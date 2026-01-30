@@ -1,0 +1,439 @@
+# Inventori - Implementation Plan
+
+This document provides a step-by-step implementation plan for the Inventori home inventory PWA. Each phase builds upon the previous one. See `REQUIREMENTS.md` for full requirements and data model documentation.
+
+## Prerequisites
+
+- Node.js 18+
+- npm or pnpm
+
+## Phase 1: Project Setup
+
+### 1.1 Initialize Vite Project
+
+```bash
+npm create vite@latest . -- --template react-ts
+npm install
+```
+
+### 1.2 Install Dependencies
+
+```bash
+# Core dependencies
+npm install react-router-dom idb
+
+# Dev dependencies
+npm install -D tailwindcss postcss autoprefixer vite-plugin-pwa
+```
+
+### 1.3 Configure Tailwind CSS
+
+1. Initialize Tailwind: `npx tailwindcss init -p`
+2. Configure `tailwind.config.js` with content paths
+3. Add Tailwind directives to `src/index.css`
+
+### 1.4 Configure PWA
+
+1. Add `vite-plugin-pwa` to `vite.config.ts`
+2. Configure service worker and manifest options
+3. Create PWA icons in `public/icons/` (192x192, 512x512)
+
+### 1.5 Setup Project Structure
+
+Create the directory structure:
+```
+src/
+├── components/
+├── db/
+├── hooks/
+├── pages/
+├── types/
+└── utils/
+```
+
+**Deliverables:**
+- [ ] Vite + React + TypeScript running
+- [ ] Tailwind CSS configured
+- [ ] PWA plugin configured with manifest
+- [ ] Directory structure created
+
+---
+
+## Phase 2: Types and Database Layer
+
+### 2.1 Define TypeScript Types
+
+Create `src/types/index.ts` with interfaces:
+- `Location`
+- `Container`
+- `Item`
+- Union type `Entity = Location | Container | Item`
+
+### 2.2 Initialize IndexedDB
+
+Create `src/db/index.ts`:
+- Database name: `inventori`
+- Version: `1`
+- Object stores: `locations`, `containers`, `items`
+- Indexes on `parentId` for containers and items
+- Index on `category` for items
+
+### 2.3 Implement CRUD Operations
+
+Create database operation modules:
+
+**`src/db/locations.ts`:**
+- `getAllLocations(): Promise<Location[]>`
+- `getLocation(id: string): Promise<Location | undefined>`
+- `createLocation(location: Omit<Location, 'id' | 'createdAt' | 'updatedAt'>): Promise<Location>`
+- `updateLocation(id: string, updates: Partial<Location>): Promise<Location>`
+- `deleteLocation(id: string): Promise<void>` (cascade delete children)
+
+**`src/db/containers.ts`:**
+- `getAllContainers(): Promise<Container[]>`
+- `getContainer(id: string): Promise<Container | undefined>`
+- `getContainersByParent(parentId: string): Promise<Container[]>`
+- `createContainer(container: Omit<Container, 'id' | 'createdAt' | 'updatedAt'>): Promise<Container>`
+- `updateContainer(id: string, updates: Partial<Container>): Promise<Container>`
+- `deleteContainer(id: string): Promise<void>` (cascade delete children)
+
+**`src/db/items.ts`:**
+- `getAllItems(): Promise<Item[]>`
+- `getItem(id: string): Promise<Item | undefined>`
+- `getItemsByParent(parentId: string): Promise<Item[]>`
+- `getItemsByCategory(category: string): Promise<Item[]>`
+- `getUnassignedItems(): Promise<Item[]>`
+- `createItem(item: Omit<Item, 'id' | 'createdAt' | 'updatedAt'>): Promise<Item>`
+- `updateItem(id: string, updates: Partial<Item>): Promise<Item>`
+- `deleteItem(id: string): Promise<void>`
+
+### 2.4 Create UUID Utility
+
+Create `src/utils/uuid.ts`:
+- Use `crypto.randomUUID()` for generating UUIDs
+
+**Deliverables:**
+- [ ] TypeScript interfaces defined
+- [ ] IndexedDB initialized with schema
+- [ ] CRUD operations for all entity types
+- [ ] Cascade delete implemented for locations and containers
+
+---
+
+## Phase 3: React Hooks
+
+### 3.1 Entity Hooks
+
+**`src/hooks/useLocations.ts`:**
+- Fetch all locations
+- Loading and error states
+- Refetch function
+
+**`src/hooks/useContainers.ts`:**
+- Fetch containers (all or by parent)
+- Loading and error states
+
+**`src/hooks/useItems.ts`:**
+- Fetch items (all, by parent, by category, unassigned)
+- Loading and error states
+
+### 3.2 Navigation Hooks
+
+**`src/hooks/useChildren.ts`:**
+- Given a parent ID and type, fetch all direct children (containers + items)
+- Used for displaying contents of a location or container
+
+**`src/hooks/useAncestors.ts`:**
+- Given an entity ID, traverse up the hierarchy to build breadcrumb path
+- Returns array of `{ id, name, type }` from root to current
+
+### 3.3 Utility Hooks
+
+**`src/hooks/useOffline.ts`:**
+- Track online/offline status using `navigator.onLine`
+- Listen to `online`/`offline` events
+
+**Deliverables:**
+- [ ] All entity hooks implemented
+- [ ] useChildren hook for hierarchy navigation
+- [ ] useAncestors hook for breadcrumbs
+- [ ] useOffline hook for connectivity status
+
+---
+
+## Phase 4: Core Components
+
+### 4.1 Layout Component
+
+**`src/components/Layout.tsx`:**
+- App shell with header and main content area
+- Navigation back button
+- Search icon linking to search page
+- Offline indicator integration
+
+### 4.2 Entity Display Components
+
+**`src/components/EntityCard.tsx`:**
+- Unified card component for displaying location/container/item
+- Shows: photo thumbnail (if available), name, type icon
+- For items: shows quantity badge if > 1
+- Click navigates to detail view
+
+**`src/components/Breadcrumbs.tsx`:**
+- Display navigation path using useAncestors
+- Clickable links to each ancestor
+- Current location shown but not clickable
+
+### 4.3 Form Components
+
+**`src/components/LocationForm.tsx`:**
+- Fields: name, description
+- Photo capture integration
+- Submit creates/updates location
+
+**`src/components/ContainerForm.tsx`:**
+- Fields: name, description
+- Parent selector (location or container)
+- Photo capture integration
+
+**`src/components/ItemForm.tsx`:**
+- All item fields from data model
+- Parent selector (optional - location or container)
+- Photo capture for item photos
+- Separate photo capture for receipt
+- Date pickers for purchaseDate, disposalDate
+
+### 4.4 Utility Components
+
+**`src/components/PhotoCapture.tsx`:**
+- Camera button (uses `getUserMedia` API)
+- File upload button
+- Preview of captured/selected photos
+- Delete photo functionality
+- Returns Blob array to parent
+
+**`src/components/SearchBar.tsx`:**
+- Text input with search icon
+- Debounced input handling
+- Clear button
+
+**`src/components/OfflineIndicator.tsx`:**
+- Shows banner/toast when offline
+- Uses useOffline hook
+
+**Deliverables:**
+- [ ] Layout with navigation
+- [ ] EntityCard for unified display
+- [ ] Breadcrumbs component
+- [ ] All form components
+- [ ] PhotoCapture with camera and upload
+- [ ] SearchBar component
+- [ ] OfflineIndicator component
+
+---
+
+## Phase 5: Pages and Routing
+
+### 5.1 Setup React Router
+
+**`src/App.tsx`:**
+- Configure BrowserRouter
+- Define routes (see below)
+- Wrap with Layout component
+
+### 5.2 Routes
+
+| Path | Component | Description |
+|------|-----------|-------------|
+| `/` | `Home` | List all locations |
+| `/location/:id` | `LocationView` | View location contents |
+| `/container/:id` | `ContainerView` | View container contents |
+| `/item/:id` | `ItemView` | View item details |
+| `/add/location` | `AddLocation` | Create new location |
+| `/add/container` | `AddContainer` | Create new container |
+| `/add/container?parentId=X&parentType=Y` | `AddContainer` | Create container with preset parent |
+| `/add/item` | `AddItem` | Create new item |
+| `/add/item?parentId=X&parentType=Y` | `AddItem` | Create item with preset parent |
+| `/edit/location/:id` | `EditLocation` | Edit location |
+| `/edit/container/:id` | `EditContainer` | Edit container |
+| `/edit/item/:id` | `EditItem` | Edit item |
+| `/search` | `Search` | Global search |
+
+### 5.3 Page Implementations
+
+**`src/pages/Home.tsx`:**
+- List all locations using EntityCard
+- "Add Location" FAB or button
+- Empty state when no locations
+
+**`src/pages/LocationView.tsx`:**
+- Breadcrumbs (just location name)
+- Location details (name, description, photo)
+- List of containers and items in this location
+- "Add Container" and "Add Item" buttons
+- Edit and Delete actions
+
+**`src/pages/ContainerView.tsx`:**
+- Breadcrumbs showing full path
+- Container details
+- List of child containers and items
+- "Add Container" and "Add Item" buttons
+- Edit and Delete actions
+
+**`src/pages/ItemView.tsx`:**
+- Breadcrumbs showing full path
+- All item details displayed
+- Photo gallery
+- Receipt photo (if exists)
+- Edit and Delete actions
+- Link to manual URL (if exists)
+
+**`src/pages/AddLocation.tsx`, `AddContainer.tsx`, `AddItem.tsx`:**
+- Render respective form component
+- Handle form submission (create entity)
+- Navigate back on success
+
+**`src/pages/EditLocation.tsx`, `EditContainer.tsx`, `EditItem.tsx`:**
+- Fetch existing entity data
+- Render form with pre-filled values
+- Handle update submission
+- Navigate back on success
+
+**`src/pages/Search.tsx`:**
+- SearchBar at top
+- Search across all entities (locations, containers, items)
+- Display results grouped by type or unified list
+- Click result navigates to detail view
+
+**Deliverables:**
+- [ ] React Router configured
+- [ ] All page components implemented
+- [ ] Navigation working between pages
+- [ ] CRUD operations connected to UI
+- [ ] Search functionality working
+
+---
+
+## Phase 6: PWA Features
+
+### 6.1 Service Worker Configuration
+
+Update `vite.config.ts` PWA settings:
+- Cache app shell and static assets
+- Runtime caching strategy for images
+
+### 6.2 Web Manifest
+
+Ensure `manifest.json` includes:
+- `name` and `short_name`
+- `description`
+- `icons` (192x192, 512x512)
+- `start_url`
+- `display: standalone`
+- `theme_color` and `background_color`
+
+### 6.3 Install Prompt
+
+Optional: Add "Install App" button that triggers `beforeinstallprompt` event
+
+### 6.4 Create App Icons
+
+Create icons in `public/icons/`:
+- `icon-192x192.png`
+- `icon-512x512.png`
+- Consider also adding `apple-touch-icon.png` for iOS
+
+**Deliverables:**
+- [ ] Service worker caching assets
+- [ ] Web manifest complete
+- [ ] App installable on mobile devices
+- [ ] Offline functionality verified
+
+---
+
+## Phase 7: Data Export
+
+### 7.1 Export Utility
+
+**`src/utils/export.ts`:**
+- `exportData(): Promise<string>` - Export all data as JSON
+- Include all locations, containers, items
+- Convert Blobs to base64 for photos
+- Return JSON string
+
+### 7.2 Export UI
+
+Add "Export Data" button to settings or home page:
+- Triggers download of JSON file
+- Filename: `inventori-backup-{date}.json`
+
+**Deliverables:**
+- [ ] Export function implemented
+- [ ] Download trigger in UI
+- [ ] Exported JSON includes all data with photos
+
+---
+
+## Phase 8: Polish and Testing
+
+### 8.1 UI Polish
+
+- Loading states (spinners/skeletons)
+- Empty states with helpful messages
+- Error states with retry options
+- Confirm dialogs for delete actions
+- Toast notifications for success/error
+
+### 8.2 Responsive Design
+
+- Test on mobile (375px)
+- Test on tablet (768px)
+- Test on desktop (1024px+)
+- Ensure touch targets are 44x44px minimum
+
+### 8.3 Accessibility
+
+- Semantic HTML elements
+- ARIA labels where needed
+- Keyboard navigation
+- Focus management on route changes
+
+### 8.4 Testing
+
+- Manual testing of all CRUD operations
+- Test offline functionality
+- Test on multiple browsers (Chrome, Firefox, Safari)
+- Test PWA installation
+
+**Deliverables:**
+- [ ] All loading/empty/error states
+- [ ] Responsive on all device sizes
+- [ ] Accessible to keyboard and screen readers
+- [ ] Cross-browser tested
+
+---
+
+## Summary Checklist
+
+- [ ] **Phase 1:** Project setup (Vite, Tailwind, PWA config)
+- [ ] **Phase 2:** Types and database layer (IndexedDB, CRUD)
+- [ ] **Phase 3:** React hooks (data fetching, navigation)
+- [ ] **Phase 4:** Core components (Layout, Cards, Forms, Photos)
+- [ ] **Phase 5:** Pages and routing (all views, search)
+- [ ] **Phase 6:** PWA features (offline, installable)
+- [ ] **Phase 7:** Data export (JSON backup)
+- [ ] **Phase 8:** Polish and testing
+
+## Notes for Implementers
+
+1. **Photo Storage:** Photos are stored as Blobs directly in IndexedDB. Consider size limits and potentially compressing images before storage.
+
+2. **Cascade Deletes:** When deleting a location or container, all child containers and items must also be deleted. Implement recursively.
+
+3. **UUIDs:** Always use `crypto.randomUUID()` for IDs to ensure compatibility with future QR codes and P2P sync.
+
+4. **Timestamps:** Always set `createdAt` on creation and update `updatedAt` on every modification.
+
+5. **Parent References:** When moving items/containers, update both `parentId` and `parentType`.
+
+6. **Search:** For v1, a simple in-memory filter is sufficient. For larger inventories, consider IndexedDB full-text search or a search index.
