@@ -10,9 +10,9 @@ Inventori helps users catalog and organize their physical belongings with a hier
 
 | Layer | Technology |
 |-------|------------|
-| Framework | React 18 |
-| Build Tool | Vite |
-| Styling | Tailwind CSS |
+| Framework | React 19 |
+| Build Tool | Vite 7 |
+| Styling | Tailwind CSS v4 (via `@tailwindcss/vite`) |
 | Storage | IndexedDB (via `idb` wrapper) |
 | PWA | vite-plugin-pwa |
 | Language | TypeScript |
@@ -266,6 +266,5 @@ inventori/
 ├── index.html
 ├── package.json
 ├── tsconfig.json
-├── vite.config.ts
-└── tailwind.config.js
+└── vite.config.ts
 ```

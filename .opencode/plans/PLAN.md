@@ -20,17 +20,16 @@ npm install
 
 ```bash
 # Core dependencies
-npm install react-router-dom idb
+pnpm add react-router-dom idb
 
 # Dev dependencies
-npm install -D tailwindcss postcss autoprefixer vite-plugin-pwa
+pnpm add -D tailwindcss @tailwindcss/vite vite-plugin-pwa
 ```
 
 ### 1.3 Configure Tailwind CSS
 
-1. Initialize Tailwind: `npx tailwindcss init -p`
-2. Configure `tailwind.config.js` with content paths
-3. Add Tailwind directives to `src/index.css`
+1. Add `@tailwindcss/vite` plugin to `vite.config.ts`
+2. Add Tailwind import to `src/index.css`: `@import "tailwindcss";`
 
 ### 1.4 Configure PWA
 
