@@ -121,7 +121,7 @@ Create `src/utils/uuid.ts`:
 
 **Deliverables:**
 - [x] TypeScript interfaces defined
-- [ ] IndexedDB initialized with schema
+- [x] IndexedDB initialized with schema
 - [ ] CRUD operations for all entity types
 - [ ] Cascade delete implemented for locations and containers
 
