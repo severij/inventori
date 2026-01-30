@@ -218,8 +218,7 @@ Living Room (location)
 
 ```
 inventori/
-├── public/
-│   └── icons/                  # PWA icons
+├── public/                       # Static assets
 ├── src/
 │   ├── components/
 │   │   ├── Layout.tsx          # App shell with navigation
@@ -268,3 +267,22 @@ inventori/
 ├── tsconfig.json
 └── vite.config.ts
 ```
+
+## Development
+
+### Prerequisites
+
+Node.js 18+ installed via nvm. Add to `~/.bashrc`:
+```bash
+export NVM_DIR="$HOME/.config/nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+```
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start dev server at http://localhost:5173 |
+| `pnpm build` | Build for production |
+| `pnpm preview` | Preview production build |
+| `pnpm lint` | Run ESLint |

@@ -4,16 +4,22 @@ This document provides a step-by-step implementation plan for the Inventori home
 
 ## Prerequisites
 
-- Node.js 18+
-- npm or pnpm
+- Node.js 18+ (installed via nvm)
+- pnpm
+
+To load Node.js/pnpm in your terminal, add this to `~/.bashrc`:
+```bash
+export NVM_DIR="$HOME/.config/nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+```
 
 ## Phase 1: Project Setup
 
 ### 1.1 Initialize Vite Project
 
 ```bash
-npm create vite@latest . -- --template react-ts
-npm install
+pnpm create vite@latest . --template react-ts
+pnpm install
 ```
 
 ### 1.2 Install Dependencies
@@ -35,7 +41,7 @@ pnpm add -D tailwindcss @tailwindcss/vite vite-plugin-pwa
 
 1. Add `vite-plugin-pwa` to `vite.config.ts`
 2. Configure service worker and manifest options
-3. Create PWA icons in `public/icons/` (192x192, 512x512)
+3. Use placeholder icons (online URLs) until production icons are created
 
 ### 1.5 Setup Project Structure
 
