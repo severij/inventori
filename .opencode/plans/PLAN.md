@@ -122,8 +122,9 @@ Create `src/utils/uuid.ts`:
 **Deliverables:**
 - [x] TypeScript interfaces defined
 - [x] IndexedDB initialized with schema
-- [ ] CRUD operations for all entity types
-- [ ] Cascade delete implemented for locations and containers
+- [x] CRUD operations for all entity types
+- [x] Cascade delete implemented for locations and containers
+- [x] UUID utility created
 
 ---
 
@@ -423,7 +424,7 @@ Add "Export Data" button to settings or home page:
 ## Summary Checklist
 
 - [x] **Phase 1:** Project setup (Vite, Tailwind, PWA config)
-- [ ] **Phase 2:** Types and database layer (IndexedDB, CRUD)
+- [x] **Phase 2:** Types and database layer (IndexedDB, CRUD)
 - [ ] **Phase 3:** React hooks (data fetching, navigation)
 - [ ] **Phase 4:** Core components (Layout, Cards, Forms, Photos)
 - [ ] **Phase 5:** Pages and routing (all views, search)
