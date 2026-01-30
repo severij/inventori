@@ -73,6 +73,8 @@ Create `src/types/index.ts` with interfaces:
 - `Container`
 - `Item`
 - Union type `Entity = Location | Container | Item`
+- Input types for create/update operations (`CreateLocationInput`, etc.)
+- `BreadcrumbItem` for navigation
 
 ### 2.2 Initialize IndexedDB
 
@@ -118,7 +120,7 @@ Create `src/utils/uuid.ts`:
 - Use `crypto.randomUUID()` for generating UUIDs
 
 **Deliverables:**
-- [ ] TypeScript interfaces defined
+- [x] TypeScript interfaces defined
 - [ ] IndexedDB initialized with schema
 - [ ] CRUD operations for all entity types
 - [ ] Cascade delete implemented for locations and containers
