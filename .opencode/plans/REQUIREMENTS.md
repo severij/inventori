@@ -258,7 +258,9 @@ inventori/
 │   │   ├── Breadcrumbs.tsx     # Navigation breadcrumbs
 │   │   ├── LocationForm.tsx    # Form for creating/editing locations
 │   │   ├── ContainerForm.tsx   # Form for creating/editing containers
-│   │   └── ItemForm.tsx        # Form for creating/editing items
+│   │   ├── ItemForm.tsx        # Form for creating/editing items
+│   │   ├── InstallButton.tsx   # PWA install prompt button
+│   │   └── ExportButton.tsx    # Data export trigger button
 │   ├── db/
 │   │   ├── index.ts            # DB initialization and schema
 │   │   ├── locations.ts        # Location CRUD operations
@@ -270,7 +272,8 @@ inventori/
 │   │   ├── useItems.ts         # Item data hook
 │   │   ├── useChildren.ts      # Get children of a parent
 │   │   ├── useAncestors.ts     # Get breadcrumb path
-│   │   └── useOffline.ts       # Offline status hook
+│   │   ├── useOffline.ts       # Offline status hook
+│   │   └── useInstallPrompt.ts # PWA install prompt hook
 │   ├── pages/
 │   │   ├── Home.tsx            # List all locations
 │   │   ├── LocationView.tsx    # View location contents

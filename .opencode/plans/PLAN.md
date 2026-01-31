@@ -411,9 +411,15 @@ Add "Export Data" button to settings or home page:
 - Triggers download of JSON file
 - Filename: `inventori-backup-{date}.json`
 
+Implemented with:
+- `src/components/ExportButton.tsx` - Button component with loading/error states
+- Settings section added to Home page (`src/pages/Home.tsx`)
+- Shows spinner during export
+- Displays error message if export fails
+
 **Deliverables:**
 - [x] Export function implemented
-- [ ] Download trigger in UI
+- [x] Download trigger in UI
 - [x] Exported JSON includes all data with photos
 
 ---
@@ -465,7 +471,7 @@ Add "Export Data" button to settings or home page:
 - [x] **Phase 4:** Core components (Layout, Cards, Forms, Photos, Search)
 - [x] **Phase 5:** Pages and routing (all views, search)
 - [x] **Phase 6:** PWA features (offline, installable)
-- [ ] **Phase 7:** Data export (JSON backup)
+- [x] **Phase 7:** Data export (JSON backup)
 - [ ] **Phase 8:** Polish and testing
 
 ## Notes for Implementers
