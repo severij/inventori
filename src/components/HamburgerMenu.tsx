@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { downloadExport } from '../utils/export';
-import { importData, readFileAsText, previewImport, type ImportResult } from '../utils/import';
+import { importData, previewImport, type ImportResult } from '../utils/import';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
 import { ConfirmDialog } from './ConfirmDialog';
 
 /**
  * Hamburger menu with dropdown containing app actions.
- * - Export Data: Downloads JSON backup
- * - Import Data: Restores from JSON backup
+ * - Export Data: Downloads ZIP backup
+ * - Import Data: Restores from ZIP/JSON backup
  * - Install App: Shows when PWA is installable
  */
 export function HamburgerMenu() {
@@ -90,8 +90,7 @@ export function HamburgerMenu() {
     event.target.value = '';
 
     try {
-      const content = await readFileAsText(file);
-      const preview = previewImport(content);
+      const preview = await previewImport(file);
 
       if (!preview.valid) {
         setImportError(preview.error || 'Invalid file');
@@ -120,8 +119,7 @@ export function HamburgerMenu() {
     setImportError(null);
 
     try {
-      const content = await readFileAsText(pendingImportFile);
-      const result = await importData(content);
+      const result = await importData(pendingImportFile);
       setImportResult(result);
 
       if (!result.success && result.errors.length > 0) {
@@ -129,9 +127,16 @@ export function HamburgerMenu() {
       }
 
       // Reload the page to reflect imported data
-      if (result.success || (result.locations.added + result.locations.updated + 
-          result.containers.added + result.containers.updated +
-          result.items.added + result.items.updated) > 0) {
+      if (
+        result.success ||
+        result.locations.added +
+          result.locations.updated +
+          result.containers.added +
+          result.containers.updated +
+          result.items.added +
+          result.items.updated >
+          0
+      ) {
         // Small delay to show result, then reload
         setTimeout(() => {
           window.location.reload();
@@ -291,29 +296,32 @@ export function HamburgerMenu() {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".json,application/json"
+              accept=".zip,.json,application/zip,application/json"
               onChange={handleFileSelect}
               className="hidden"
             />
 
             {/* Export error message */}
             {exportError && (
-              <div className="px-4 py-2 text-sm text-red-600 bg-red-50">
-                {exportError}
-              </div>
+              <div className="px-4 py-2 text-sm text-red-600 bg-red-50">{exportError}</div>
             )}
 
             {/* Import error message */}
             {importError && (
-              <div className="px-4 py-2 text-sm text-red-600 bg-red-50">
-                {importError}
-              </div>
+              <div className="px-4 py-2 text-sm text-red-600 bg-red-50">{importError}</div>
             )}
 
             {/* Import success message */}
             {importResult && importResult.success && (
               <div className="px-4 py-2 text-sm text-green-600 bg-green-50">
                 Imported successfully! Reloading...
+              </div>
+            )}
+
+            {/* Import warnings */}
+            {importResult && importResult.warnings.length > 0 && (
+              <div className="px-4 py-2 text-sm text-amber-600 bg-amber-50">
+                {importResult.warnings.length} warning(s)
               </div>
             )}
 
@@ -351,13 +359,16 @@ export function HamburgerMenu() {
         message={
           <div className="space-y-3">
             <p>
-              This will merge the imported data with your existing inventory.
-              Items with matching IDs will be updated.
+              This will merge the imported data with your existing inventory. Items with matching
+              IDs will be updated.
             </p>
             {importPreview && (
               <div className="bg-gray-50 rounded-lg p-3 text-sm">
-                <p><strong>File details:</strong></p>
+                <p>
+                  <strong>File details:</strong>
+                </p>
                 <ul className="mt-1 space-y-1 text-gray-600">
+                  <li>Format version: {importPreview.version ?? 'Unknown'}</li>
                   <li>Exported: {formatDate(importPreview.exportedAt)}</li>
                   <li>Locations: {importPreview.counts?.locations ?? 0}</li>
                   <li>Containers: {importPreview.counts?.containers ?? 0}</li>

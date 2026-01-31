@@ -381,49 +381,65 @@ SVG format used for scalability. PNG versions can be added later if compatibilit
 ### 7.1 Export Utility
 
 **`src/utils/export.ts`:**
-- `exportData(): Promise<string>` - Export all data as JSON
+- `exportData(): Promise<Blob>` - Export all data as ZIP file
 - Include all locations, containers, items
-- Convert Blobs to base64 for photos
-- Return JSON string
+- Store photos as separate files (not embedded base64)
+- Return ZIP blob
 
 Implemented with:
-- Flat export format with separate arrays for locations, containers, items
-- Metadata: `version` (1.0) and `exportedAt` timestamp
-- All photos converted to base64 data URLs
+- ZIP archive format using JSZip library
+- Structure: `data.json` + `images/` folder
+- Images stored uncompressed (STORE mode) for speed
+- Metadata: `version` (1.1) and `exportedAt` timestamp
 - All dates converted to ISO strings
 - Helper function `downloadExport()` to trigger browser download
 - Helper function `generateExportFilename()` for consistent naming
 
-Export format:
+Export format (v1.1):
+```
+inventori-backup-YYYY-MM-DD.zip
+├── data.json
+└── images/
+    ├── location-{id}-{index}.{ext}
+    ├── container-{id}-{index}.{ext}
+    ├── item-{id}-{index}.{ext}
+    └── item-{id}-receipt.{ext}
+```
+
+data.json structure:
 ```json
 {
-  "version": "1.0",
-  "exportedAt": "2026-01-31T12:00:00.000Z",
-  "locations": [...],
+  "version": "1.1",
+  "exportedAt": "2026-02-01T12:00:00.000Z",
+  "locations": [{ "photos": ["location-abc-0.jpg"], ... }],
   "containers": [...],
-  "items": [...]
+  "items": [{ "photos": ["item-xyz-0.jpg"], "receiptPhoto": "item-xyz-receipt.jpg", ... }]
 }
 ```
 
 ### 7.2 Import Utility
 
 **`src/utils/import.ts`:**
-- `importData(jsonString): Promise<ImportResult>` - Import data from JSON
-- `readFileAsText(file): Promise<string>` - Read file contents
-- `previewImport(jsonString)` - Preview import file without importing
+- `importData(file: File): Promise<ImportResult>` - Import data from ZIP or JSON
+- `previewImport(file: File)` - Preview import file without importing
+- `isZipFile(file)` / `isJsonFile(file)` - File type detection
 
 Implemented with:
 - Merge by ID strategy: existing items updated, new items added
-- Base64 data URLs converted back to Blobs
+- Support for both v1.1 (ZIP) and v1.0 (JSON with base64) formats
+- Extracts images from ZIP and converts filenames back to Blobs
 - ISO date strings converted back to Date objects
 - Validation of export format and version compatibility
-- Detailed result with counts of added/updated items and errors
+- `ImportResult` includes:
+  - `warnings`: Array of non-fatal issues (e.g., missing images)
+  - `errors`: Array of fatal issues
+  - Counts of added/updated items per entity type
 
 ### 7.3 Export/Import UI
 
 Accessible from hamburger menu in header:
-- **Export Data**: Downloads JSON backup file
-- **Import Data**: Opens file picker, shows confirmation dialog with preview
+- **Export Data**: Downloads ZIP backup file
+- **Import Data**: Opens file picker (accepts .zip and .json), shows confirmation dialog
 
 Implemented with:
 - `src/components/HamburgerMenu.tsx` - Dropdown menu with:
@@ -431,15 +447,16 @@ Implemented with:
   - Import Data option (with file picker and confirmation)
   - Install App option (shows when PWA is installable)
 - `src/components/ConfirmDialog.tsx` - Reusable confirmation dialog
-- Import confirmation shows file details (date, counts) before importing
+- Import confirmation shows file details (version, date, counts) before importing
+- Displays warnings for missing images after import
 - Page reloads after successful import to reflect changes
 
 **Deliverables:**
-- [x] Export function implemented
-- [x] Import function implemented (merge by ID)
+- [x] Export function implemented (ZIP with separate images)
+- [x] Import function implemented (merge by ID, warnings for missing images)
+- [x] Backward compatibility with v1.0 JSON format
 - [x] Download trigger in UI (hamburger menu)
 - [x] Import trigger in UI with confirmation dialog
-- [x] Exported JSON includes all data with photos
 
 ---
 
