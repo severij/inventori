@@ -1,24 +1,35 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Breadcrumbs } from '../components/Breadcrumbs';
+import { EntityCard } from '../components/EntityCard';
 import { useItem } from '../hooks/useItems';
+import { useChildren } from '../hooks/useChildren';
 import { useAncestors } from '../hooks/useAncestors';
 import { deleteItem } from '../db/items';
 
 /**
  * Item view - View item details
+ * If item isContainer, also shows children and add buttons
  */
 export function ItemView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const { item, loading, error } = useItem(id);
+  const { item, loading: itemLoading, error } = useItem(id);
+  const { containers, items: childItems, loading: childrenLoading } = useChildren(id);
   const { ancestors } = useAncestors(id, 'item');
+
+  const loading = itemLoading || (item?.isContainer && childrenLoading);
+  const hasChildren = containers.length > 0 || childItems.length > 0;
 
   const handleDelete = async () => {
     if (!item) return;
 
-    if (window.confirm(`Delete "${item.name}"? This cannot be undone.`)) {
+    const confirmMsg = item.isContainer && hasChildren
+      ? `Delete "${item.name}" and all its contents? This cannot be undone.`
+      : `Delete "${item.name}"? This cannot be undone.`;
+
+    if (window.confirm(confirmMsg)) {
       await deleteItem(item.id);
       // Navigate to parent or home
       if (item.parentId && item.parentType) {
@@ -205,6 +216,47 @@ export function ItemView() {
                 </div>
               )}
             </div>
+          )}
+
+          {/* Container Contents - only shown for items with isContainer */}
+          {item.isContainer && (
+            <>
+              {/* Add buttons */}
+              <div className="flex gap-2 mb-4">
+                <Link
+                  to={`/add/container?parentId=${item.id}&parentType=item`}
+                  className="flex-1 text-center px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                >
+                  + Add Container
+                </Link>
+                <Link
+                  to={`/add/item?parentId=${item.id}&parentType=item`}
+                  className="flex-1 text-center px-4 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
+                >
+                  + Add Item
+                </Link>
+              </div>
+
+              {/* Contents list */}
+              {hasChildren ? (
+                <div className="space-y-3 mb-6">
+                  <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+                    Contents ({containers.length + childItems.length})
+                  </h3>
+                  {containers.map((container) => (
+                    <EntityCard key={container.id} entity={container} />
+                  ))}
+                  {childItems.map((childItem) => (
+                    <EntityCard key={childItem.id} entity={childItem} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-gray-500 mb-6 bg-gray-50 rounded-lg">
+                  <p>This container is empty</p>
+                  <p className="text-sm">Add a container or item to get started</p>
+                </div>
+              )}
+            </>
           )}
 
           {/* Lifecycle */}

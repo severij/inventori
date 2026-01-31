@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import type { Entity } from '../types';
+import type { Entity, Item } from '../types';
 
 interface EntityCardProps {
   entity: Entity;
@@ -8,6 +8,7 @@ interface EntityCardProps {
 /**
  * Unified card component for displaying location/container/item.
  * Shows photo thumbnail (if available), name, type icon, and quantity badge for items.
+ * Items with isContainer show a container icon.
  * Click navigates to detail view.
  */
 export function EntityCard({ entity }: EntityCardProps) {
@@ -21,11 +22,17 @@ export function EntityCard({ entity }: EntityCardProps) {
   const thumbnail = entity.photos?.[0];
   const thumbnailUrl = thumbnail ? URL.createObjectURL(thumbnail) : null;
 
-  // Get icon based on entity type
-  const icon = getEntityIcon(entity.type);
+  // Get icon based on entity type and isContainer flag
+  const icon = getEntityIcon(entity);
 
-  // Get quantity for items
-  const quantity = entity.type === 'item' ? entity.quantity : null;
+  // Get quantity for items (non-containers only)
+  const quantity = entity.type === 'item' && !(entity as Item).isContainer ? (entity as Item).quantity : null;
+
+  // Check if this is a container item (not a pure container)
+  const isContainerItem = entity.type === 'item' && (entity as Item).isContainer;
+
+  // Check if this is a pure container
+  const isPureContainer = entity.type === 'container';
 
   return (
     <button
@@ -53,7 +60,21 @@ export function EntityCard({ entity }: EntityCardProps) {
         )}
       </div>
 
-      {/* Quantity badge for items */}
+      {/* Container indicator badge for item-containers */}
+      {isContainerItem && (
+        <span className="flex-shrink-0 bg-amber-100 text-amber-800 text-xs font-medium px-2 py-0.5 rounded">
+          Container
+        </span>
+      )}
+
+      {/* Pure container badge */}
+      {isPureContainer && (
+        <span className="flex-shrink-0 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">
+          Organizer
+        </span>
+      )}
+
+      {/* Quantity badge for non-container items */}
       {quantity !== null && quantity > 1 && (
         <span className="flex-shrink-0 bg-blue-100 text-blue-800 text-sm font-medium px-2 py-0.5 rounded">
           x{quantity}
@@ -82,15 +103,17 @@ export function EntityCard({ entity }: EntityCardProps) {
 /**
  * Get icon for entity type
  */
-function getEntityIcon(type: Entity['type']): string {
-  switch (type) {
-    case 'location':
-      return '📍';
-    case 'container':
-      return '📦';
-    case 'item':
-      return '📄';
-    default:
-      return '📄';
+function getEntityIcon(entity: Entity): string {
+  if (entity.type === 'location') {
+    return '📍';
   }
+  // Pure containers (organizational)
+  if (entity.type === 'container') {
+    return '🗄️';
+  }
+  // For items, show container icon if isContainer is true
+  if (entity.type === 'item') {
+    return (entity as Item).isContainer ? '📦' : '📄';
+  }
+  return '📄';
 }

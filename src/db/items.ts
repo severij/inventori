@@ -1,6 +1,7 @@
 import { getDB } from './index';
 import { generateUUID } from '../utils/uuid';
 import type { Item, CreateItemInput, UpdateItemInput } from '../types';
+import { deleteContainersByParent } from './containers';
 
 /**
  * Get all items
@@ -19,11 +20,20 @@ export async function getItem(id: string): Promise<Item | undefined> {
 }
 
 /**
- * Get all items by parent ID (location or container)
+ * Get all items by parent ID (location or another item)
  */
 export async function getItemsByParent(parentId: string): Promise<Item[]> {
   const db = await getDB();
   return db.getAllFromIndex('items', 'by-parent', parentId);
+}
+
+/**
+ * Get all items that are containers (can hold other items)
+ */
+export async function getContainerItems(): Promise<Item[]> {
+  const db = await getDB();
+  const allItems = await db.getAll('items');
+  return allItems.filter((item) => item.isContainer);
 }
 
 /**
@@ -84,22 +94,38 @@ export async function updateItem(id: string, updates: UpdateItemInput): Promise<
 }
 
 /**
- * Delete an item
+ * Delete an item.
+ * If the item is a container (isContainer: true), also deletes all children recursively.
  */
 export async function deleteItem(id: string): Promise<void> {
   const db = await getDB();
+  const item = await db.get('items', id);
+  
+  if (item?.isContainer) {
+    // Delete child containers first
+    await deleteContainersByParent(id);
+    // Then delete child items
+    await deleteItemsByParent(id);
+  }
+  
   await db.delete('items', id);
 }
 
 /**
  * Delete all items that have the given parent ID.
- * This is called when deleting a location or container.
+ * This recursively deletes children of container-items.
+ * Called when deleting a location, container, or item-container.
  */
 export async function deleteItemsByParent(parentId: string): Promise<void> {
   const db = await getDB();
   const items = await getItemsByParent(parentId);
 
   for (const item of items) {
+    // If this item is also a container, recursively delete its children
+    if (item.isContainer) {
+      await deleteContainersByParent(item.id);
+      await deleteItemsByParent(item.id);
+    }
     await db.delete('items', item.id);
   }
 }

@@ -61,15 +61,16 @@ export async function updateLocation(id: string, updates: UpdateLocationInput): 
 }
 
 /**
- * Delete a location and all its children (cascade delete)
+ * Delete a location and all its children (cascade delete).
+ * This recursively deletes all containers and items.
  */
 export async function deleteLocation(id: string): Promise<void> {
   const db = await getDB();
 
-  // Delete all child containers (which will cascade to their children)
+  // Delete all child containers (recursively handles their children)
   await deleteContainersByParent(id);
 
-  // Delete all direct child items
+  // Delete all child items (recursively handles item-containers)
   await deleteItemsByParent(id);
 
   // Delete the location itself

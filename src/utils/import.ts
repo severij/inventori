@@ -27,11 +27,14 @@ interface LegacyExportedLocation extends Omit<ExportedLocation, 'photos'> {
 
 interface LegacyExportedContainer extends Omit<ExportedContainer, 'photos'> {
   photos: string[]; // base64 encoded in v1.0
+  parentType: 'location' | 'container'; // v1.0 didn't support 'item' as parent
 }
 
-interface LegacyExportedItem extends Omit<ExportedItem, 'photos' | 'receiptPhoto'> {
+interface LegacyExportedItem extends Omit<ExportedItem, 'photos' | 'receiptPhoto' | 'isContainer'> {
   photos: string[]; // base64 encoded in v1.0
   receiptPhoto?: string; // base64 encoded in v1.0
+  isContainer?: boolean; // Optional in legacy, may not exist
+  parentType?: 'location' | 'container'; // v1.0 didn't support 'item' as parent
 }
 
 interface LegacyExportData {
@@ -165,6 +168,7 @@ function importItemV11(
     description: exported.description,
     parentId: exported.parentId,
     parentType: exported.parentType,
+    isContainer: exported.isContainer,
     category: exported.category,
     quantity: exported.quantity ?? 1,
     brand: exported.brand,
@@ -223,6 +227,7 @@ async function importItemV10(exported: LegacyExportedItem): Promise<Item> {
     description: exported.description,
     parentId: exported.parentId,
     parentType: exported.parentType,
+    isContainer: exported.isContainer ?? false, // Default to false for legacy imports
     category: exported.category,
     quantity: exported.quantity ?? 1,
     brand: exported.brand,

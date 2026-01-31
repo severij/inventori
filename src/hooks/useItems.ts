@@ -6,6 +6,7 @@ import {
   getItemsByParent,
   getItemsByCategory,
   getUnassignedItems,
+  getContainerItems,
 } from '../db/items';
 
 interface UseItemsResult {
@@ -178,4 +179,32 @@ export function useItem(id: string | undefined): UseItemResult {
   }, [refetch]);
 
   return { item, loading, error, refetch };
+}
+
+/**
+ * Hook to fetch all container items (items that can hold other items)
+ */
+export function useContainerItems(): UseItemsResult {
+  const [items, setItems] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const refetch = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getContainerItems();
+      setItems(data);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch container items'));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  return { items, loading, error, refetch };
 }

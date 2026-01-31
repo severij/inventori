@@ -20,7 +20,7 @@ export async function getContainer(id: string): Promise<Container | undefined> {
 }
 
 /**
- * Get all containers by parent ID (location or container)
+ * Get all containers by parent ID (location, container, or item)
  */
 export async function getContainersByParent(parentId: string): Promise<Container[]> {
   const db = await getDB();
@@ -68,28 +68,37 @@ export async function updateContainer(id: string, updates: UpdateContainerInput)
 }
 
 /**
- * Delete a container and all its children (cascade delete)
+ * Delete a container and all its children (cascade delete).
+ * This recursively deletes child containers and items.
  */
 export async function deleteContainer(id: string): Promise<void> {
-  // Delete all child containers recursively
+  const db = await getDB();
+
+  // Delete all child containers (recursive)
   await deleteContainersByParent(id);
 
-  // Delete all direct child items
+  // Delete all child items (recursive for item-containers)
   await deleteItemsByParent(id);
 
   // Delete the container itself
-  const db = await getDB();
   await db.delete('containers', id);
 }
 
 /**
- * Delete all containers that have the given parent ID (cascade delete)
- * This is called when deleting a location or parent container.
+ * Delete all containers that have the given parent ID.
+ * This recursively deletes their children as well.
+ * Called when deleting a location, container, or item-container.
  */
 export async function deleteContainersByParent(parentId: string): Promise<void> {
-  const children = await getContainersByParent(parentId);
+  const db = await getDB();
+  const containers = await getContainersByParent(parentId);
 
-  for (const child of children) {
-    await deleteContainer(child.id);
+  for (const container of containers) {
+    // Recursively delete child containers
+    await deleteContainersByParent(container.id);
+    // Delete child items
+    await deleteItemsByParent(container.id);
+    // Delete the container
+    await db.delete('containers', container.id);
   }
 }

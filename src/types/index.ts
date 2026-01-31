@@ -3,7 +3,7 @@
  */
 
 /** Parent type for hierarchy relationships */
-export type ParentType = 'location' | 'container';
+export type ParentType = 'location' | 'container' | 'item';
 
 /** Entity type discriminator */
 export type EntityType = 'location' | 'container' | 'item';
@@ -23,8 +23,9 @@ export interface Location {
 }
 
 /**
- * A storage unit that can hold items or other containers.
- * Can be nested infinitely within locations or other containers.
+ * A pure organizational container (drawer, shelf, etc.).
+ * Does not have purchase/tracking info - use Item with isContainer for that.
+ * Can be nested inside locations, other containers, or items with isContainer=true.
  */
 export interface Container {
   id: string;
@@ -40,6 +41,7 @@ export interface Container {
 
 /**
  * An individual inventory item.
+ * Items with isContainer: true can hold containers and other items.
  */
 export interface Item {
   id: string;
@@ -50,6 +52,9 @@ export interface Item {
   // Hierarchy (optional - items can be unassigned)
   parentId?: string;
   parentType?: ParentType;
+
+  // Container capability - if true, this item can hold containers and other items
+  isContainer: boolean;
 
   // Item-specific fields
   category?: string;

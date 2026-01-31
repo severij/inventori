@@ -29,7 +29,7 @@ export interface ExportedContainer {
   name: string;
   description?: string;
   parentId: string;
-  parentType: 'location' | 'container';
+  parentType: 'location' | 'container' | 'item';
   photos: string[]; // filenames in images/ folder
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
@@ -44,7 +44,8 @@ export interface ExportedItem {
   name: string;
   description?: string;
   parentId?: string;
-  parentType?: 'location' | 'container';
+  parentType?: 'location' | 'container' | 'item';
+  isContainer: boolean;
   category?: string;
   quantity: number;
   brand?: string;
@@ -208,6 +209,7 @@ function exportItem(item: Item): {
       description: item.description,
       parentId: item.parentId,
       parentType: item.parentType,
+      isContainer: item.isContainer,
       category: item.category,
       quantity: item.quantity,
       brand: item.brand,

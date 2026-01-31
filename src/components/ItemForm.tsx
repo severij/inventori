@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { PhotoCapture } from './PhotoCapture';
 import { useLocations } from '../hooks/useLocations';
 import { useContainers } from '../hooks/useContainers';
+import { useContainerItems } from '../hooks/useItems';
 import type { CreateItemInput, Item, ParentType } from '../types';
 
 interface ItemFormProps {
@@ -11,6 +12,8 @@ interface ItemFormProps {
   defaultParentId?: string;
   /** Pre-selected parent type (from URL query params) */
   defaultParentType?: ParentType;
+  /** Default value for isContainer (from URL query params) */
+  defaultIsContainer?: boolean;
   /** Called when form is submitted with valid data */
   onSubmit: (data: CreateItemInput) => void;
   /** Called when user cancels */
@@ -21,19 +24,24 @@ interface ItemFormProps {
 
 /**
  * Form for creating or editing an Item.
- * Includes all item fields: name, description, parent, category, quantity,
+ * Includes all item fields: name, description, parent, isContainer, category, quantity,
  * brand, manualUrl, photos, purchase info (date, price, store, receipt), disposal date.
  */
 export function ItemForm({
   initialValues,
   defaultParentId,
   defaultParentType,
+  defaultIsContainer = false,
   onSubmit,
   onCancel,
   isSubmitting = false,
 }: ItemFormProps) {
   const { locations, loading: locationsLoading } = useLocations();
   const { containers, loading: containersLoading } = useContainers();
+  const { items: containerItems, loading: containerItemsLoading } = useContainerItems();
+
+  // Container capability
+  const [isContainer, setIsContainer] = useState(initialValues?.isContainer ?? defaultIsContainer);
 
   // Basic fields
   const [name, setName] = useState(initialValues?.name ?? '');
@@ -72,9 +80,9 @@ export function ItemForm({
   const [errors, setErrors] = useState<{ name?: string; quantity?: string }>({});
 
   const isEditMode = !!initialValues;
-  const isLoadingParents = locationsLoading || containersLoading;
+  const isLoadingParents = locationsLoading || containersLoading || containerItemsLoading;
 
-  // Build parent options
+  // Build parent options (locations + containers + container-items)
   const parentOptions: { id: string; name: string; type: ParentType; label: string }[] = [
     ...locations.map((loc) => ({
       id: loc.id,
@@ -86,8 +94,16 @@ export function ItemForm({
       id: container.id,
       name: container.name,
       type: 'container' as ParentType,
-      label: `📦 ${container.name}`,
+      label: `🗄️ ${container.name}`,
     })),
+    ...containerItems
+      .filter((item) => item.id !== initialValues?.id) // Don't show self as parent option
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        type: 'item' as ParentType,
+        label: `📦 ${item.name}`,
+      })),
   ];
 
   const validate = (): boolean => {
@@ -97,7 +113,9 @@ export function ItemForm({
       newErrors.name = 'Name is required';
     }
 
-    if (quantity < 1) {
+    // Containers must have quantity 1
+    const effectiveQuantity = isContainer ? 1 : quantity;
+    if (effectiveQuantity < 1) {
       newErrors.quantity = 'Quantity must be at least 1';
     }
 
@@ -119,6 +137,14 @@ export function ItemForm({
     }
   };
 
+  const handleIsContainerChange = (checked: boolean) => {
+    setIsContainer(checked);
+    // Force quantity to 1 when becoming a container
+    if (checked) {
+      setQuantity(1);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -129,8 +155,9 @@ export function ItemForm({
       description: description.trim() || undefined,
       parentId: parentId || undefined,
       parentType: parentId ? parentType : undefined,
+      isContainer,
       category: category.trim() || undefined,
-      quantity,
+      quantity: isContainer ? 1 : quantity, // Containers always have quantity 1
       brand: brand.trim() || undefined,
       manualUrl: manualUrl.trim() || undefined,
       photos,
@@ -146,6 +173,25 @@ export function ItemForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Container Toggle - at top for visibility */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={isContainer}
+            onChange={(e) => handleIsContainerChange(e.target.checked)}
+            disabled={isSubmitting}
+            className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <div>
+            <span className="font-medium text-gray-900">This item can hold other items</span>
+            <p className="text-sm text-gray-600">
+              Enable this for containers like boxes, shelves, drawers, bags, etc.
+            </p>
+          </div>
+        </label>
+      </div>
+
       {/* Basic Information Section */}
       <fieldset className="space-y-4">
         <legend className="text-lg font-medium text-gray-900">Basic Information</legend>
@@ -163,7 +209,7 @@ export function ItemForm({
             className={`mt-1 block w-full rounded-md shadow-sm px-3 py-2 border ${
               errors.name ? 'border-red-500' : 'border-gray-300'
             } focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none`}
-            placeholder="e.g., Hammer, Laptop, Winter Jacket"
+            placeholder={isContainer ? "e.g., Toolbox, Shelf, Storage Bin" : "e.g., Hammer, Laptop, Winter Jacket"}
             disabled={isSubmitting}
           />
           {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
@@ -197,25 +243,30 @@ export function ItemForm({
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               className="mt-1 block w-full rounded-md shadow-sm px-3 py-2 border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-              placeholder="e.g., Tools, Electronics"
+              placeholder={isContainer ? "e.g., Storage, Furniture" : "e.g., Tools, Electronics"}
               disabled={isSubmitting}
             />
           </div>
           <div>
             <label htmlFor="item-quantity" className="block text-sm font-medium text-gray-700">
-              Quantity <span className="text-red-500">*</span>
+              Quantity {!isContainer && <span className="text-red-500">*</span>}
             </label>
             <input
               type="number"
               id="item-quantity"
-              value={quantity}
+              value={isContainer ? 1 : quantity}
               onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
               min={1}
               className={`mt-1 block w-full rounded-md shadow-sm px-3 py-2 border ${
                 errors.quantity ? 'border-red-500' : 'border-gray-300'
-              } focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none`}
-              disabled={isSubmitting}
+              } focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none ${
+                isContainer ? 'bg-gray-100 text-gray-500' : ''
+              }`}
+              disabled={isSubmitting || isContainer}
             />
+            {isContainer && (
+              <p className="mt-1 text-xs text-gray-500">Containers always have quantity 1</p>
+            )}
             {errors.quantity && <p className="mt-1 text-sm text-red-500">{errors.quantity}</p>}
           </div>
         </div>
@@ -232,7 +283,7 @@ export function ItemForm({
               value={brand}
               onChange={(e) => setBrand(e.target.value)}
               className="mt-1 block w-full rounded-md shadow-sm px-3 py-2 border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-              placeholder="e.g., DeWalt, Apple"
+              placeholder={isContainer ? "e.g., IKEA, Rubbermaid" : "e.g., DeWalt, Apple"}
               disabled={isSubmitting}
             />
           </div>

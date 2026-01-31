@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Container } from '../types';
-import { getAllContainers, getContainer, getContainersByParent } from '../db/containers';
+import {
+  getAllContainers,
+  getContainer,
+  getContainersByParent,
+} from '../db/containers';
 
 interface UseContainersResult {
   containers: Container[];

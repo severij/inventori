@@ -28,7 +28,7 @@ interface InventoriDB extends DBSchema {
 }
 
 const DB_NAME = 'inventori';
-const DB_VERSION = 1;
+const DB_VERSION = 3; // Bump version to add back containers store
 
 let dbPromise: Promise<IDBPDatabase<InventoriDB>> | null = null;
 
@@ -39,7 +39,7 @@ let dbPromise: Promise<IDBPDatabase<InventoriDB>> | null = null;
 export function getDB(): Promise<IDBPDatabase<InventoriDB>> {
   if (!dbPromise) {
     dbPromise = openDB<InventoriDB>(DB_NAME, DB_VERSION, {
-      upgrade(db) {
+      upgrade(db, _oldVersion, _newVersion, _transaction) {
         // Create locations store
         if (!db.objectStoreNames.contains('locations')) {
           db.createObjectStore('locations', { keyPath: 'id' });

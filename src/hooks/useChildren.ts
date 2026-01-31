@@ -13,7 +13,7 @@ interface UseChildrenResult {
 
 /**
  * Hook to fetch all direct children (containers + items) of a parent.
- * Used for displaying contents of a location or container.
+ * Used for displaying contents of a location, container, or item-container.
  */
 export function useChildren(parentId: string | undefined): UseChildrenResult {
   const [containers, setContainers] = useState<Container[]>([]);
