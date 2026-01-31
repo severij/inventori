@@ -230,13 +230,13 @@ Create `src/utils/uuid.ts`:
 - Uses useOffline hook
 
 **Deliverables:**
-- [ ] Layout with navigation
+- [x] Layout with navigation
 - [ ] EntityCard for unified display
 - [ ] Breadcrumbs component
 - [ ] All form components
 - [ ] PhotoCapture with camera and upload
 - [ ] SearchBar component
-- [ ] OfflineIndicator component
+- [ ] OfflineIndicator component (integrated into Layout)
 
 ---
 
