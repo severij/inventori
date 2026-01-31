@@ -1,4 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
+import { HamburgerMenu } from './HamburgerMenu';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -49,11 +50,11 @@ export function Layout({ children, title = 'Inventori', showBack = false }: Layo
           {/* Center: Title */}
           <h1 className="text-lg font-semibold truncate">{title}</h1>
 
-          {/* Right: Search button */}
-          <div className="w-10">
+          {/* Right: Search button and Menu */}
+          <div className="flex items-center gap-1">
             <button
               onClick={() => navigate('/search')}
-              className="p-2 -mr-2 rounded-full hover:bg-blue-600 transition-colors"
+              className="p-2 rounded-full hover:bg-blue-600 transition-colors"
               aria-label="Search"
             >
               <svg
@@ -71,6 +72,7 @@ export function Layout({ children, title = 'Inventori', showBack = false }: Layo
                 />
               </svg>
             </button>
+            <HamburgerMenu />
           </div>
         </div>
       </header>

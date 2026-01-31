@@ -1,8 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { EntityCard } from '../components/EntityCard';
-import { InstallButton } from '../components/InstallButton';
-import { ExportButton } from '../components/ExportButton';
 import { useLocations } from '../hooks/useLocations';
 
 /**
@@ -13,11 +11,6 @@ export function Home() {
 
   return (
     <Layout title="Inventori">
-      {/* Install prompt - only shows when app is installable */}
-      <div className="mb-4">
-        <InstallButton />
-      </div>
-
       {/* Loading state */}
       {loading && (
         <div className="flex items-center justify-center py-12">
@@ -87,16 +80,6 @@ export function Home() {
           </svg>
         </Link>
       )}
-
-      {/* Settings Section */}
-      <section className="mt-8 pt-6 border-t border-gray-200">
-        <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
-          Settings
-        </h2>
-        <div className="space-y-3">
-          <ExportButton />
-        </div>
-      </section>
     </Layout>
   );
 }

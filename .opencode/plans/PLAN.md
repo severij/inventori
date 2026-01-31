@@ -407,19 +407,21 @@ Export format:
 
 ### 7.2 Export UI
 
-Add "Export Data" button to settings or home page:
+Add "Export Data" button accessible from hamburger menu in header:
 - Triggers download of JSON file
 - Filename: `inventori-backup-{date}.json`
 
 Implemented with:
-- `src/components/ExportButton.tsx` - Button component with loading/error states
-- Settings section added to Home page (`src/pages/Home.tsx`)
-- Shows spinner during export
-- Displays error message if export fails
+- `src/components/HamburgerMenu.tsx` - Dropdown menu in header with:
+  - Export Data option (with loading spinner)
+  - Install App option (shows when PWA is installable)
+  - Click outside or Escape key to close
+- `src/components/Layout.tsx` - Added hamburger menu to header (right side, next to search)
+- Removed Settings section from Home page (moved to hamburger menu)
 
 **Deliverables:**
 - [x] Export function implemented
-- [x] Download trigger in UI
+- [x] Download trigger in UI (hamburger menu)
 - [x] Exported JSON includes all data with photos
 
 ---

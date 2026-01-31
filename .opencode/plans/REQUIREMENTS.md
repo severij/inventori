@@ -252,6 +252,7 @@ inventori/
 ├── src/
 │   ├── components/
 │   │   ├── Layout.tsx          # App shell with navigation
+│   │   ├── HamburgerMenu.tsx   # Dropdown menu with app actions
 │   │   ├── SearchBar.tsx       # Debounced search input component
 │   │   ├── PhotoCapture.tsx    # Camera/upload component
 │   │   ├── EntityCard.tsx      # Card for displaying location/container/item
@@ -259,8 +260,8 @@ inventori/
 │   │   ├── LocationForm.tsx    # Form for creating/editing locations
 │   │   ├── ContainerForm.tsx   # Form for creating/editing containers
 │   │   ├── ItemForm.tsx        # Form for creating/editing items
-│   │   ├── InstallButton.tsx   # PWA install prompt button
-│   │   └── ExportButton.tsx    # Data export trigger button
+│   │   ├── InstallButton.tsx   # PWA install prompt button (standalone)
+│   │   └── ExportButton.tsx    # Data export trigger button (standalone)
 │   ├── db/
 │   │   ├── index.ts            # DB initialization and schema
 │   │   ├── locations.ts        # Location CRUD operations
