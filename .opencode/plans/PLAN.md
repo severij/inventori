@@ -165,7 +165,7 @@ Create `src/utils/uuid.ts`:
 - [x] All entity hooks implemented
 - [x] useChildren hook for hierarchy navigation
 - [x] useAncestors hook for breadcrumbs
-- [ ] useOffline hook for connectivity status
+- [x] useOffline hook for connectivity status
 
 ---
 
@@ -425,7 +425,7 @@ Add "Export Data" button to settings or home page:
 
 - [x] **Phase 1:** Project setup (Vite, Tailwind, PWA config)
 - [x] **Phase 2:** Types and database layer (IndexedDB, CRUD)
-- [ ] **Phase 3:** React hooks (data fetching, navigation)
+- [x] **Phase 3:** React hooks (data fetching, navigation)
 - [ ] **Phase 4:** Core components (Layout, Cards, Forms, Photos)
 - [ ] **Phase 5:** Pages and routing (all views, search)
 - [ ] **Phase 6:** PWA features (offline, installable)
