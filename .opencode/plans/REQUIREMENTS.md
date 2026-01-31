@@ -150,6 +150,29 @@ Living Room (location)
 7. **Data Management**
    - JSON export/backup of all data
 
+## Export Format
+
+The export utility produces a JSON file with the following structure:
+
+```typescript
+interface ExportData {
+  version: string;        // Export format version (e.g., "1.0")
+  exportedAt: string;     // ISO 8601 timestamp
+  locations: ExportedLocation[];
+  containers: ExportedContainer[];
+  items: ExportedItem[];
+}
+```
+
+Key transformations from IndexedDB to export:
+- **Photos (Blob[])**: Converted to base64 data URLs (string[])
+- **Dates**: Converted to ISO 8601 strings
+- **Structure**: Flat format with separate arrays (not nested hierarchy)
+
+The flat format preserves relationships via `parentId` and `parentType` fields, making it easy to re-import into IndexedDB.
+
+Filename format: `inventori-backup-YYYY-MM-DD.json`
+
 #### PWA Features
 
 1. **Offline-First**

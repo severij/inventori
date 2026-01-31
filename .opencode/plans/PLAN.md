@@ -386,6 +386,25 @@ SVG format used for scalability. PNG versions can be added later if compatibilit
 - Convert Blobs to base64 for photos
 - Return JSON string
 
+Implemented with:
+- Flat export format with separate arrays for locations, containers, items
+- Metadata: `version` (1.0) and `exportedAt` timestamp
+- All photos converted to base64 data URLs
+- All dates converted to ISO strings
+- Helper function `downloadExport()` to trigger browser download
+- Helper function `generateExportFilename()` for consistent naming
+
+Export format:
+```json
+{
+  "version": "1.0",
+  "exportedAt": "2026-01-31T12:00:00.000Z",
+  "locations": [...],
+  "containers": [...],
+  "items": [...]
+}
+```
+
 ### 7.2 Export UI
 
 Add "Export Data" button to settings or home page:
@@ -393,9 +412,9 @@ Add "Export Data" button to settings or home page:
 - Filename: `inventori-backup-{date}.json`
 
 **Deliverables:**
-- [ ] Export function implemented
+- [x] Export function implemented
 - [ ] Download trigger in UI
-- [ ] Exported JSON includes all data with photos
+- [x] Exported JSON includes all data with photos
 
 ---
 
