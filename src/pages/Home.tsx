@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { EntityCard } from '../components/EntityCard';
+import { InstallButton } from '../components/InstallButton';
 import { useLocations } from '../hooks/useLocations';
 
 /**
@@ -11,6 +12,11 @@ export function Home() {
 
   return (
     <Layout title="Inventori">
+      {/* Install prompt - only shows when app is installable */}
+      <div className="mb-4">
+        <InstallButton />
+      </div>
+
       {/* Loading state */}
       {loading && (
         <div className="flex items-center justify-center py-12">

@@ -328,8 +328,17 @@ All routes configured in `src/App.tsx`. Query parameters (`?parentId=X&parentTyp
 ### 6.1 Service Worker Configuration
 
 Update `vite.config.ts` PWA settings:
-- Cache app shell and static assets
-- Runtime caching strategy for images
+- Cache app shell and static assets (globPatterns for js, css, html, fonts, images)
+- Runtime caching strategy for images (CacheFirst, 30 days)
+- Runtime caching for Google Fonts (CacheFirst, 1 year)
+- skipWaiting and clientsClaim for immediate updates
+
+Updated files:
+- `vite.config.ts` - Enhanced workbox configuration with runtime caching
+- `index.html` - Added PWA meta tags, theme-color, iOS support
+- `public/icons/icon-192x192.svg` - App icon
+- `public/icons/icon-512x512.svg` - Large app icon
+- `public/apple-touch-icon.svg` - iOS home screen icon
 
 ### 6.2 Web Manifest
 
@@ -341,22 +350,29 @@ Ensure `manifest.json` includes:
 - `display: standalone`
 - `theme_color` and `background_color`
 
+All fields verified in generated `dist/manifest.webmanifest`.
+
 ### 6.3 Install Prompt
 
-Optional: Add "Install App" button that triggers `beforeinstallprompt` event
+Added install prompt functionality:
+- `src/hooks/useInstallPrompt.ts` - Hook to capture `beforeinstallprompt` event
+- `src/components/InstallButton.tsx` - Button component that shows when app is installable
+- Integrated into Home page
 
 ### 6.4 Create App Icons
 
-Create icons in `public/icons/`:
-- `icon-192x192.png`
-- `icon-512x512.png`
-- Consider also adding `apple-touch-icon.png` for iOS
+Icons created as SVG in `public/icons/`:
+- `icon-192x192.svg`
+- `icon-512x512.svg`
+- `apple-touch-icon.svg` for iOS
+
+SVG format used for scalability. PNG versions can be added later if compatibility issues arise.
 
 **Deliverables:**
-- [ ] Service worker caching assets
-- [ ] Web manifest complete
-- [ ] App installable on mobile devices
-- [ ] Offline functionality verified
+- [x] Service worker caching assets
+- [x] Web manifest complete
+- [x] App installable on mobile devices (install prompt added)
+- [x] Offline functionality (IndexedDB local-first, service worker precaching)
 
 ---
 
@@ -429,7 +445,7 @@ Add "Export Data" button to settings or home page:
 - [x] **Phase 3:** React hooks (data fetching, navigation)
 - [x] **Phase 4:** Core components (Layout, Cards, Forms, Photos, Search)
 - [x] **Phase 5:** Pages and routing (all views, search)
-- [ ] **Phase 6:** PWA features (offline, installable)
+- [x] **Phase 6:** PWA features (offline, installable)
 - [ ] **Phase 7:** Data export (JSON backup)
 - [ ] **Phase 8:** Polish and testing
 

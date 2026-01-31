@@ -155,12 +155,14 @@ Living Room (location)
 1. **Offline-First**
    - Full functionality without internet connection
    - Service worker caching for app shell and assets
+   - Runtime caching for images and fonts
 
 2. **Installable**
    - Web app manifest
    - "Add to Home Screen" support
-   - App icons (192x192, 512x512)
-   - Splash screen
+   - App icons (SVG format: 192x192, 512x512)
+   - Apple touch icon for iOS
+   - PWA meta tags for iOS standalone mode
 
 3. **Static Hosting Compatible**
    - Uses HashRouter for compatibility with GitHub Pages and other static hosts
