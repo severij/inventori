@@ -163,8 +163,8 @@ Create `src/utils/uuid.ts`:
 
 **Deliverables:**
 - [x] All entity hooks implemented
-- [ ] useChildren hook for hierarchy navigation
-- [ ] useAncestors hook for breadcrumbs
+- [x] useChildren hook for hierarchy navigation
+- [x] useAncestors hook for breadcrumbs
 - [ ] useOffline hook for connectivity status
 
 ---
