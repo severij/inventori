@@ -57,20 +57,8 @@ export interface Item {
   isContainer: boolean;
 
   // Item-specific fields
-  category?: string;
   quantity: number;
-  brand?: string;
-  manualUrl?: string;
   photos: Blob[];
-
-  // Purchase info
-  purchaseDate?: Date;
-  purchasePrice?: number;
-  purchaseStore?: string;
-  receiptPhoto?: Blob;
-
-  // Lifecycle
-  disposalDate?: Date;
 
   createdAt: Date;
   updatedAt: Date;

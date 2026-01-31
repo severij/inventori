@@ -46,16 +46,8 @@ export interface ExportedItem {
   parentId?: string;
   parentType?: 'location' | 'container' | 'item';
   isContainer: boolean;
-  category?: string;
   quantity: number;
-  brand?: string;
-  manualUrl?: string;
   photos: string[]; // filenames in images/ folder
-  receiptPhoto?: string; // filename in images/ folder
-  purchaseDate?: string; // ISO date string
-  purchasePrice?: number;
-  purchaseStore?: string;
-  disposalDate?: string; // ISO date string
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
 }
@@ -102,19 +94,11 @@ function getExtensionFromMimeType(mimeType: string): string {
 function generateImageFilename(
   entityType: 'location' | 'container' | 'item',
   entityId: string,
-  index: number | 'receipt',
+  index: number,
   blob: Blob
 ): string {
   const ext = getExtensionFromMimeType(blob.type);
-  const suffix = index === 'receipt' ? 'receipt' : index.toString();
-  return `${entityType}-${entityId}-${suffix}.${ext}`;
-}
-
-/**
- * Convert a Date to ISO string, handling undefined
- */
-function dateToString(date: Date | undefined): string | undefined {
-  return date ? date.toISOString() : undefined;
+  return `${entityType}-${entityId}-${index}.${ext}`;
 }
 
 /**
@@ -194,13 +178,6 @@ function exportItem(item: Item): {
 } {
   const { filenames, images } = processPhotos('item', item.id, item.photos);
 
-  // Handle receipt photo separately
-  let receiptFilename: string | undefined;
-  if (item.receiptPhoto) {
-    receiptFilename = generateImageFilename('item', item.id, 'receipt', item.receiptPhoto);
-    images.push({ filename: receiptFilename, blob: item.receiptPhoto });
-  }
-
   return {
     data: {
       id: item.id,
@@ -210,16 +187,8 @@ function exportItem(item: Item): {
       parentId: item.parentId,
       parentType: item.parentType,
       isContainer: item.isContainer,
-      category: item.category,
       quantity: item.quantity,
-      brand: item.brand,
-      manualUrl: item.manualUrl,
       photos: filenames,
-      receiptPhoto: receiptFilename,
-      purchaseDate: dateToString(item.purchaseDate),
-      purchasePrice: item.purchasePrice,
-      purchaseStore: item.purchaseStore,
-      disposalDate: dateToString(item.disposalDate),
       createdAt: item.createdAt.toISOString(),
       updatedAt: item.updatedAt.toISOString(),
     },

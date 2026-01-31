@@ -24,8 +24,7 @@ interface ItemFormProps {
 
 /**
  * Form for creating or editing an Item.
- * Includes all item fields: name, description, parent, isContainer, category, quantity,
- * brand, manualUrl, photos, purchase info (date, price, store, receipt), disposal date.
+ * Includes fields: name, description, parent, isContainer, quantity, photos.
  */
 export function ItemForm({
   initialValues,
@@ -46,10 +45,7 @@ export function ItemForm({
   // Basic fields
   const [name, setName] = useState(initialValues?.name ?? '');
   const [description, setDescription] = useState(initialValues?.description ?? '');
-  const [category, setCategory] = useState(initialValues?.category ?? '');
   const [quantity, setQuantity] = useState(initialValues?.quantity ?? 1);
-  const [brand, setBrand] = useState(initialValues?.brand ?? '');
-  const [manualUrl, setManualUrl] = useState(initialValues?.manualUrl ?? '');
 
   // Parent selection (optional for items)
   const [parentId, setParentId] = useState(initialValues?.parentId ?? defaultParentId ?? '');
@@ -59,23 +55,6 @@ export function ItemForm({
 
   // Photos
   const [photos, setPhotos] = useState<Blob[]>(initialValues?.photos ?? []);
-  const [receiptPhoto, setReceiptPhoto] = useState<Blob[]>(
-    initialValues?.receiptPhoto ? [initialValues.receiptPhoto] : []
-  );
-
-  // Purchase info
-  const [purchaseDate, setPurchaseDate] = useState(
-    initialValues?.purchaseDate ? formatDateForInput(initialValues.purchaseDate) : ''
-  );
-  const [purchasePrice, setPurchasePrice] = useState(
-    initialValues?.purchasePrice?.toString() ?? ''
-  );
-  const [purchaseStore, setPurchaseStore] = useState(initialValues?.purchaseStore ?? '');
-
-  // Lifecycle
-  const [disposalDate, setDisposalDate] = useState(
-    initialValues?.disposalDate ? formatDateForInput(initialValues.disposalDate) : ''
-  );
 
   const [errors, setErrors] = useState<{ name?: string; quantity?: string }>({});
 
@@ -156,16 +135,8 @@ export function ItemForm({
       parentId: parentId || undefined,
       parentType: parentId ? parentType : undefined,
       isContainer,
-      category: category.trim() || undefined,
       quantity: isContainer ? 1 : quantity, // Containers always have quantity 1
-      brand: brand.trim() || undefined,
-      manualUrl: manualUrl.trim() || undefined,
       photos,
-      purchaseDate: purchaseDate ? new Date(purchaseDate) : undefined,
-      purchasePrice: purchasePrice ? parseFloat(purchasePrice) : undefined,
-      purchaseStore: purchaseStore.trim() || undefined,
-      receiptPhoto: receiptPhoto[0] ?? undefined,
-      disposalDate: disposalDate ? new Date(disposalDate) : undefined,
     };
 
     onSubmit(data);
@@ -231,76 +202,28 @@ export function ItemForm({
           />
         </div>
 
-        {/* Category and Quantity row */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="item-category" className="block text-sm font-medium text-gray-700">
-              Category
-            </label>
-            <input
-              type="text"
-              id="item-category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="mt-1 block w-full rounded-md shadow-sm px-3 py-2 border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-              placeholder={isContainer ? "e.g., Storage, Furniture" : "e.g., Tools, Electronics"}
-              disabled={isSubmitting}
-            />
-          </div>
-          <div>
-            <label htmlFor="item-quantity" className="block text-sm font-medium text-gray-700">
-              Quantity {!isContainer && <span className="text-red-500">*</span>}
-            </label>
-            <input
-              type="number"
-              id="item-quantity"
-              value={isContainer ? 1 : quantity}
-              onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-              min={1}
-              className={`mt-1 block w-full rounded-md shadow-sm px-3 py-2 border ${
-                errors.quantity ? 'border-red-500' : 'border-gray-300'
-              } focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none ${
-                isContainer ? 'bg-gray-100 text-gray-500' : ''
-              }`}
-              disabled={isSubmitting || isContainer}
-            />
-            {isContainer && (
-              <p className="mt-1 text-xs text-gray-500">Containers always have quantity 1</p>
-            )}
-            {errors.quantity && <p className="mt-1 text-sm text-red-500">{errors.quantity}</p>}
-          </div>
-        </div>
-
-        {/* Brand and Manual URL row */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="item-brand" className="block text-sm font-medium text-gray-700">
-              Brand
-            </label>
-            <input
-              type="text"
-              id="item-brand"
-              value={brand}
-              onChange={(e) => setBrand(e.target.value)}
-              className="mt-1 block w-full rounded-md shadow-sm px-3 py-2 border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-              placeholder={isContainer ? "e.g., IKEA, Rubbermaid" : "e.g., DeWalt, Apple"}
-              disabled={isSubmitting}
-            />
-          </div>
-          <div>
-            <label htmlFor="item-manual-url" className="block text-sm font-medium text-gray-700">
-              Manual URL
-            </label>
-            <input
-              type="url"
-              id="item-manual-url"
-              value={manualUrl}
-              onChange={(e) => setManualUrl(e.target.value)}
-              className="mt-1 block w-full rounded-md shadow-sm px-3 py-2 border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-              placeholder="https://..."
-              disabled={isSubmitting}
-            />
-          </div>
+        {/* Quantity field */}
+        <div>
+          <label htmlFor="item-quantity" className="block text-sm font-medium text-gray-700">
+            Quantity {!isContainer && <span className="text-red-500">*</span>}
+          </label>
+          <input
+            type="number"
+            id="item-quantity"
+            value={isContainer ? 1 : quantity}
+            onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+            min={1}
+            className={`mt-1 block w-full rounded-md shadow-sm px-3 py-2 border ${
+              errors.quantity ? 'border-red-500' : 'border-gray-300'
+            } focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none ${
+              isContainer ? 'bg-gray-100 text-gray-500' : ''
+            }`}
+            disabled={isSubmitting || isContainer}
+          />
+          {isContainer && (
+            <p className="mt-1 text-xs text-gray-500">Containers always have quantity 1</p>
+          )}
+          {errors.quantity && <p className="mt-1 text-sm text-red-500">{errors.quantity}</p>}
         </div>
       </fieldset>
 
@@ -340,87 +263,6 @@ export function ItemForm({
         <PhotoCapture photos={photos} onChange={setPhotos} maxPhotos={10} label="Item Photos" />
       </fieldset>
 
-      {/* Purchase Information Section */}
-      <fieldset className="space-y-4">
-        <legend className="text-lg font-medium text-gray-900">Purchase Information</legend>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="item-purchase-date" className="block text-sm font-medium text-gray-700">
-              Purchase Date
-            </label>
-            <input
-              type="date"
-              id="item-purchase-date"
-              value={purchaseDate}
-              onChange={(e) => setPurchaseDate(e.target.value)}
-              className="mt-1 block w-full rounded-md shadow-sm px-3 py-2 border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-              disabled={isSubmitting}
-            />
-          </div>
-          <div>
-            <label htmlFor="item-purchase-price" className="block text-sm font-medium text-gray-700">
-              Purchase Price
-            </label>
-            <input
-              type="number"
-              id="item-purchase-price"
-              value={purchasePrice}
-              onChange={(e) => setPurchasePrice(e.target.value)}
-              min={0}
-              step={0.01}
-              className="mt-1 block w-full rounded-md shadow-sm px-3 py-2 border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-              placeholder="0.00"
-              disabled={isSubmitting}
-            />
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="item-purchase-store" className="block text-sm font-medium text-gray-700">
-            Purchase Store
-          </label>
-          <input
-            type="text"
-            id="item-purchase-store"
-            value={purchaseStore}
-            onChange={(e) => setPurchaseStore(e.target.value)}
-            className="mt-1 block w-full rounded-md shadow-sm px-3 py-2 border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-            placeholder="e.g., Amazon, Home Depot"
-            disabled={isSubmitting}
-          />
-        </div>
-
-        <PhotoCapture
-          photos={receiptPhoto}
-          onChange={setReceiptPhoto}
-          maxPhotos={1}
-          label="Receipt Photo"
-        />
-      </fieldset>
-
-      {/* Lifecycle Section */}
-      <fieldset className="space-y-4">
-        <legend className="text-lg font-medium text-gray-900">Lifecycle</legend>
-
-        <div>
-          <label htmlFor="item-disposal-date" className="block text-sm font-medium text-gray-700">
-            Disposal Date
-          </label>
-          <input
-            type="date"
-            id="item-disposal-date"
-            value={disposalDate}
-            onChange={(e) => setDisposalDate(e.target.value)}
-            className="mt-1 block w-full rounded-md shadow-sm px-3 py-2 border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-            disabled={isSubmitting}
-          />
-          <p className="mt-1 text-xs text-gray-500">
-            Set this when the item is sold, donated, or thrown away.
-          </p>
-        </div>
-      </fieldset>
-
       {/* Action buttons */}
       <div className="flex gap-3 pt-4">
         <button
@@ -441,11 +283,4 @@ export function ItemForm({
       </div>
     </form>
   );
-}
-
-/**
- * Format a Date object for use in an input[type="date"] field
- */
-function formatDateForInput(date: Date): string {
-  return date.toISOString().split('T')[0];
 }

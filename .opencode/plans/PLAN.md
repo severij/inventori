@@ -83,7 +83,6 @@ Create `src/db/index.ts`:
 - Version: `1`
 - Object stores: `locations`, `containers`, `items`
 - Indexes on `parentId` for containers and items
-- Index on `category` for items
 
 ### 2.3 Implement CRUD Operations
 
@@ -108,11 +107,10 @@ Create database operation modules:
 - `getAllItems(): Promise<Item[]>`
 - `getItem(id: string): Promise<Item | undefined>`
 - `getItemsByParent(parentId: string): Promise<Item[]>`
-- `getItemsByCategory(category: string): Promise<Item[]>`
 - `getUnassignedItems(): Promise<Item[]>`
 - `createItem(item: Omit<Item, 'id' | 'createdAt' | 'updatedAt'>): Promise<Item>`
 - `updateItem(id: string, updates: Partial<Item>): Promise<Item>`
-- `deleteItem(id: string): Promise<void>`
+- `deleteItem(id: string): Promise<void>` (cascade delete children if isContainer)
 
 ### 2.4 Create UUID Utility
 
@@ -142,7 +140,7 @@ Create `src/utils/uuid.ts`:
 - Loading and error states
 
 **`src/hooks/useItems.ts`:**
-- Fetch items (all, by parent, by category, unassigned)
+- Fetch items (all, by parent, unassigned)
 - Loading and error states
 
 ### 3.2 Navigation Hooks
@@ -205,11 +203,10 @@ Create `src/utils/uuid.ts`:
 - Photo capture integration
 
 **`src/components/ItemForm.tsx`:**
-- All item fields from data model
-- Parent selector (optional - location or container)
+- Fields: name, description, isContainer toggle
+- Parent selector (optional - location, container, or item-container)
 - Photo capture for item photos
-- Separate photo capture for receipt
-- Date pickers for purchaseDate, disposalDate
+- Quantity field
 
 ### 4.4 Utility Components
 
@@ -290,11 +287,10 @@ All routes configured in `src/App.tsx`. Query parameters (`?parentId=X&parentTyp
 
 **`src/pages/ItemView.tsx`:**
 - Breadcrumbs showing full path
-- All item details displayed
+- Item details (name, description, quantity)
 - Photo gallery
-- Receipt photo (if exists)
+- If isContainer, list child items
 - Edit and Delete actions
-- Link to manual URL (if exists)
 
 **`src/pages/AddLocation.tsx`, `AddContainer.tsx`, `AddItem.tsx`:**
 - Render respective form component
@@ -420,13 +416,13 @@ data.json structure:
 ### 7.2 Import Utility
 
 **`src/utils/import.ts`:**
-- `importData(file: File): Promise<ImportResult>` - Import data from ZIP or JSON
+- `importData(file: File): Promise<ImportResult>` - Import data from ZIP
 - `previewImport(file: File)` - Preview import file without importing
-- `isZipFile(file)` / `isJsonFile(file)` - File type detection
+- `isZipFile(file)` - File type detection
 
 Implemented with:
 - Merge by ID strategy: existing items updated, new items added
-- Support for both v1.1 (ZIP) and v1.0 (JSON with base64) formats
+- Only supports v1.1 ZIP format
 - Extracts images from ZIP and converts filenames back to Blobs
 - ISO date strings converted back to Date objects
 - Validation of export format and version compatibility
@@ -454,7 +450,6 @@ Implemented with:
 **Deliverables:**
 - [x] Export function implemented (ZIP with separate images)
 - [x] Import function implemented (merge by ID, warnings for missing images)
-- [x] Backward compatibility with v1.0 JSON format
 - [x] Download trigger in UI (hamburger menu)
 - [x] Import trigger in UI with confirmation dialog
 

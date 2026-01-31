@@ -56,7 +56,7 @@ interface Container {
 
 ### Item
 
-An individual inventory item.
+An individual inventory item. Items can also act as containers (e.g., a toolbox that holds tools).
 
 ```typescript
 interface Item {
@@ -67,23 +67,12 @@ interface Item {
   
   // Hierarchy (optional - items can be unassigned)
   parentId?: string;
-  parentType?: 'location' | 'container';
+  parentType?: 'location' | 'container' | 'item';  // Items can be nested in other items
   
   // Item-specific fields
-  category?: string;       // e.g., "Electronics", "Tools", "Kitchen"
+  isContainer: boolean;    // If true, this item can hold other items (e.g., toolbox)
   quantity: number;        // Default: 1
-  brand?: string;
-  manualUrl?: string;      // Link to product manual/documentation
   photos: Blob[];
-  
-  // Purchase info
-  purchaseDate?: Date;
-  purchasePrice?: number;
-  purchaseStore?: string;
-  receiptPhoto?: Blob;
-  
-  // Lifecycle
-  disposalDate?: Date;     // Soft delete - when item was sold/donated/trashed
   
   createdAt: Date;
   updatedAt: Date;
@@ -95,7 +84,7 @@ interface Item {
 ```
 Garage (location)
   Metal Shelf Unit (container)
-    Red Toolbox (container)
+    Red Toolbox (item, isContainer=true)
       Hammer (item)
       Screwdriver Set (item)
     Blue Bin (container)
@@ -128,9 +117,9 @@ Living Room (location)
 3. **Item Management**
    - Create, view, edit, delete items
    - All data fields as defined in the data model
-   - Items can be unassigned (no parent) or assigned to a location/container
+   - Items can be unassigned (no parent) or assigned to a location/container/item
+   - Items can be marked as containers (`isContainer=true`) to hold other items
    - Photo attachments (multiple photos per item)
-   - Receipt photo attachment
 
 4. **Navigation & Organization**
    - Home page showing all locations
@@ -140,7 +129,7 @@ Living Room (location)
 
 5. **Search**
    - Global search across all items, containers, and locations
-   - Search by name, description, category, brand
+   - Search by name, description
 
 6. **Photo Capture**
    - Camera integration for taking photos
@@ -252,7 +241,7 @@ This is safe because UUIDs are globally unique - items created on different devi
 |-------|----------|---------|
 | `locations` | `id` | - |
 | `containers` | `id` | `parentId` |
-| `items` | `id` | `parentId`, `category` |
+| `items` | `id` | `parentId` |
 
 ## Project Structure
 

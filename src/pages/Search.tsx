@@ -43,9 +43,7 @@ export function Search() {
       const matchingItems = items.filter(
         (item) =>
           item.name.toLowerCase().includes(lowerTerm) ||
-          item.description?.toLowerCase().includes(lowerTerm) ||
-          item.category?.toLowerCase().includes(lowerTerm) ||
-          item.brand?.toLowerCase().includes(lowerTerm)
+          item.description?.toLowerCase().includes(lowerTerm)
       );
 
       return [...matchingLocations, ...matchingContainers, ...matchingItems];
