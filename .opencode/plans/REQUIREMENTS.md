@@ -16,7 +16,7 @@ Inventori helps users catalog and organize their physical belongings with a hier
 | Storage | IndexedDB (via `idb` wrapper) |
 | PWA | vite-plugin-pwa |
 | Language | TypeScript |
-| Routing | React Router |
+| Routing | React Router (HashRouter) |
 
 ## Data Model
 
@@ -162,7 +162,11 @@ Living Room (location)
    - App icons (192x192, 512x512)
    - Splash screen
 
-3. **Sync Status Indicator (v3)**
+3. **Static Hosting Compatible**
+   - Uses HashRouter for compatibility with GitHub Pages and other static hosts
+   - No server-side configuration required
+
+4. **Sync Status Indicator (v3)**
    - Visual indicator showing connection to sync server
    - Deferred until P2P sync is implemented
 

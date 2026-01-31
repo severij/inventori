@@ -1,12 +1,49 @@
+import { HashRouter, Routes, Route } from 'react-router-dom';
+
+// Pages
+import { Home } from './pages/Home';
+import { LocationView } from './pages/LocationView';
+import { ContainerView } from './pages/ContainerView';
+import { ItemView } from './pages/ItemView';
+import { AddLocation } from './pages/AddLocation';
+import { AddContainer } from './pages/AddContainer';
+import { AddItem } from './pages/AddItem';
+import { EditLocation } from './pages/EditLocation';
+import { EditContainer } from './pages/EditContainer';
+import { EditItem } from './pages/EditItem';
+import { Search } from './pages/Search';
+
+/**
+ * Main application component with HashRouter for routing.
+ * HashRouter is used for compatibility with static hosting (e.g., GitHub Pages).
+ */
 function App() {
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-md text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Inventori</h1>
-        <p className="text-gray-600">Tailwind CSS is working!</p>
-      </div>
-    </div>
-  )
+    <HashRouter>
+      <Routes>
+        {/* Home - list all locations */}
+        <Route path="/" element={<Home />} />
+
+        {/* View pages */}
+        <Route path="/location/:id" element={<LocationView />} />
+        <Route path="/container/:id" element={<ContainerView />} />
+        <Route path="/item/:id" element={<ItemView />} />
+
+        {/* Add pages */}
+        <Route path="/add/location" element={<AddLocation />} />
+        <Route path="/add/container" element={<AddContainer />} />
+        <Route path="/add/item" element={<AddItem />} />
+
+        {/* Edit pages */}
+        <Route path="/edit/location/:id" element={<EditLocation />} />
+        <Route path="/edit/container/:id" element={<EditContainer />} />
+        <Route path="/edit/item/:id" element={<EditItem />} />
+
+        {/* Search */}
+        <Route path="/search" element={<Search />} />
+      </Routes>
+    </HashRouter>
+  );
 }
 
-export default App
+export default App;

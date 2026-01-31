@@ -245,11 +245,13 @@ Create `src/utils/uuid.ts`:
 ### 5.1 Setup React Router
 
 **`src/App.tsx`:**
-- Configure BrowserRouter
+- Configure HashRouter (for compatibility with static hosting like GitHub Pages)
 - Define routes (see below)
-- Wrap with Layout component
+- Pages wrapped with Layout component in Phase 5.3
 
 ### 5.2 Routes
+
+All routes configured in `src/App.tsx`. Query parameters (`?parentId=X&parentType=Y`) handled in components via `useSearchParams`.
 
 | Path | Component | Description |
 |------|-----------|-------------|
@@ -258,10 +260,8 @@ Create `src/utils/uuid.ts`:
 | `/container/:id` | `ContainerView` | View container contents |
 | `/item/:id` | `ItemView` | View item details |
 | `/add/location` | `AddLocation` | Create new location |
-| `/add/container` | `AddContainer` | Create new container |
-| `/add/container?parentId=X&parentType=Y` | `AddContainer` | Create container with preset parent |
-| `/add/item` | `AddItem` | Create new item |
-| `/add/item?parentId=X&parentType=Y` | `AddItem` | Create item with preset parent |
+| `/add/container` | `AddContainer` | Create new container (supports `?parentId&parentType`) |
+| `/add/item` | `AddItem` | Create new item (supports `?parentId&parentType`) |
 | `/edit/location/:id` | `EditLocation` | Edit location |
 | `/edit/container/:id` | `EditContainer` | Edit container |
 | `/edit/item/:id` | `EditItem` | Edit item |
@@ -314,8 +314,9 @@ Create `src/utils/uuid.ts`:
 - Click result navigates to detail view
 
 **Deliverables:**
-- [ ] React Router configured
-- [ ] All page components implemented
+- [x] React Router configured (HashRouter)
+- [x] Placeholder page components created
+- [ ] All page components fully implemented
 - [ ] Navigation working between pages
 - [ ] CRUD operations connected to UI
 - [ ] Search functionality working
