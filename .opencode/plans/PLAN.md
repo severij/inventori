@@ -316,10 +316,10 @@ All routes configured in `src/App.tsx`. Query parameters (`?parentId=X&parentTyp
 **Deliverables:**
 - [x] React Router configured (HashRouter)
 - [x] Placeholder page components created
-- [ ] All page components fully implemented
-- [ ] Navigation working between pages
-- [ ] CRUD operations connected to UI
-- [ ] Search functionality working
+- [x] All page components fully implemented
+- [x] Navigation working between pages
+- [x] CRUD operations connected to UI
+- [x] Search functionality working
 
 ---
 
@@ -428,7 +428,7 @@ Add "Export Data" button to settings or home page:
 - [x] **Phase 2:** Types and database layer (IndexedDB, CRUD)
 - [x] **Phase 3:** React hooks (data fetching, navigation)
 - [x] **Phase 4:** Core components (Layout, Cards, Forms, Photos, Search)
-- [ ] **Phase 5:** Pages and routing (all views, search)
+- [x] **Phase 5:** Pages and routing (all views, search)
 - [ ] **Phase 6:** PWA features (offline, installable)
 - [ ] **Phase 7:** Data export (JSON backup)
 - [ ] **Phase 8:** Polish and testing

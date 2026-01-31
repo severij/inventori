@@ -1,16 +1,229 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Layout } from '../components/Layout';
+import { Breadcrumbs } from '../components/Breadcrumbs';
+import { useItem } from '../hooks/useItems';
+import { useAncestors } from '../hooks/useAncestors';
+import { deleteItem } from '../db/items';
 
 /**
  * Item view - View item details
- * TODO: Implement in Phase 5.3
  */
 export function ItemView() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+
+  const { item, loading, error } = useItem(id);
+  const { ancestors } = useAncestors(id, 'item');
+
+  const handleDelete = async () => {
+    if (!item) return;
+
+    if (window.confirm(`Delete "${item.name}"? This cannot be undone.`)) {
+      await deleteItem(item.id);
+      // Navigate to parent or home
+      if (item.parentId && item.parentType) {
+        navigate(`/${item.parentType}/${item.parentId}`);
+      } else {
+        navigate('/');
+      }
+    }
+  };
+
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
+  };
+
+  // Format date
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    }).format(new Date(date));
+  };
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold">Item View</h1>
-      <p className="text-gray-600">Item ID: {id}</p>
-    </div>
+    <Layout title={item?.name ?? 'Item'}>
+      {/* Loading state */}
+      {loading && (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-gray-500">Loading...</div>
+        </div>
+      )}
+
+      {/* Error state */}
+      {error && (
+        <div className="bg-red-50 text-red-700 p-4 rounded-lg">
+          <p>Error: {error.message}</p>
+        </div>
+      )}
+
+      {/* Not found state */}
+      {!loading && !error && !item && (
+        <div className="text-center py-12">
+          <div className="text-6xl mb-4">🔍</div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Item not found</h2>
+          <Link to="/" className="text-blue-600 hover:underline">
+            Go back home
+          </Link>
+        </div>
+      )}
+
+      {/* Item content */}
+      {!loading && item && (
+        <>
+          {/* Breadcrumbs */}
+          <Breadcrumbs ancestors={ancestors} />
+
+          {/* Photo gallery */}
+          {item.photos.length > 0 && (
+            <div className="mb-6">
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {item.photos.map((photo, index) => (
+                  <img
+                    key={index}
+                    src={URL.createObjectURL(photo)}
+                    alt={`${item.name} photo ${index + 1}`}
+                    className="w-48 h-48 object-cover rounded-lg flex-shrink-0"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Item details */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">{item.name}</h2>
+                {item.brand && (
+                  <p className="text-sm text-gray-500">{item.brand}</p>
+                )}
+              </div>
+              {item.quantity > 1 && (
+                <span className="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded">
+                  x{item.quantity}
+                </span>
+              )}
+            </div>
+
+            {item.description && (
+              <p className="text-gray-600 mt-3">{item.description}</p>
+            )}
+
+            {item.category && (
+              <div className="mt-3">
+                <span className="inline-block bg-gray-100 text-gray-700 text-sm px-2 py-1 rounded">
+                  {item.category}
+                </span>
+              </div>
+            )}
+
+            {/* Manual URL */}
+            {item.manualUrl && (
+              <div className="mt-3">
+                <a
+                  href={item.manualUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline text-sm flex items-center gap-1"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                    className="w-4 h-4"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+                    />
+                  </svg>
+                  View Manual
+                </a>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex gap-2 mt-4">
+              <Link
+                to={`/edit/item/${item.id}`}
+                className="flex-1 text-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Edit
+              </Link>
+              <button
+                onClick={handleDelete}
+                className="flex-1 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+
+          {/* Purchase Information */}
+          {(item.purchaseDate || item.purchasePrice || item.purchaseStore) && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+              <h3 className="font-medium text-gray-900 mb-3">Purchase Information</h3>
+              <dl className="space-y-2 text-sm">
+                {item.purchaseDate && (
+                  <div className="flex justify-between">
+                    <dt className="text-gray-500">Date</dt>
+                    <dd className="text-gray-900">{formatDate(item.purchaseDate)}</dd>
+                  </div>
+                )}
+                {item.purchasePrice !== undefined && (
+                  <div className="flex justify-between">
+                    <dt className="text-gray-500">Price</dt>
+                    <dd className="text-gray-900">{formatCurrency(item.purchasePrice)}</dd>
+                  </div>
+                )}
+                {item.purchaseStore && (
+                  <div className="flex justify-between">
+                    <dt className="text-gray-500">Store</dt>
+                    <dd className="text-gray-900">{item.purchaseStore}</dd>
+                  </div>
+                )}
+              </dl>
+
+              {/* Receipt photo */}
+              {item.receiptPhoto && (
+                <div className="mt-4">
+                  <p className="text-sm text-gray-500 mb-2">Receipt</p>
+                  <img
+                    src={URL.createObjectURL(item.receiptPhoto)}
+                    alt="Receipt"
+                    className="w-full max-w-xs rounded-lg border border-gray-200"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Lifecycle */}
+          {item.disposalDate && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+              <h3 className="font-medium text-amber-800 mb-1">Disposed</h3>
+              <p className="text-sm text-amber-700">
+                This item was disposed on {formatDate(item.disposalDate)}
+              </p>
+            </div>
+          )}
+
+          {/* Metadata */}
+          <div className="text-xs text-gray-400 space-y-1">
+            <p>Created: {formatDate(item.createdAt)}</p>
+            <p>Updated: {formatDate(item.updatedAt)}</p>
+          </div>
+        </>
+      )}
+    </Layout>
   );
 }
