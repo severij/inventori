@@ -162,8 +162,9 @@ Living Room (location)
    - App icons (192x192, 512x512)
    - Splash screen
 
-3. **Offline Indicator**
-   - Visual indicator when offline
+3. **Sync Status Indicator (v3)**
+   - Visual indicator showing connection to sync server
+   - Deferred until P2P sync is implemented
 
 ### v2 (Deferred)
 
@@ -222,14 +223,13 @@ inventori/
 ├── src/
 │   ├── components/
 │   │   ├── Layout.tsx          # App shell with navigation
-│   │   ├── SearchBar.tsx       # Search input component
+│   │   ├── SearchBar.tsx       # Debounced search input component
 │   │   ├── PhotoCapture.tsx    # Camera/upload component
 │   │   ├── EntityCard.tsx      # Card for displaying location/container/item
 │   │   ├── Breadcrumbs.tsx     # Navigation breadcrumbs
 │   │   ├── LocationForm.tsx    # Form for creating/editing locations
 │   │   ├── ContainerForm.tsx   # Form for creating/editing containers
-│   │   ├── ItemForm.tsx        # Form for creating/editing items
-│   │   └── OfflineIndicator.tsx
+│   │   └── ItemForm.tsx        # Form for creating/editing items
 │   ├── db/
 │   │   ├── index.ts            # DB initialization and schema
 │   │   ├── locations.ts        # Location CRUD operations

@@ -1,5 +1,4 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useOffline } from '../hooks/useOffline';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -13,7 +12,6 @@ interface LayoutProps {
 export function Layout({ children, title = 'Inventori', showBack = false }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isOffline } = useOffline();
 
   const isHome = location.pathname === '/';
 
@@ -75,13 +73,6 @@ export function Layout({ children, title = 'Inventori', showBack = false }: Layo
             </button>
           </div>
         </div>
-
-        {/* Offline indicator */}
-        {isOffline && (
-          <div className="bg-yellow-500 text-yellow-900 text-sm text-center py-1 px-4">
-            You are offline
-          </div>
-        )}
       </header>
 
       {/* Main content */}

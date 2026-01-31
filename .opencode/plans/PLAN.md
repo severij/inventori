@@ -222,12 +222,12 @@ Create `src/utils/uuid.ts`:
 
 **`src/components/SearchBar.tsx`:**
 - Text input with search icon
-- Debounced input handling
+- Debounced input handling (150ms default for fast local queries)
 - Clear button
 
-**`src/components/OfflineIndicator.tsx`:**
-- Shows banner/toast when offline
-- Uses useOffline hook
+**`src/components/SyncIndicator.tsx` (v3):**
+- Shows connection status to sync server
+- Deferred until P2P sync is implemented
 
 **Deliverables:**
 - [x] Layout with navigation
@@ -235,8 +235,8 @@ Create `src/utils/uuid.ts`:
 - [x] Breadcrumbs component
 - [x] All form components (LocationForm, ContainerForm, ItemForm)
 - [x] PhotoCapture with camera and upload
-- [ ] SearchBar component
-- [ ] OfflineIndicator component (integrated into Layout)
+- [x] SearchBar component
+- [ ] Sync status indicator (deferred to v3 with sync server)
 
 ---
 
@@ -426,7 +426,7 @@ Add "Export Data" button to settings or home page:
 - [x] **Phase 1:** Project setup (Vite, Tailwind, PWA config)
 - [x] **Phase 2:** Types and database layer (IndexedDB, CRUD)
 - [x] **Phase 3:** React hooks (data fetching, navigation)
-- [ ] **Phase 4:** Core components (Layout, Cards, Forms, Photos)
+- [x] **Phase 4:** Core components (Layout, Cards, Forms, Photos, Search)
 - [ ] **Phase 5:** Pages and routing (all views, search)
 - [ ] **Phase 6:** PWA features (offline, installable)
 - [ ] **Phase 7:** Data export (JSON backup)
