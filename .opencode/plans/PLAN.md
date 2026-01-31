@@ -233,8 +233,8 @@ Create `src/utils/uuid.ts`:
 - [x] Layout with navigation
 - [x] EntityCard for unified display
 - [x] Breadcrumbs component
-- [ ] All form components
-- [ ] PhotoCapture with camera and upload
+- [x] All form components (LocationForm, ContainerForm, ItemForm)
+- [x] PhotoCapture with camera and upload
 - [ ] SearchBar component
 - [ ] OfflineIndicator component (integrated into Layout)
 
