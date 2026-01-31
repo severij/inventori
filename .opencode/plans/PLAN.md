@@ -162,7 +162,7 @@ Create `src/utils/uuid.ts`:
 - Listen to `online`/`offline` events
 
 **Deliverables:**
-- [ ] All entity hooks implemented
+- [x] All entity hooks implemented
 - [ ] useChildren hook for hierarchy navigation
 - [ ] useAncestors hook for breadcrumbs
 - [ ] useOffline hook for connectivity status
