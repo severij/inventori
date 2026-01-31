@@ -231,8 +231,8 @@ Create `src/utils/uuid.ts`:
 
 **Deliverables:**
 - [x] Layout with navigation
-- [ ] EntityCard for unified display
-- [ ] Breadcrumbs component
+- [x] EntityCard for unified display
+- [x] Breadcrumbs component
 - [ ] All form components
 - [ ] PhotoCapture with camera and upload
 - [ ] SearchBar component
