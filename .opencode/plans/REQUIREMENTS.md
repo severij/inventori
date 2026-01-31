@@ -149,8 +149,9 @@ Living Room (location)
 
 7. **Data Management**
    - JSON export/backup of all data
+   - JSON import/restore from backup (merge by ID)
 
-## Export Format
+## Export/Import Format
 
 The export utility produces a JSON file with the following structure:
 
@@ -172,6 +173,15 @@ Key transformations from IndexedDB to export:
 The flat format preserves relationships via `parentId` and `parentType` fields, making it easy to re-import into IndexedDB.
 
 Filename format: `inventori-backup-YYYY-MM-DD.json`
+
+### Import Behavior
+
+Import uses a **merge by ID** strategy:
+- Items with matching UUIDs are **updated** with imported data
+- Items with new UUIDs are **added** to the database
+- Existing items not in the import file are **preserved**
+
+This is safe because UUIDs are globally unique - items created on different devices will have different IDs and won't conflict.
 
 #### PWA Features
 
@@ -253,6 +263,7 @@ inventori/
 │   ├── components/
 │   │   ├── Layout.tsx          # App shell with navigation
 │   │   ├── HamburgerMenu.tsx   # Dropdown menu with app actions
+│   │   ├── ConfirmDialog.tsx   # Reusable confirmation dialog
 │   │   ├── SearchBar.tsx       # Debounced search input component
 │   │   ├── PhotoCapture.tsx    # Camera/upload component
 │   │   ├── EntityCard.tsx      # Card for displaying location/container/item
@@ -291,7 +302,8 @@ inventori/
 │   │   └── index.ts            # TypeScript interfaces
 │   ├── utils/
 │   │   ├── uuid.ts             # UUID generation
-│   │   └── export.ts           # JSON export functionality
+│   │   ├── export.ts           # JSON export functionality
+│   │   └── import.ts           # JSON import functionality
 │   ├── App.tsx                 # Main app with routing
 │   ├── main.tsx                # Entry point
 │   └── index.css               # Tailwind imports

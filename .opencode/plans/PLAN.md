@@ -376,7 +376,7 @@ SVG format used for scalability. PNG versions can be added later if compatibilit
 
 ---
 
-## Phase 7: Data Export
+## Phase 7: Data Export/Import
 
 ### 7.1 Export Utility
 
@@ -405,23 +405,40 @@ Export format:
 }
 ```
 
-### 7.2 Export UI
+### 7.2 Import Utility
 
-Add "Export Data" button accessible from hamburger menu in header:
-- Triggers download of JSON file
-- Filename: `inventori-backup-{date}.json`
+**`src/utils/import.ts`:**
+- `importData(jsonString): Promise<ImportResult>` - Import data from JSON
+- `readFileAsText(file): Promise<string>` - Read file contents
+- `previewImport(jsonString)` - Preview import file without importing
 
 Implemented with:
-- `src/components/HamburgerMenu.tsx` - Dropdown menu in header with:
+- Merge by ID strategy: existing items updated, new items added
+- Base64 data URLs converted back to Blobs
+- ISO date strings converted back to Date objects
+- Validation of export format and version compatibility
+- Detailed result with counts of added/updated items and errors
+
+### 7.3 Export/Import UI
+
+Accessible from hamburger menu in header:
+- **Export Data**: Downloads JSON backup file
+- **Import Data**: Opens file picker, shows confirmation dialog with preview
+
+Implemented with:
+- `src/components/HamburgerMenu.tsx` - Dropdown menu with:
   - Export Data option (with loading spinner)
+  - Import Data option (with file picker and confirmation)
   - Install App option (shows when PWA is installable)
-  - Click outside or Escape key to close
-- `src/components/Layout.tsx` - Added hamburger menu to header (right side, next to search)
-- Removed Settings section from Home page (moved to hamburger menu)
+- `src/components/ConfirmDialog.tsx` - Reusable confirmation dialog
+- Import confirmation shows file details (date, counts) before importing
+- Page reloads after successful import to reflect changes
 
 **Deliverables:**
 - [x] Export function implemented
+- [x] Import function implemented (merge by ID)
 - [x] Download trigger in UI (hamburger menu)
+- [x] Import trigger in UI with confirmation dialog
 - [x] Exported JSON includes all data with photos
 
 ---
