@@ -208,10 +208,10 @@ export function HamburgerMenu() {
         {/* Hamburger button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="p-2 rounded-full hover:bg-accent-600 transition-colors"
+          className="p-2 rounded-full hover:bg-accent-600 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
           aria-label="Menu"
           aria-expanded={isOpen}
-          aria-haspopup="true"
+          aria-haspopup="menu"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -220,6 +220,7 @@ export function HamburgerMenu() {
             strokeWidth={2}
             stroke="currentColor"
             className="w-6 h-6"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"
@@ -231,7 +232,11 @@ export function HamburgerMenu() {
 
         {/* Dropdown menu */}
         {isOpen && (
-          <div className="absolute right-0 top-full mt-2 w-48 bg-surface rounded-lg shadow-lg border border-border py-1 z-20">
+          <div 
+            className="absolute right-0 top-full mt-2 w-48 bg-surface rounded-lg shadow-lg border border-border py-1 z-20"
+            role="menu"
+            aria-label="Application menu"
+          >
             {/* Export Data */}
             <button
               onClick={handleExport}

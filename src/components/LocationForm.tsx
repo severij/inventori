@@ -58,7 +58,8 @@ export function LocationForm({
       {/* Name field */}
       <div>
         <label htmlFor="location-name" className="block text-sm font-medium text-content-secondary">
-          Name <span className="text-red-500">*</span>
+          Name <span className="text-red-500" aria-hidden="true">*</span>
+          <span className="sr-only">(required)</span>
         </label>
         <input
           type="text"
@@ -70,8 +71,10 @@ export function LocationForm({
           } bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none`}
           placeholder="e.g., Garage, Kitchen, Storage Unit"
           disabled={isSubmitting}
+          aria-invalid={errors.name ? 'true' : undefined}
+          aria-describedby={errors.name ? 'location-name-error' : undefined}
         />
-        {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
+        {errors.name && <p id="location-name-error" className="mt-1 text-sm text-red-500" role="alert">{errors.name}</p>}
       </div>
 
       {/* Description field */}
@@ -98,7 +101,7 @@ export function LocationForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex-1 bg-accent-500 text-white py-2 px-4 rounded-md hover:bg-accent-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+          className="flex-1 min-h-[44px] bg-accent-500 text-white py-2 px-4 rounded-md hover:bg-accent-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
         >
           {isSubmitting ? 'Saving...' : isEditMode ? 'Update Location' : 'Create Location'}
         </button>
@@ -106,7 +109,7 @@ export function LocationForm({
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="px-4 py-2 border border-border text-content-secondary rounded-md hover:bg-surface-tertiary transition-colors disabled:opacity-50"
+          className="min-h-[44px] px-4 py-2 border border-border text-content-secondary rounded-md hover:bg-surface-tertiary transition-colors disabled:opacity-50"
         >
           Cancel
         </button>

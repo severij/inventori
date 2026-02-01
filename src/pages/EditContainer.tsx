@@ -1,9 +1,13 @@
 import { useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { ContainerForm } from '../components/ContainerForm';
+import { DetailSkeleton } from '../components/Skeleton';
+import { EmptyState } from '../components/EmptyState';
+import { ErrorState } from '../components/ErrorState';
 import { useContainer } from '../hooks/useContainers';
 import { updateContainer } from '../db/containers';
+import { useToast } from '../contexts/ToastContext';
 import type { CreateContainerInput } from '../types';
 
 /**
@@ -12,7 +16,8 @@ import type { CreateContainerInput } from '../types';
 export function EditContainer() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { container, loading, error } = useContainer(id);
+  const { showToast } = useToast();
+  const { container, loading, error, refetch } = useContainer(id);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (data: CreateContainerInput) => {
@@ -21,10 +26,11 @@ export function EditContainer() {
     setIsSubmitting(true);
     try {
       await updateContainer(id, data);
+      showToast('success', 'Container updated successfully');
       navigate(`/container/${id}`);
     } catch (err) {
       console.error('Failed to update container:', err);
-      alert('Failed to update container. Please try again.');
+      showToast('error', 'Failed to update container. Please try again.');
       setIsSubmitting(false);
     }
   };
@@ -36,28 +42,24 @@ export function EditContainer() {
   return (
     <Layout title="Edit Container">
       {/* Loading state */}
-      {loading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="text-content-tertiary">Loading...</div>
-        </div>
-      )}
+      {loading && <DetailSkeleton />}
 
       {/* Error state */}
       {error && (
-        <div className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 p-4 rounded-lg">
-          <p>Error: {error.message}</p>
-        </div>
+        <ErrorState
+          message={error.message || 'Failed to load container'}
+          onRetry={refetch}
+        />
       )}
 
       {/* Not found state */}
       {!loading && !error && !container && (
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">🔍</div>
-          <h2 className="text-xl font-semibold text-content mb-2">Container not found</h2>
-          <Link to="/" className="text-accent-600 hover:underline">
-            Go back home
-          </Link>
-        </div>
+        <EmptyState
+          icon="🔍"
+          title="Container not found"
+          description="This container may have been deleted or the link is invalid."
+          action={{ label: 'Go Home', to: '/' }}
+        />
       )}
 
       {/* Form */}

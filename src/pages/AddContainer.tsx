@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { ContainerForm } from '../components/ContainerForm';
 import { createContainer } from '../db/containers';
+import { useToast } from '../contexts/ToastContext';
 import type { CreateContainerInput, ParentType } from '../types';
 
 /**
@@ -11,6 +12,7 @@ import type { CreateContainerInput, ParentType } from '../types';
 export function AddContainer() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Get parent from URL params if provided
@@ -21,10 +23,11 @@ export function AddContainer() {
     setIsSubmitting(true);
     try {
       const container = await createContainer(data);
+      showToast('success', `"${container.name}" has been created`);
       navigate(`/container/${container.id}`);
     } catch (error) {
       console.error('Failed to create container:', error);
-      alert('Failed to create container. Please try again.');
+      showToast('error', 'Failed to create container. Please try again.');
       setIsSubmitting(false);
     }
   };

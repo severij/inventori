@@ -170,7 +170,8 @@ export function ItemForm({
         {/* Name field */}
         <div>
           <label htmlFor="item-name" className="block text-sm font-medium text-content-secondary">
-            Name <span className="text-red-500">*</span>
+            Name <span className="text-red-500" aria-hidden="true">*</span>
+            <span className="sr-only">(required)</span>
           </label>
           <input
             type="text"
@@ -182,8 +183,10 @@ export function ItemForm({
             } bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none`}
             placeholder={isContainer ? "e.g., Toolbox, Shelf, Storage Bin" : "e.g., Hammer, Laptop, Winter Jacket"}
             disabled={isSubmitting}
+            aria-invalid={errors.name ? 'true' : undefined}
+            aria-describedby={errors.name ? 'item-name-error' : undefined}
           />
-          {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
+          {errors.name && <p id="item-name-error" className="mt-1 text-sm text-red-500" role="alert">{errors.name}</p>}
         </div>
 
         {/* Description field */}
@@ -205,7 +208,7 @@ export function ItemForm({
         {/* Quantity field */}
         <div>
           <label htmlFor="item-quantity" className="block text-sm font-medium text-content-secondary">
-            Quantity {!isContainer && <span className="text-red-500">*</span>}
+            Quantity {!isContainer && <><span className="text-red-500" aria-hidden="true">*</span><span className="sr-only">(required)</span></>}
           </label>
           <input
             type="number"
@@ -219,11 +222,13 @@ export function ItemForm({
               isContainer ? 'bg-surface-tertiary text-content-muted' : ''
             }`}
             disabled={isSubmitting || isContainer}
+            aria-invalid={errors.quantity ? 'true' : undefined}
+            aria-describedby={isContainer ? 'item-quantity-hint' : errors.quantity ? 'item-quantity-error' : undefined}
           />
           {isContainer && (
-            <p className="mt-1 text-xs text-content-muted">Containers always have quantity 1</p>
+            <p id="item-quantity-hint" className="mt-1 text-xs text-content-muted">Containers always have quantity 1</p>
           )}
-          {errors.quantity && <p className="mt-1 text-sm text-red-500">{errors.quantity}</p>}
+          {errors.quantity && <p id="item-quantity-error" className="mt-1 text-sm text-red-500" role="alert">{errors.quantity}</p>}
         </div>
       </fieldset>
 
@@ -268,7 +273,7 @@ export function ItemForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex-1 bg-accent-500 text-white py-2 px-4 rounded-md hover:bg-accent-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+          className="flex-1 min-h-[44px] bg-accent-500 text-white py-2 px-4 rounded-md hover:bg-accent-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
         >
           {isSubmitting ? 'Saving...' : isEditMode ? 'Update Item' : 'Create Item'}
         </button>
@@ -276,7 +281,7 @@ export function ItemForm({
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="px-4 py-2 border border-border text-content-secondary rounded-md hover:bg-surface-tertiary transition-colors disabled:opacity-50"
+          className="min-h-[44px] px-4 py-2 border border-border text-content-secondary rounded-md hover:bg-surface-tertiary transition-colors disabled:opacity-50"
         >
           Cancel
         </button>

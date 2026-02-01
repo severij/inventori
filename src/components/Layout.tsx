@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { HamburgerMenu } from './HamburgerMenu';
 
@@ -9,6 +10,7 @@ interface LayoutProps {
 
 /**
  * App shell with header, main content area, and offline indicator.
+ * Includes proper ARIA landmarks and focus management.
  */
 export function Layout({ children, title = 'Inventori', showBack = false }: LayoutProps) {
   const navigate = useNavigate();
@@ -16,17 +18,30 @@ export function Layout({ children, title = 'Inventori', showBack = false }: Layo
 
   const isHome = location.pathname === '/';
 
+  // Focus management: scroll to top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   return (
     <div className="min-h-screen bg-surface-secondary">
+      {/* Skip to content link for keyboard users */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-accent-600 focus:text-white focus:rounded-lg"
+      >
+        Skip to main content
+      </a>
+
       {/* Header */}
-      <header className="bg-accent-500 text-white shadow-md sticky top-0 z-10">
-        <div className="flex items-center justify-between px-4 h-14">
+      <header className="bg-accent-500 text-white shadow-md sticky top-0 z-10" role="banner">
+        <div className="flex items-center justify-between px-4 h-14 max-w-4xl mx-auto">
           {/* Left: Back button or spacer */}
-          <div className="w-10">
+          <div className="w-11 flex-shrink-0">
             {(showBack || !isHome) && (
               <button
                 onClick={() => navigate(-1)}
-                className="p-2 -ml-2 rounded-full hover:bg-accent-600 transition-colors"
+                className="p-2 -ml-2 rounded-full hover:bg-accent-600 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                 aria-label="Go back"
               >
                 <svg
@@ -36,6 +51,7 @@ export function Layout({ children, title = 'Inventori', showBack = false }: Layo
                   strokeWidth={2}
                   stroke="currentColor"
                   className="w-6 h-6"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -48,13 +64,13 @@ export function Layout({ children, title = 'Inventori', showBack = false }: Layo
           </div>
 
           {/* Center: Title */}
-          <h1 className="text-lg font-semibold truncate">{title}</h1>
+          <h1 className="text-lg font-semibold truncate flex-1 text-center px-2">{title}</h1>
 
           {/* Right: Search button and Menu */}
-          <div className="flex items-center gap-1">
+          <nav className="flex items-center gap-1 flex-shrink-0" aria-label="Main navigation">
             <button
               onClick={() => navigate('/search')}
-              className="p-2 rounded-full hover:bg-accent-600 transition-colors"
+              className="p-2 rounded-full hover:bg-accent-600 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Search"
             >
               <svg
@@ -64,6 +80,7 @@ export function Layout({ children, title = 'Inventori', showBack = false }: Layo
                 strokeWidth={2}
                 stroke="currentColor"
                 className="w-6 h-6"
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
@@ -73,12 +90,19 @@ export function Layout({ children, title = 'Inventori', showBack = false }: Layo
               </svg>
             </button>
             <HamburgerMenu />
-          </div>
+          </nav>
         </div>
       </header>
 
       {/* Main content */}
-      <main className="p-4">{children}</main>
+      <main 
+        id="main-content" 
+        className="p-4 max-w-4xl mx-auto"
+        role="main"
+        tabIndex={-1}
+      >
+        {children}
+      </main>
     </div>
   );
 }

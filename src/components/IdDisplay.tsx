@@ -37,8 +37,8 @@ export function IdDisplay({ id, size = 'md' }: IdDisplayProps) {
       <button
         type="button"
         onClick={handleCopy}
-        className="p-1.5 text-content-muted hover:text-content-secondary hover:bg-surface-tertiary rounded transition-colors"
-        title={copied ? 'Copied!' : 'Copy to clipboard'}
+        className="min-w-[44px] min-h-[44px] flex items-center justify-center text-content-muted hover:text-content-secondary hover:bg-surface-tertiary rounded transition-colors"
+        aria-label={copied ? 'Copied to clipboard' : `Copy ID ${formatted} to clipboard`}
       >
         {copied ? (
           <svg
@@ -48,6 +48,7 @@ export function IdDisplay({ id, size = 'md' }: IdDisplayProps) {
             strokeWidth={1.5}
             stroke="currentColor"
             className="w-5 h-5 text-green-600"
+            aria-hidden="true"
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
           </svg>
@@ -59,6 +60,7 @@ export function IdDisplay({ id, size = 'md' }: IdDisplayProps) {
             strokeWidth={1.5}
             stroke="currentColor"
             className="w-5 h-5"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"

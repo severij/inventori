@@ -471,38 +471,45 @@ Implemented with:
 
 ### 8.1 UI Polish
 
-- Loading states (spinners/skeletons)
-- Empty states with helpful messages
-- Error states with retry options
-- Confirm dialogs for delete actions
-- Toast notifications for success/error
+- [x] Loading states (spinners/skeletons)
+- [x] Empty states with helpful messages
+- [x] Error states with retry options
+- [x] Confirm dialogs for delete actions
+- [x] Toast notifications for success/error
 
 ### 8.2 Responsive Design
 
-- Test on mobile (375px)
-- Test on tablet (768px)
-- Test on desktop (1024px+)
-- Ensure touch targets are 44x44px minimum
+- [x] Test on mobile (375px)
+- [x] Test on tablet (768px)
+- [x] Test on desktop (1024px+)
+- [x] Ensure touch targets are 44x44px minimum
 
 ### 8.3 Accessibility
 
-- Semantic HTML elements
-- ARIA labels where needed
-- Keyboard navigation
-- Focus management on route changes
+- [x] Semantic HTML elements
+- [x] ARIA labels where needed
+- [x] Keyboard navigation
+- [x] Focus management on route changes
+- [x] Focus trap in ConfirmDialog
+- [x] Error announcements with `role="alert"`
+- [x] Form field error associations with `aria-describedby`
+- [x] Form field invalid states with `aria-invalid`
+- [x] Screen reader only text for visual indicators (e.g., required asterisks)
+- [x] Breadcrumbs separator icons marked with `aria-hidden`
+- [x] ID display button with accessible labels
 
 ### 8.4 Testing
 
-- Manual testing of all CRUD operations
-- Test offline functionality
-- Test on multiple browsers (Chrome, Firefox, Safari)
-- Test PWA installation
+- [x] Manual testing of all CRUD operations
+- [x] Test offline functionality
+- [x] Test on multiple browsers (Chrome, Firefox, Safari)
+- [x] Test PWA installation
 
 **Deliverables:**
-- [ ] All loading/empty/error states
-- [ ] Responsive on all device sizes
-- [ ] Accessible to keyboard and screen readers
-- [ ] Cross-browser tested
+- [x] All loading/empty/error states
+- [x] Responsive on all device sizes
+- [x] Accessible to keyboard and screen readers
+- [x] Cross-browser tested
 
 ---
 
@@ -515,7 +522,7 @@ Implemented with:
 - [x] **Phase 5:** Pages and routing (all views, search)
 - [x] **Phase 6:** PWA features (offline, installable)
 - [x] **Phase 7:** Data export (JSON backup)
-- [ ] **Phase 8:** Polish and testing
+- [x] **Phase 8:** Polish and testing
 
 ## Notes for Implementers
 

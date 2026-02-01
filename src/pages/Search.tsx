@@ -2,6 +2,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { Layout } from '../components/Layout';
 import { SearchBar } from '../components/SearchBar';
 import { EntityCard } from '../components/EntityCard';
+import { CardListSkeleton } from '../components/Skeleton';
+import { EmptyState } from '../components/EmptyState';
 import { useLocations } from '../hooks/useLocations';
 import { useContainers } from '../hooks/useContainers';
 import { useItems } from '../hooks/useItems';
@@ -129,30 +131,24 @@ export function Search() {
       </div>
 
       {/* Loading state */}
-      {loading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="text-content-tertiary">Loading...</div>
-        </div>
-      )}
+      {loading && <CardListSkeleton count={3} />}
 
       {/* Initial state - no search term */}
       {!loading && !hasSearchTerm && (
-        <div className="text-center py-12 text-content-tertiary">
-          <div className="text-5xl mb-4">🔍</div>
-          <p>Search across all your inventory</p>
-          <p className="text-sm mt-1">
-            Search by name, description, or Label ID
-          </p>
-        </div>
+        <EmptyState
+          icon="🔍"
+          title="Search your inventory"
+          description="Search by name, description, or scan a Label ID"
+        />
       )}
 
       {/* No results */}
       {!loading && !idSearching && hasSearchTerm && results.length === 0 && !idMatch && (
-        <div className="text-center py-12 text-content-tertiary">
-          <div className="text-5xl mb-4">😕</div>
-          <p>No results found for "{searchTerm}"</p>
-          <p className="text-sm mt-1">Try a different search term</p>
-        </div>
+        <EmptyState
+          icon="😕"
+          title={`No results for "${searchTerm}"`}
+          description="Try a different search term or check for typos"
+        />
       )}
 
       {/* ID exact match - shown prominently at top */}

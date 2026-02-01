@@ -39,6 +39,7 @@ export function Breadcrumbs({ ancestors }: BreadcrumbsProps) {
                 strokeWidth={2}
                 stroke="currentColor"
                 className="w-4 h-4 text-content-muted"
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"

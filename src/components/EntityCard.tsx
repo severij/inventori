@@ -11,6 +11,7 @@ interface EntityCardProps {
  * Shows photo thumbnail (if available), name, type icon, and quantity badge for items.
  * Items with isContainer show a container icon.
  * Click navigates to detail view.
+ * Minimum 48px height for touch accessibility.
  */
 export function EntityCard({ entity }: EntityCardProps) {
   const navigate = useNavigate();
@@ -41,14 +42,18 @@ export function EntityCard({ entity }: EntityCardProps) {
   return (
     <button
       onClick={handleClick}
-      className="w-full bg-surface rounded-lg shadow-sm border border-border p-3 flex items-center gap-3 hover:shadow-md hover:border-border-focus transition-all text-left"
+      className="w-full bg-surface rounded-lg shadow-sm border border-border p-3 flex items-center gap-3 hover:shadow-md hover:border-border-focus transition-all text-left min-h-[56px] focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2"
+      aria-label={`View ${entity.name}`}
     >
       {/* Thumbnail or icon */}
-      <div className="w-12 h-12 flex-shrink-0 rounded-md bg-surface-tertiary flex items-center justify-center overflow-hidden">
+      <div 
+        className="w-12 h-12 flex-shrink-0 rounded-md bg-surface-tertiary flex items-center justify-center overflow-hidden"
+        aria-hidden="true"
+      >
         {thumbnailUrl ? (
           <img
             src={thumbnailUrl}
-            alt={entity.name}
+            alt=""
             className="w-full h-full object-cover"
           />
         ) : (
@@ -91,6 +96,7 @@ export function EntityCard({ entity }: EntityCardProps) {
         strokeWidth={2}
         stroke="currentColor"
         className="w-5 h-5 text-content-muted flex-shrink-0"
+        aria-hidden="true"
       >
         <path
           strokeLinecap="round"

@@ -141,7 +141,8 @@ export function ContainerForm({
         {/* Name field */}
         <div>
           <label htmlFor="container-name" className="block text-sm font-medium text-content-secondary">
-            Name <span className="text-red-500">*</span>
+            Name <span className="text-red-500" aria-hidden="true">*</span>
+            <span className="sr-only">(required)</span>
           </label>
           <input
             type="text"
@@ -153,8 +154,10 @@ export function ContainerForm({
             } bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none`}
             placeholder="e.g., Top Drawer, Left Shelf, Under Sink"
             disabled={isSubmitting}
+            aria-invalid={errors.name ? 'true' : undefined}
+            aria-describedby={errors.name ? 'container-name-error' : undefined}
           />
-          {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
+          {errors.name && <p id="container-name-error" className="mt-1 text-sm text-red-500" role="alert">{errors.name}</p>}
         </div>
 
         {/* Description field */}
@@ -180,7 +183,8 @@ export function ContainerForm({
 
         <div>
           <label htmlFor="container-parent" className="block text-sm font-medium text-content-secondary">
-            Parent <span className="text-red-500">*</span>
+            Parent <span className="text-red-500" aria-hidden="true">*</span>
+            <span className="sr-only">(required)</span>
           </label>
           <select
             id="container-parent"
@@ -190,6 +194,8 @@ export function ContainerForm({
             className={`mt-1 block w-full rounded-md shadow-sm px-3 py-2 border ${
               errors.parent ? 'border-red-500' : 'border-border'
             } bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none`}
+            aria-invalid={errors.parent ? 'true' : undefined}
+            aria-describedby={errors.parent ? 'container-parent-error' : 'container-parent-hint'}
           >
             <option value="">
               {isLoadingParents ? 'Loading...' : 'Select a parent...'}
@@ -200,8 +206,8 @@ export function ContainerForm({
               </option>
             ))}
           </select>
-          {errors.parent && <p className="mt-1 text-sm text-red-500">{errors.parent}</p>}
-          <p className="mt-1 text-xs text-content-muted">
+          {errors.parent && <p id="container-parent-error" className="mt-1 text-sm text-red-500" role="alert">{errors.parent}</p>}
+          <p id="container-parent-hint" className="mt-1 text-xs text-content-muted">
             Containers must be inside a location, another container, or a container-item.
           </p>
         </div>
@@ -218,7 +224,7 @@ export function ContainerForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex-1 bg-accent-500 text-white py-2 px-4 rounded-md hover:bg-accent-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+          className="flex-1 min-h-[44px] bg-accent-500 text-white py-2 px-4 rounded-md hover:bg-accent-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
         >
           {isSubmitting ? 'Saving...' : isEditMode ? 'Update Container' : 'Create Container'}
         </button>
@@ -226,7 +232,7 @@ export function ContainerForm({
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="px-4 py-2 border border-border text-content-secondary rounded-md hover:bg-surface-tertiary transition-colors disabled:opacity-50"
+          className="min-h-[44px] px-4 py-2 border border-border text-content-secondary rounded-md hover:bg-surface-tertiary transition-colors disabled:opacity-50"
         >
           Cancel
         </button>
