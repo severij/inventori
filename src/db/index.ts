@@ -9,12 +9,16 @@ interface InventoriDB extends DBSchema {
   locations: {
     key: string;
     value: Location;
+    indexes: {
+      'by-shortId': string;
+    };
   };
   containers: {
     key: string;
     value: Container;
     indexes: {
       'by-parent': string;
+      'by-shortId': string;
     };
   };
   items: {
@@ -22,13 +26,13 @@ interface InventoriDB extends DBSchema {
     value: Item;
     indexes: {
       'by-parent': string;
-      'by-category': string;
+      'by-shortId': string;
     };
   };
 }
 
 const DB_NAME = 'inventori';
-const DB_VERSION = 3; // Bump version to add back containers store
+const DB_VERSION = 4; // Bump version to add shortId indexes
 
 let dbPromise: Promise<IDBPDatabase<InventoriDB>> | null = null;
 
@@ -39,23 +43,47 @@ let dbPromise: Promise<IDBPDatabase<InventoriDB>> | null = null;
 export function getDB(): Promise<IDBPDatabase<InventoriDB>> {
   if (!dbPromise) {
     dbPromise = openDB<InventoriDB>(DB_NAME, DB_VERSION, {
-      upgrade(db, _oldVersion, _newVersion, _transaction) {
+      upgrade(db, oldVersion, _newVersion, transaction) {
         // Create locations store
         if (!db.objectStoreNames.contains('locations')) {
-          db.createObjectStore('locations', { keyPath: 'id' });
+          const locationStore = db.createObjectStore('locations', { keyPath: 'id' });
+          locationStore.createIndex('by-shortId', 'shortId', { unique: true });
+        } else if (oldVersion < 4) {
+          // Add shortId index to existing store
+          const locationStore = transaction.objectStore('locations');
+          if (!locationStore.indexNames.contains('by-shortId')) {
+            locationStore.createIndex('by-shortId', 'shortId', { unique: true });
+          }
         }
 
-        // Create containers store with parentId index
+        // Create containers store with parentId and shortId indexes
         if (!db.objectStoreNames.contains('containers')) {
           const containerStore = db.createObjectStore('containers', { keyPath: 'id' });
           containerStore.createIndex('by-parent', 'parentId');
+          containerStore.createIndex('by-shortId', 'shortId', { unique: true });
+        } else if (oldVersion < 4) {
+          // Add shortId index to existing store
+          const containerStore = transaction.objectStore('containers');
+          if (!containerStore.indexNames.contains('by-shortId')) {
+            containerStore.createIndex('by-shortId', 'shortId', { unique: true });
+          }
         }
 
-        // Create items store with parentId and category indexes
+        // Create items store with parentId and shortId indexes
         if (!db.objectStoreNames.contains('items')) {
           const itemStore = db.createObjectStore('items', { keyPath: 'id' });
           itemStore.createIndex('by-parent', 'parentId');
-          itemStore.createIndex('by-category', 'category');
+          itemStore.createIndex('by-shortId', 'shortId', { unique: true });
+        } else if (oldVersion < 4) {
+          // Add shortId index to existing store
+          const itemStore = transaction.objectStore('items');
+          if (!itemStore.indexNames.contains('by-shortId')) {
+            itemStore.createIndex('by-shortId', 'shortId', { unique: true });
+          }
+          // Remove old category index if it exists (from earlier versions)
+          if ((itemStore.indexNames as DOMStringList).contains('by-category')) {
+            itemStore.deleteIndex('by-category');
+          }
         }
       },
     });

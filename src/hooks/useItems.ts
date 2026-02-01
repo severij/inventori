@@ -4,7 +4,6 @@ import {
   getAllItems,
   getItem,
   getItemsByParent,
-  getItemsByCategory,
   getUnassignedItems,
   getContainerItems,
 } from '../db/items';
@@ -70,40 +69,6 @@ export function useItemsByParent(parentId: string | undefined): UseItemsResult {
       setLoading(false);
     }
   }, [parentId]);
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
-  return { items, loading, error, refetch };
-}
-
-/**
- * Hook to fetch items by category
- */
-export function useItemsByCategory(category: string | undefined): UseItemsResult {
-  const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  const refetch = useCallback(async () => {
-    if (!category) {
-      setItems([]);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getItemsByCategory(category);
-      setItems(data);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch items'));
-    } finally {
-      setLoading(false);
-    }
-  }, [category]);
 
   useEffect(() => {
     refetch();

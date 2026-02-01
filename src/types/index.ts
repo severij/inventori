@@ -17,6 +17,7 @@ export interface Location {
   type: 'location';
   name: string;
   description?: string;
+  shortId?: string; // Optional 8-char Crockford Base32 ID for physical labels
   photos: Blob[];
   createdAt: Date;
   updatedAt: Date;
@@ -32,6 +33,7 @@ export interface Container {
   type: 'container';
   name: string;
   description?: string;
+  shortId?: string; // Optional 8-char Crockford Base32 ID for physical labels
   parentId: string;
   parentType: ParentType;
   photos: Blob[];
@@ -48,6 +50,7 @@ export interface Item {
   type: 'item';
   name: string;
   description?: string;
+  shortId?: string; // Optional 8-char Crockford Base32 ID for physical labels
 
   // Hierarchy (optional - items can be unassigned)
   parentId?: string;

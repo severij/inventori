@@ -1,5 +1,8 @@
 import JSZip from 'jszip';
 import { getDB } from '../db/index';
+import { getLocationByShortId } from '../db/locations';
+import { getContainerByShortId } from '../db/containers';
+import { getItemByShortId } from '../db/items';
 import type { Location, Container, Item } from '../types';
 import type { ExportData, ExportedLocation, ExportedContainer, ExportedItem } from './export';
 
@@ -41,18 +44,47 @@ function getImagesFromMap(
 }
 
 /**
- * Convert an exported location back to a Location
+ * Check if a shortId is already used by a different entity (different UUID)
  */
-function importLocation(
+async function isShortIdCollision(shortId: string, entityId: string): Promise<boolean> {
+  const existingLocation = await getLocationByShortId(shortId);
+  if (existingLocation && existingLocation.id !== entityId) return true;
+
+  const existingContainer = await getContainerByShortId(shortId);
+  if (existingContainer && existingContainer.id !== entityId) return true;
+
+  const existingItem = await getItemByShortId(shortId);
+  if (existingItem && existingItem.id !== entityId) return true;
+
+  return false;
+}
+
+/**
+ * Convert an exported location back to a Location
+ * Handles shortId collision by clearing it and adding a warning
+ */
+async function importLocation(
   exported: ExportedLocation,
   imagesMap: Map<string, Blob>,
   warnings: string[]
-): Location {
+): Promise<Location> {
+  let shortId = exported.shortId;
+
+  // Check for shortId collision with a different entity
+  if (shortId) {
+    const hasCollision = await isShortIdCollision(shortId, exported.id);
+    if (hasCollision) {
+      warnings.push(`Short ID "${shortId}" for location "${exported.name}" conflicts with another entity. Short ID cleared.`);
+      shortId = undefined;
+    }
+  }
+
   return {
     id: exported.id,
     type: 'location',
     name: exported.name,
     description: exported.description,
+    shortId,
     photos: getImagesFromMap(exported.photos, imagesMap, warnings),
     createdAt: new Date(exported.createdAt),
     updatedAt: new Date(exported.updatedAt),
@@ -61,17 +93,30 @@ function importLocation(
 
 /**
  * Convert an exported container back to a Container
+ * Handles shortId collision by clearing it and adding a warning
  */
-function importContainer(
+async function importContainer(
   exported: ExportedContainer,
   imagesMap: Map<string, Blob>,
   warnings: string[]
-): Container {
+): Promise<Container> {
+  let shortId = exported.shortId;
+
+  // Check for shortId collision with a different entity
+  if (shortId) {
+    const hasCollision = await isShortIdCollision(shortId, exported.id);
+    if (hasCollision) {
+      warnings.push(`Short ID "${shortId}" for container "${exported.name}" conflicts with another entity. Short ID cleared.`);
+      shortId = undefined;
+    }
+  }
+
   return {
     id: exported.id,
     type: 'container',
     name: exported.name,
     description: exported.description,
+    shortId,
     parentId: exported.parentId,
     parentType: exported.parentType,
     photos: getImagesFromMap(exported.photos, imagesMap, warnings),
@@ -82,17 +127,30 @@ function importContainer(
 
 /**
  * Convert an exported item back to an Item
+ * Handles shortId collision by clearing it and adding a warning
  */
-function importItem(
+async function importItem(
   exported: ExportedItem,
   imagesMap: Map<string, Blob>,
   warnings: string[]
-): Item {
+): Promise<Item> {
+  let shortId = exported.shortId;
+
+  // Check for shortId collision with a different entity
+  if (shortId) {
+    const hasCollision = await isShortIdCollision(shortId, exported.id);
+    if (hasCollision) {
+      warnings.push(`Short ID "${shortId}" for item "${exported.name}" conflicts with another entity. Short ID cleared.`);
+      shortId = undefined;
+    }
+  }
+
   return {
     id: exported.id,
     type: 'item',
     name: exported.name,
     description: exported.description,
+    shortId,
     parentId: exported.parentId,
     parentType: exported.parentType,
     isContainer: exported.isContainer,
@@ -227,7 +285,7 @@ export async function importData(file: File): Promise<ImportResult> {
   // Import locations
   for (const exported of data.locations) {
     try {
-      const location = importLocation(exported, imagesMap, result.warnings);
+      const location = await importLocation(exported, imagesMap, result.warnings);
       const existing = await db.get('locations', location.id);
 
       if (existing) {
@@ -247,7 +305,7 @@ export async function importData(file: File): Promise<ImportResult> {
   // Import containers
   for (const exported of data.containers) {
     try {
-      const container = importContainer(exported, imagesMap, result.warnings);
+      const container = await importContainer(exported, imagesMap, result.warnings);
       const existing = await db.get('containers', container.id);
 
       if (existing) {
@@ -267,7 +325,7 @@ export async function importData(file: File): Promise<ImportResult> {
   // Import items
   for (const exported of data.items) {
     try {
-      const item = importItem(exported, imagesMap, result.warnings);
+      const item = await importItem(exported, imagesMap, result.warnings);
       const existing = await db.get('items', item.id);
 
       if (existing) {

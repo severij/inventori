@@ -2,6 +2,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { EntityCard } from '../components/EntityCard';
+import { ShortIdDisplay } from '../components/ShortIdDisplay';
 import { useLocation } from '../hooks/useLocations';
 import { useChildren } from '../hooks/useChildren';
 import { useAncestors } from '../hooks/useAncestors';
@@ -82,6 +83,13 @@ export function LocationView() {
             <h2 className="text-xl font-semibold text-gray-900">{location.name}</h2>
             {location.description && (
               <p className="text-gray-600 mt-1">{location.description}</p>
+            )}
+
+            {/* Label ID */}
+            {location.shortId && (
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <ShortIdDisplay shortId={location.shortId} />
+              </div>
             )}
 
             {/* Actions */}

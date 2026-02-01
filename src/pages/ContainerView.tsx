@@ -2,6 +2,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { EntityCard } from '../components/EntityCard';
+import { ShortIdDisplay } from '../components/ShortIdDisplay';
 import { useContainer } from '../hooks/useContainers';
 import { useChildren } from '../hooks/useChildren';
 import { useAncestors } from '../hooks/useAncestors';
@@ -83,6 +84,13 @@ export function ContainerView() {
             <h2 className="text-xl font-semibold text-gray-900">{container.name}</h2>
             {container.description && (
               <p className="text-gray-600 mt-1">{container.description}</p>
+            )}
+
+            {/* Label ID */}
+            {container.shortId && (
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <ShortIdDisplay shortId={container.shortId} />
+              </div>
             )}
 
             {/* Actions */}

@@ -2,6 +2,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { EntityCard } from '../components/EntityCard';
+import { ShortIdDisplay } from '../components/ShortIdDisplay';
 import { useItem } from '../hooks/useItems';
 import { useChildren } from '../hooks/useChildren';
 import { useAncestors } from '../hooks/useAncestors';
@@ -111,6 +112,13 @@ export function ItemView() {
 
             {item.description && (
               <p className="text-gray-600 mt-3">{item.description}</p>
+            )}
+
+            {/* Label ID */}
+            {item.shortId && (
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <ShortIdDisplay shortId={item.shortId} />
+              </div>
             )}
 
             {/* Actions */}

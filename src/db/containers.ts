@@ -1,7 +1,9 @@
 import { getDB } from './index';
 import { generateUUID } from '../utils/uuid';
+import { generateUniqueShortId } from '../utils/shortId';
 import type { Container, CreateContainerInput, UpdateContainerInput } from '../types';
-import { deleteItemsByParent } from './items';
+import { deleteItemsByParent, getItemByShortId } from './items';
+import { getLocationByShortId } from './locations';
 
 /**
  * Get all containers
@@ -20,6 +22,14 @@ export async function getContainer(id: string): Promise<Container | undefined> {
 }
 
 /**
+ * Get a container by its short ID
+ */
+export async function getContainerByShortId(shortId: string): Promise<Container | undefined> {
+  const db = await getDB();
+  return db.getFromIndex('containers', 'by-shortId', shortId);
+}
+
+/**
  * Get all containers by parent ID (location, container, or item)
  */
 export async function getContainersByParent(parentId: string): Promise<Container[]> {
@@ -34,10 +44,22 @@ export async function createContainer(input: CreateContainerInput): Promise<Cont
   const db = await getDB();
   const now = new Date();
 
+  // Generate unique shortId with collision detection across all stores
+  const shortId = await generateUniqueShortId(async (id) => {
+    const existingContainer = await db.getFromIndex('containers', 'by-shortId', id);
+    if (existingContainer) return true;
+    const existingLocation = await getLocationByShortId(id);
+    if (existingLocation) return true;
+    const existingItem = await getItemByShortId(id);
+    if (existingItem) return true;
+    return false;
+  });
+
   const container: Container = {
     ...input,
     id: generateUUID(),
     type: 'container',
+    shortId,
     createdAt: now,
     updatedAt: now,
   };
@@ -65,6 +87,44 @@ export async function updateContainer(id: string, updates: UpdateContainerInput)
 
   await db.put('containers', updated);
   return updated;
+}
+
+/**
+ * Generate and set a short ID for a container.
+ * Returns the generated short ID.
+ * Throws if the container already has a short ID.
+ */
+export async function setContainerShortId(id: string): Promise<string> {
+  const db = await getDB();
+  const container = await db.get('containers', id);
+
+  if (!container) {
+    throw new Error(`Container not found: ${id}`);
+  }
+
+  if (container.shortId) {
+    throw new Error(`Container already has a short ID: ${container.shortId}`);
+  }
+
+  // Generate unique shortId with collision detection across all stores
+  const shortId = await generateUniqueShortId(async (sid) => {
+    const existingContainer = await db.getFromIndex('containers', 'by-shortId', sid);
+    if (existingContainer) return true;
+    const existingLocation = await getLocationByShortId(sid);
+    if (existingLocation) return true;
+    const existingItem = await getItemByShortId(sid);
+    if (existingItem) return true;
+    return false;
+  });
+
+  const updated: Container = {
+    ...container,
+    shortId,
+    updatedAt: new Date(),
+  };
+
+  await db.put('containers', updated);
+  return shortId;
 }
 
 /**

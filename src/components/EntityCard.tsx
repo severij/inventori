@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import type { Entity, Item } from '../types';
+import { formatShortId } from '../utils/shortId';
 
 interface EntityCardProps {
   entity: Entity;
@@ -34,6 +35,9 @@ export function EntityCard({ entity }: EntityCardProps) {
   // Check if this is a pure container
   const isPureContainer = entity.type === 'container';
 
+  // Get formatted short ID if present
+  const shortId = entity.shortId ? formatShortId(entity.shortId) : null;
+
   return (
     <button
       onClick={handleClick}
@@ -55,9 +59,11 @@ export function EntityCard({ entity }: EntityCardProps) {
       {/* Content */}
       <div className="flex-1 min-w-0">
         <h3 className="font-medium text-gray-900 truncate">{entity.name}</h3>
-        {entity.description && (
+        {shortId ? (
+          <p className="text-xs text-gray-400 font-mono">{shortId}</p>
+        ) : entity.description ? (
           <p className="text-sm text-gray-500 truncate">{entity.description}</p>
-        )}
+        ) : null}
       </div>
 
       {/* Container indicator badge for item-containers */}
