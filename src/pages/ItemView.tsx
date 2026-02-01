@@ -2,7 +2,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { EntityCard } from '../components/EntityCard';
-import { ShortIdDisplay } from '../components/ShortIdDisplay';
+import { IdDisplay } from '../components/IdDisplay';
 import { useItem } from '../hooks/useItems';
 import { useChildren } from '../hooks/useChildren';
 import { useAncestors } from '../hooks/useAncestors';
@@ -101,24 +101,20 @@ export function ItemView() {
 
           {/* Item details */}
           <div className="bg-surface rounded-lg shadow-sm border border-border p-4 mb-6">
-            <div className="flex items-start justify-between">
-              <h2 className="text-xl font-semibold text-content">{item.name}</h2>
-              {item.quantity > 1 && (
-                <span className="bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300 text-sm font-medium px-2 py-1 rounded">
-                  x{item.quantity}
-                </span>
-              )}
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-semibold text-content">{item.name}</h2>
+                {item.quantity > 1 && (
+                  <span className="bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300 text-sm font-medium px-2 py-1 rounded">
+                    x{item.quantity}
+                  </span>
+                )}
+              </div>
+              <IdDisplay id={item.id} size="sm" />
             </div>
 
             {item.description && (
-              <p className="text-content-secondary mt-3">{item.description}</p>
-            )}
-
-            {/* Label ID */}
-            {item.shortId && (
-              <div className="mt-4 pt-4 border-t border-border">
-                <ShortIdDisplay shortId={item.shortId} />
-              </div>
+              <p className="text-content-secondary mt-2">{item.description}</p>
             )}
 
             {/* Actions */}

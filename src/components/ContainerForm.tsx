@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { PhotoCapture } from './PhotoCapture';
-import { ShortIdDisplay } from './ShortIdDisplay';
 import { useLocations } from '../hooks/useLocations';
 import { useContainers } from '../hooks/useContainers';
 import { useContainerItems } from '../hooks/useItems';
@@ -126,21 +125,6 @@ export function ContainerForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Label ID Section - only shown in edit mode when shortId exists */}
-      {isEditMode && initialValues?.shortId && (
-        <div className="bg-surface-tertiary border border-border rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-content-secondary">Label ID</h3>
-              <p className="text-xs text-content-muted mt-0.5">
-                Use this ID on physical labels to quickly find this container
-              </p>
-            </div>
-            <ShortIdDisplay shortId={initialValues.shortId} />
-          </div>
-        </div>
-      )}
-
       {/* Info banner */}
       <div className="bg-surface-tertiary border border-border rounded-lg p-4">
         <p className="text-sm text-content-secondary">

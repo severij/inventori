@@ -2,7 +2,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { EntityCard } from '../components/EntityCard';
-import { ShortIdDisplay } from '../components/ShortIdDisplay';
+import { IdDisplay } from '../components/IdDisplay';
 import { useLocation } from '../hooks/useLocations';
 import { useChildren } from '../hooks/useChildren';
 import { useAncestors } from '../hooks/useAncestors';
@@ -80,16 +80,12 @@ export function LocationView() {
                 className="w-full h-48 object-cover rounded-lg mb-4"
               />
             )}
-            <h2 className="text-xl font-semibold text-content">{location.name}</h2>
+            <div className="flex items-start justify-between gap-2">
+              <h2 className="text-xl font-semibold text-content">{location.name}</h2>
+              <IdDisplay id={location.id} size="sm" />
+            </div>
             {location.description && (
-              <p className="text-content-secondary mt-1">{location.description}</p>
-            )}
-
-            {/* Label ID */}
-            {location.shortId && (
-              <div className="mt-4 pt-4 border-t border-border">
-                <ShortIdDisplay shortId={location.shortId} />
-              </div>
+              <p className="text-content-secondary mt-2">{location.description}</p>
             )}
 
             {/* Actions */}

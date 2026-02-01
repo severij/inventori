@@ -6,9 +6,9 @@ import { useLocations } from '../hooks/useLocations';
 import { useContainers } from '../hooks/useContainers';
 import { useItems } from '../hooks/useItems';
 import { looksLikeShortId, normalizeShortId } from '../utils/shortId';
-import { getLocationByShortId } from '../db/locations';
-import { getContainerByShortId } from '../db/containers';
-import { getItemByShortId } from '../db/items';
+import { getLocation } from '../db/locations';
+import { getContainer } from '../db/containers';
+import { getItem } from '../db/items';
 import type { Entity } from '../types';
 
 /**
@@ -16,8 +16,8 @@ import type { Entity } from '../types';
  */
 export function Search() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [shortIdMatch, setShortIdMatch] = useState<Entity | null>(null);
-  const [shortIdSearching, setShortIdSearching] = useState(false);
+  const [idMatch, setIdMatch] = useState<Entity | null>(null);
+  const [idSearching, setIdSearching] = useState(false);
 
   const { locations, loading: locationsLoading } = useLocations();
   const { containers, loading: containersLoading } = useContainers();
@@ -25,54 +25,54 @@ export function Search() {
 
   const loading = locationsLoading || containersLoading || itemsLoading;
 
-  // Check for shortId exact match when search term looks like a shortId
+  // Check for ID exact match when search term looks like an ID
   useEffect(() => {
-    const searchShortId = async () => {
+    const searchById = async () => {
       if (!looksLikeShortId(searchTerm)) {
-        setShortIdMatch(null);
+        setIdMatch(null);
         return;
       }
 
       const normalized = normalizeShortId(searchTerm);
       if (!normalized) {
-        setShortIdMatch(null);
+        setIdMatch(null);
         return;
       }
 
-      setShortIdSearching(true);
+      setIdSearching(true);
       try {
         // Check all three stores for a match
-        const location = await getLocationByShortId(normalized);
+        const location = await getLocation(normalized);
         if (location) {
-          setShortIdMatch(location);
-          setShortIdSearching(false);
+          setIdMatch(location);
+          setIdSearching(false);
           return;
         }
 
-        const container = await getContainerByShortId(normalized);
+        const container = await getContainer(normalized);
         if (container) {
-          setShortIdMatch(container);
-          setShortIdSearching(false);
+          setIdMatch(container);
+          setIdSearching(false);
           return;
         }
 
-        const item = await getItemByShortId(normalized);
+        const item = await getItem(normalized);
         if (item) {
-          setShortIdMatch(item);
-          setShortIdSearching(false);
+          setIdMatch(item);
+          setIdSearching(false);
           return;
         }
 
-        setShortIdMatch(null);
+        setIdMatch(null);
       } catch (err) {
-        console.error('Short ID search error:', err);
-        setShortIdMatch(null);
+        console.error('ID search error:', err);
+        setIdMatch(null);
       } finally {
-        setShortIdSearching(false);
+        setIdSearching(false);
       }
     };
 
-    searchShortId();
+    searchById();
   }, [searchTerm]);
 
   // Filter entities based on search term
@@ -147,7 +147,7 @@ export function Search() {
       )}
 
       {/* No results */}
-      {!loading && !shortIdSearching && hasSearchTerm && results.length === 0 && !shortIdMatch && (
+      {!loading && !idSearching && hasSearchTerm && results.length === 0 && !idMatch && (
         <div className="text-center py-12 text-content-tertiary">
           <div className="text-5xl mb-4">😕</div>
           <p>No results found for "{searchTerm}"</p>
@@ -155,14 +155,14 @@ export function Search() {
         </div>
       )}
 
-      {/* Short ID exact match - shown prominently at top */}
-      {!loading && shortIdMatch && (
+      {/* ID exact match - shown prominently at top */}
+      {!loading && idMatch && (
         <div className="mb-6">
           <section className="bg-green-100 dark:bg-green-900/30 rounded-lg p-4 border border-green-300 dark:border-green-700">
             <h2 className="text-sm font-medium text-green-700 dark:text-green-400 uppercase tracking-wide mb-3">
               Label ID Match
             </h2>
-            <EntityCard entity={shortIdMatch} />
+            <EntityCard entity={idMatch} />
           </section>
         </div>
       )}

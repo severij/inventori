@@ -13,11 +13,10 @@ export type EntityType = 'location' | 'container' | 'item';
  * (room, building, storage unit, etc.)
  */
 export interface Location {
-  id: string;
+  id: string; // 8-char Crockford Base32 ID (used for physical labels)
   type: 'location';
   name: string;
   description?: string;
-  shortId?: string; // Optional 8-char Crockford Base32 ID for physical labels
   photos: Blob[];
   createdAt: Date;
   updatedAt: Date;
@@ -29,11 +28,10 @@ export interface Location {
  * Can be nested inside locations, other containers, or items with isContainer=true.
  */
 export interface Container {
-  id: string;
+  id: string; // 8-char Crockford Base32 ID (used for physical labels)
   type: 'container';
   name: string;
   description?: string;
-  shortId?: string; // Optional 8-char Crockford Base32 ID for physical labels
   parentId: string;
   parentType: ParentType;
   photos: Blob[];
@@ -46,11 +44,10 @@ export interface Container {
  * Items with isContainer: true can hold containers and other items.
  */
 export interface Item {
-  id: string;
+  id: string; // 8-char Crockford Base32 ID (used for physical labels)
   type: 'item';
   name: string;
   description?: string;
-  shortId?: string; // Optional 8-char Crockford Base32 ID for physical labels
 
   // Hierarchy (optional - items can be unassigned)
   parentId?: string;

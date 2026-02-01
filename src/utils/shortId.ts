@@ -1,5 +1,5 @@
 /**
- * Short ID utilities using Crockford's Base32 encoding.
+ * ID utilities using Crockford's Base32 encoding.
  *
  * Crockford's Base32 is designed for human readability:
  * - Excludes confusable characters: I, L, O, U
@@ -24,10 +24,10 @@ DECODE_MAP['L'] = 1; // L → 1
 DECODE_MAP['O'] = 0; // O → 0
 
 /**
- * Generate an 8-character Crockford Base32 short ID.
+ * Generate an 8-character Crockford Base32 ID.
  * Uses 5 random bytes (40 bits) encoded as 8 Base32 characters.
  */
-export function generateShortId(): string {
+export function generateId(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(5));
   return encodeCrockford(bytes);
 }
@@ -60,7 +60,7 @@ function encodeCrockford(bytes: Uint8Array): string {
 }
 
 /**
- * Format a short ID for display: "ABCDEFGH" → "ABCD-EFGH"
+ * Format an ID for display: "ABCDEFGH" → "ABCD-EFGH"
  */
 export function formatShortId(id: string): string {
   if (id.length !== 8) return id;
@@ -68,7 +68,7 @@ export function formatShortId(id: string): string {
 }
 
 /**
- * Normalize user input for short ID lookup.
+ * Normalize user input for ID lookup.
  * - Removes hyphens and spaces
  * - Converts to uppercase
  * - Applies Crockford substitutions (I→1, L→1, O→0)
@@ -101,7 +101,7 @@ export function normalizeShortId(input: string): string | null {
 }
 
 /**
- * Check if a string is a valid short ID format.
+ * Check if a string is a valid ID format.
  * Accepts both raw (ABCDEFGH) and formatted (ABCD-EFGH) forms.
  */
 export function isValidShortId(input: string): boolean {
@@ -109,8 +109,8 @@ export function isValidShortId(input: string): boolean {
 }
 
 /**
- * Check if a search query looks like it might be a short ID.
- * Used to trigger exact-match short ID search.
+ * Check if a search query looks like it might be an ID.
+ * Used to trigger exact-match ID search.
  */
 export function looksLikeShortId(query: string): boolean {
   const cleaned = query.replace(/[-\s]/g, '');
@@ -127,24 +127,24 @@ export function looksLikeShortId(query: string): boolean {
 }
 
 /**
- * Generate a unique short ID by checking for collisions.
- * Takes a callback that checks if a shortId already exists.
+ * Generate a unique ID by checking for collisions.
+ * Takes a callback that checks if an ID already exists.
  * Retries up to maxAttempts times if collision detected.
  */
-export async function generateUniqueShortId(
-  isCollision: (shortId: string) => Promise<boolean>,
+export async function generateUniqueId(
+  isCollision: (id: string) => Promise<boolean>,
   maxAttempts = 10
 ): Promise<string> {
   let attempts = 0;
 
   while (attempts < maxAttempts) {
-    const shortId = generateShortId();
-    const hasCollision = await isCollision(shortId);
+    const id = generateId();
+    const hasCollision = await isCollision(id);
     if (!hasCollision) {
-      return shortId;
+      return id;
     }
     attempts++;
   }
 
-  throw new Error('Failed to generate unique short ID after multiple attempts');
+  throw new Error('Failed to generate unique ID after multiple attempts');
 }

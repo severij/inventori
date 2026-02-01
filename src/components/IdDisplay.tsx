@@ -1,21 +1,21 @@
 import { useState } from 'react';
 import { formatShortId } from '../utils/shortId';
 
-interface ShortIdDisplayProps {
-  /** The short ID to display */
-  shortId: string;
+interface IdDisplayProps {
+  /** The ID to display */
+  id: string;
   /** Size variant */
   size?: 'sm' | 'md' | 'lg';
 }
 
 /**
- * Displays a short ID with copy-to-clipboard functionality.
+ * Displays an ID with copy-to-clipboard functionality.
  */
-export function ShortIdDisplay({ shortId, size = 'md' }: ShortIdDisplayProps) {
+export function IdDisplay({ id, size = 'md' }: IdDisplayProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    const formatted = formatShortId(shortId);
+    const formatted = formatShortId(id);
     await navigator.clipboard.writeText(formatted);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -27,7 +27,7 @@ export function ShortIdDisplay({ shortId, size = 'md' }: ShortIdDisplayProps) {
     lg: 'text-lg',
   };
 
-  const formatted = formatShortId(shortId);
+  const formatted = formatShortId(id);
 
   return (
     <div className="inline-flex items-center gap-2">

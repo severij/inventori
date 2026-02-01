@@ -2,7 +2,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { EntityCard } from '../components/EntityCard';
-import { ShortIdDisplay } from '../components/ShortIdDisplay';
+import { IdDisplay } from '../components/IdDisplay';
 import { useContainer } from '../hooks/useContainers';
 import { useChildren } from '../hooks/useChildren';
 import { useAncestors } from '../hooks/useAncestors';
@@ -81,16 +81,12 @@ export function ContainerView() {
                 className="w-full h-48 object-cover rounded-lg mb-4"
               />
             )}
-            <h2 className="text-xl font-semibold text-content">{container.name}</h2>
+            <div className="flex items-start justify-between gap-2">
+              <h2 className="text-xl font-semibold text-content">{container.name}</h2>
+              <IdDisplay id={container.id} size="sm" />
+            </div>
             {container.description && (
-              <p className="text-content-secondary mt-1">{container.description}</p>
-            )}
-
-            {/* Label ID */}
-            {container.shortId && (
-              <div className="mt-4 pt-4 border-t border-border">
-                <ShortIdDisplay shortId={container.shortId} />
-              </div>
+              <p className="text-content-secondary mt-2">{container.description}</p>
             )}
 
             {/* Actions */}

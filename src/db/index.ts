@@ -9,16 +9,12 @@ interface InventoriDB extends DBSchema {
   locations: {
     key: string;
     value: Location;
-    indexes: {
-      'by-shortId': string;
-    };
   };
   containers: {
     key: string;
     value: Container;
     indexes: {
       'by-parent': string;
-      'by-shortId': string;
     };
   };
   items: {
@@ -26,13 +22,12 @@ interface InventoriDB extends DBSchema {
     value: Item;
     indexes: {
       'by-parent': string;
-      'by-shortId': string;
     };
   };
 }
 
 const DB_NAME = 'inventori';
-const DB_VERSION = 4; // Bump version to add shortId indexes
+const DB_VERSION = 5; // Bump version: shortId is now the primary id field
 
 let dbPromise: Promise<IDBPDatabase<InventoriDB>> | null = null;
 
@@ -46,39 +41,44 @@ export function getDB(): Promise<IDBPDatabase<InventoriDB>> {
       upgrade(db, oldVersion, _newVersion, transaction) {
         // Create locations store
         if (!db.objectStoreNames.contains('locations')) {
-          const locationStore = db.createObjectStore('locations', { keyPath: 'id' });
-          locationStore.createIndex('by-shortId', 'shortId', { unique: true });
-        } else if (oldVersion < 4) {
-          // Add shortId index to existing store
+          db.createObjectStore('locations', { keyPath: 'id' });
+        } else if (oldVersion < 5) {
+          // Remove shortId index if it exists (no longer needed)
           const locationStore = transaction.objectStore('locations');
-          if (!locationStore.indexNames.contains('by-shortId')) {
-            locationStore.createIndex('by-shortId', 'shortId', { unique: true });
+          if ((locationStore.indexNames as DOMStringList).contains('by-shortId')) {
+            locationStore.deleteIndex('by-shortId');
           }
         }
 
-        // Create containers store with parentId and shortId indexes
+        // Create containers store with parentId index
         if (!db.objectStoreNames.contains('containers')) {
           const containerStore = db.createObjectStore('containers', { keyPath: 'id' });
           containerStore.createIndex('by-parent', 'parentId');
-          containerStore.createIndex('by-shortId', 'shortId', { unique: true });
-        } else if (oldVersion < 4) {
-          // Add shortId index to existing store
+        } else if (oldVersion < 5) {
+          // Remove shortId index if it exists (no longer needed)
           const containerStore = transaction.objectStore('containers');
-          if (!containerStore.indexNames.contains('by-shortId')) {
-            containerStore.createIndex('by-shortId', 'shortId', { unique: true });
+          if ((containerStore.indexNames as DOMStringList).contains('by-shortId')) {
+            containerStore.deleteIndex('by-shortId');
+          }
+          // Ensure by-parent index exists
+          if (!containerStore.indexNames.contains('by-parent')) {
+            containerStore.createIndex('by-parent', 'parentId');
           }
         }
 
-        // Create items store with parentId and shortId indexes
+        // Create items store with parentId index
         if (!db.objectStoreNames.contains('items')) {
           const itemStore = db.createObjectStore('items', { keyPath: 'id' });
           itemStore.createIndex('by-parent', 'parentId');
-          itemStore.createIndex('by-shortId', 'shortId', { unique: true });
-        } else if (oldVersion < 4) {
-          // Add shortId index to existing store
+        } else if (oldVersion < 5) {
+          // Remove shortId index if it exists (no longer needed)
           const itemStore = transaction.objectStore('items');
-          if (!itemStore.indexNames.contains('by-shortId')) {
-            itemStore.createIndex('by-shortId', 'shortId', { unique: true });
+          if ((itemStore.indexNames as DOMStringList).contains('by-shortId')) {
+            itemStore.deleteIndex('by-shortId');
+          }
+          // Ensure by-parent index exists
+          if (!itemStore.indexNames.contains('by-parent')) {
+            itemStore.createIndex('by-parent', 'parentId');
           }
           // Remove old category index if it exists (from earlier versions)
           if ((itemStore.indexNames as DOMStringList).contains('by-category')) {

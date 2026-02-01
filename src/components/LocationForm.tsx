@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { PhotoCapture } from './PhotoCapture';
-import { ShortIdDisplay } from './ShortIdDisplay';
 import type { CreateLocationInput, Location } from '../types';
 
 interface LocationFormProps {
@@ -56,21 +55,6 @@ export function LocationForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Label ID Section - only shown in edit mode when shortId exists */}
-      {isEditMode && initialValues?.shortId && (
-        <div className="bg-surface-tertiary border border-border rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-content-secondary">Label ID</h3>
-              <p className="text-xs text-content-muted mt-0.5">
-                Use this ID on physical labels to quickly find this location
-              </p>
-            </div>
-            <ShortIdDisplay shortId={initialValues.shortId} />
-          </div>
-        </div>
-      )}
-
       {/* Name field */}
       <div>
         <label htmlFor="location-name" className="block text-sm font-medium text-content-secondary">

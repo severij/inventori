@@ -11,11 +11,10 @@ export const EXPORT_VERSION = '1.1';
  * Exported location with photos as filenames
  */
 export interface ExportedLocation {
-  id: string;
+  id: string; // 8-char Crockford Base32 ID (used for physical labels)
   type: 'location';
   name: string;
   description?: string;
-  shortId?: string; // Optional 8-char Crockford Base32 ID for physical labels
   photos: string[]; // filenames in images/ folder
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
@@ -25,11 +24,10 @@ export interface ExportedLocation {
  * Exported container with photos as filenames
  */
 export interface ExportedContainer {
-  id: string;
+  id: string; // 8-char Crockford Base32 ID (used for physical labels)
   type: 'container';
   name: string;
   description?: string;
-  shortId?: string; // Optional 8-char Crockford Base32 ID for physical labels
   parentId: string;
   parentType: 'location' | 'container' | 'item';
   photos: string[]; // filenames in images/ folder
@@ -41,11 +39,10 @@ export interface ExportedContainer {
  * Exported item with photos as filenames
  */
 export interface ExportedItem {
-  id: string;
+  id: string; // 8-char Crockford Base32 ID (used for physical labels)
   type: 'item';
   name: string;
   description?: string;
-  shortId?: string; // Optional 8-char Crockford Base32 ID for physical labels
   parentId?: string;
   parentType?: 'location' | 'container' | 'item';
   isContainer: boolean;
@@ -139,7 +136,6 @@ function exportLocation(location: Location): {
       type: location.type,
       name: location.name,
       description: location.description,
-      shortId: location.shortId,
       photos: filenames,
       createdAt: location.createdAt.toISOString(),
       updatedAt: location.updatedAt.toISOString(),
@@ -163,7 +159,6 @@ function exportContainer(container: Container): {
       type: container.type,
       name: container.name,
       description: container.description,
-      shortId: container.shortId,
       parentId: container.parentId,
       parentType: container.parentType,
       photos: filenames,
@@ -189,7 +184,6 @@ function exportItem(item: Item): {
       type: item.type,
       name: item.name,
       description: item.description,
-      shortId: item.shortId,
       parentId: item.parentId,
       parentType: item.parentType,
       isContainer: item.isContainer,

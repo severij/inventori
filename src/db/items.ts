@@ -1,9 +1,8 @@
 import { getDB } from './index';
-import { generateUUID } from '../utils/uuid';
-import { generateUniqueShortId } from '../utils/shortId';
+import { generateUniqueId } from '../utils/shortId';
 import type { Item, CreateItemInput, UpdateItemInput } from '../types';
-import { deleteContainersByParent, getContainerByShortId } from './containers';
-import { getLocationByShortId } from './locations';
+import { deleteContainersByParent, getContainer } from './containers';
+import { getLocation } from './locations';
 
 /**
  * Get all items
@@ -19,14 +18,6 @@ export async function getAllItems(): Promise<Item[]> {
 export async function getItem(id: string): Promise<Item | undefined> {
   const db = await getDB();
   return db.get('items', id);
-}
-
-/**
- * Get an item by its short ID
- */
-export async function getItemByShortId(shortId: string): Promise<Item | undefined> {
-  const db = await getDB();
-  return db.getFromIndex('items', 'by-shortId', shortId);
 }
 
 /**
@@ -62,22 +53,21 @@ export async function createItem(input: CreateItemInput): Promise<Item> {
   const db = await getDB();
   const now = new Date();
 
-  // Generate unique shortId with collision detection across all stores
-  const shortId = await generateUniqueShortId(async (id) => {
-    const existingItem = await db.getFromIndex('items', 'by-shortId', id);
+  // Generate unique id with collision detection across all stores
+  const id = await generateUniqueId(async (candidateId) => {
+    const existingItem = await db.get('items', candidateId);
     if (existingItem) return true;
-    const existingLocation = await getLocationByShortId(id);
+    const existingLocation = await getLocation(candidateId);
     if (existingLocation) return true;
-    const existingContainer = await getContainerByShortId(id);
+    const existingContainer = await getContainer(candidateId);
     if (existingContainer) return true;
     return false;
   });
 
   const item: Item = {
     ...input,
-    id: generateUUID(),
+    id,
     type: 'item',
-    shortId,
     createdAt: now,
     updatedAt: now,
   };
@@ -105,44 +95,6 @@ export async function updateItem(id: string, updates: UpdateItemInput): Promise<
 
   await db.put('items', updated);
   return updated;
-}
-
-/**
- * Generate and set a short ID for an item.
- * Returns the generated short ID.
- * Throws if the item already has a short ID.
- */
-export async function setItemShortId(id: string): Promise<string> {
-  const db = await getDB();
-  const item = await db.get('items', id);
-
-  if (!item) {
-    throw new Error(`Item not found: ${id}`);
-  }
-
-  if (item.shortId) {
-    throw new Error(`Item already has a short ID: ${item.shortId}`);
-  }
-
-  // Generate unique shortId with collision detection across all stores
-  const shortId = await generateUniqueShortId(async (sid) => {
-    const existingItem = await db.getFromIndex('items', 'by-shortId', sid);
-    if (existingItem) return true;
-    const existingLocation = await getLocationByShortId(sid);
-    if (existingLocation) return true;
-    const existingContainer = await getContainerByShortId(sid);
-    if (existingContainer) return true;
-    return false;
-  });
-
-  const updated: Item = {
-    ...item,
-    shortId,
-    updatedAt: new Date(),
-  };
-
-  await db.put('items', updated);
-  return shortId;
 }
 
 /**

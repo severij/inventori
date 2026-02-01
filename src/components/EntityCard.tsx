@@ -35,8 +35,8 @@ export function EntityCard({ entity }: EntityCardProps) {
   // Check if this is a pure container
   const isPureContainer = entity.type === 'container';
 
-  // Get formatted short ID if present
-  const shortId = entity.shortId ? formatShortId(entity.shortId) : null;
+  // Get formatted ID for display
+  const formattedId = formatShortId(entity.id);
 
   return (
     <button
@@ -59,11 +59,7 @@ export function EntityCard({ entity }: EntityCardProps) {
       {/* Content */}
       <div className="flex-1 min-w-0">
         <h3 className="font-medium text-content truncate">{entity.name}</h3>
-        {shortId ? (
-          <p className="text-xs text-content-muted font-mono">{shortId}</p>
-        ) : entity.description ? (
-          <p className="text-sm text-content-secondary truncate">{entity.description}</p>
-        ) : null}
+        <p className="text-xs text-content-muted font-mono">{formattedId}</p>
       </div>
 
       {/* Container indicator badge for item-containers */}
