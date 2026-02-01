@@ -44,13 +44,13 @@ export function ContainerView() {
       {/* Loading state */}
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <div className="text-gray-500">Loading...</div>
+          <div className="text-content-tertiary">Loading...</div>
         </div>
       )}
 
       {/* Error state */}
       {containerError && (
-        <div className="bg-red-50 text-red-700 p-4 rounded-lg">
+        <div className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 p-4 rounded-lg">
           <p>Error: {containerError.message}</p>
         </div>
       )}
@@ -59,8 +59,8 @@ export function ContainerView() {
       {!loading && !containerError && !container && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🔍</div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Container not found</h2>
-          <Link to="/" className="text-blue-600 hover:underline">
+          <h2 className="text-xl font-semibold text-content mb-2">Container not found</h2>
+          <Link to="/" className="text-accent-600 hover:underline">
             Go back home
           </Link>
         </div>
@@ -73,7 +73,7 @@ export function ContainerView() {
           <Breadcrumbs ancestors={ancestors} />
 
           {/* Container details */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+          <div className="bg-surface rounded-lg shadow-sm border border-border p-4 mb-6">
             {photoUrl && (
               <img
                 src={photoUrl}
@@ -81,14 +81,14 @@ export function ContainerView() {
                 className="w-full h-48 object-cover rounded-lg mb-4"
               />
             )}
-            <h2 className="text-xl font-semibold text-gray-900">{container.name}</h2>
+            <h2 className="text-xl font-semibold text-content">{container.name}</h2>
             {container.description && (
-              <p className="text-gray-600 mt-1">{container.description}</p>
+              <p className="text-content-secondary mt-1">{container.description}</p>
             )}
 
             {/* Label ID */}
             {container.shortId && (
-              <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="mt-4 pt-4 border-t border-border">
                 <ShortIdDisplay shortId={container.shortId} />
               </div>
             )}
@@ -97,13 +97,13 @@ export function ContainerView() {
             <div className="flex gap-2 mt-4">
               <Link
                 to={`/edit/container/${container.id}`}
-                className="flex-1 text-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="flex-1 text-center px-4 py-2 bg-surface-tertiary text-content-secondary rounded-lg hover:bg-surface-secondary transition-colors"
               >
                 Edit
               </Link>
               <button
                 onClick={handleDelete}
-                className="flex-1 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                className="flex-1 px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
               >
                 Delete
               </button>
@@ -114,13 +114,13 @@ export function ContainerView() {
           <div className="flex gap-2 mb-4">
             <Link
               to={`/add/container?parentId=${container.id}&parentType=container`}
-              className="flex-1 text-center px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+              className="flex-1 text-center px-4 py-2 bg-accent-100 dark:bg-surface-tertiary text-accent-600 dark:text-accent-400 border border-accent-300 dark:border-accent-600/50 rounded-lg hover:bg-accent-200 dark:hover:bg-surface-secondary transition-colors font-medium"
             >
               + Add Container
             </Link>
             <Link
               to={`/add/item?parentId=${container.id}&parentType=container`}
-              className="flex-1 text-center px-4 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
+              className="flex-1 text-center px-4 py-2 bg-accent-100 dark:bg-surface-tertiary text-accent-600 dark:text-accent-400 border border-accent-300 dark:border-accent-600/50 rounded-lg hover:bg-accent-200 dark:hover:bg-surface-secondary transition-colors font-medium"
             >
               + Add Item
             </Link>
@@ -129,7 +129,7 @@ export function ContainerView() {
           {/* Contents */}
           {hasChildren ? (
             <div className="space-y-3">
-              <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+              <h3 className="text-sm font-medium text-content-tertiary uppercase tracking-wide">
                 Contents ({containers.length + items.length})
               </h3>
               {containers.map((childContainer) => (
@@ -140,7 +140,7 @@ export function ContainerView() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-content-tertiary">
               <p>This container is empty</p>
               <p className="text-sm">Add a container or item to get started</p>
             </div>

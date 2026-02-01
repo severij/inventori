@@ -128,11 +128,11 @@ export function ContainerForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Label ID Section - only shown in edit mode when shortId exists */}
       {isEditMode && initialValues?.shortId && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <div className="bg-surface-tertiary border border-border rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-gray-700">Label ID</h3>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <h3 className="text-sm font-medium text-content-secondary">Label ID</h3>
+              <p className="text-xs text-content-muted mt-0.5">
                 Use this ID on physical labels to quickly find this container
               </p>
             </div>
@@ -142,8 +142,8 @@ export function ContainerForm({
       )}
 
       {/* Info banner */}
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-        <p className="text-sm text-gray-600">
+      <div className="bg-surface-tertiary border border-border rounded-lg p-4">
+        <p className="text-sm text-content-secondary">
           <strong>Containers</strong> are for organizing items (drawers, shelves, bins).
           They don't have purchase info or value tracking.
           Use <strong>Items</strong> with "can hold other items" for trackable containers like toolboxes.
@@ -152,11 +152,11 @@ export function ContainerForm({
 
       {/* Basic Information Section */}
       <fieldset className="space-y-4">
-        <legend className="text-lg font-medium text-gray-900">Basic Information</legend>
+        <legend className="text-lg font-medium text-content">Basic Information</legend>
 
         {/* Name field */}
         <div>
-          <label htmlFor="container-name" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="container-name" className="block text-sm font-medium text-content-secondary">
             Name <span className="text-red-500">*</span>
           </label>
           <input
@@ -165,8 +165,8 @@ export function ContainerForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
             className={`mt-1 block w-full rounded-md shadow-sm px-3 py-2 border ${
-              errors.name ? 'border-red-500' : 'border-gray-300'
-            } focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none`}
+              errors.name ? 'border-red-500' : 'border-border'
+            } bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none`}
             placeholder="e.g., Top Drawer, Left Shelf, Under Sink"
             disabled={isSubmitting}
           />
@@ -175,7 +175,7 @@ export function ContainerForm({
 
         {/* Description field */}
         <div>
-          <label htmlFor="container-description" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="container-description" className="block text-sm font-medium text-content-secondary">
             Description
           </label>
           <textarea
@@ -183,7 +183,7 @@ export function ContainerForm({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
-            className="mt-1 block w-full rounded-md shadow-sm px-3 py-2 border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none"
+            className="mt-1 block w-full rounded-md shadow-sm px-3 py-2 border border-border bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none resize-none"
             placeholder="Optional description..."
             disabled={isSubmitting}
           />
@@ -192,10 +192,10 @@ export function ContainerForm({
 
       {/* Location Section */}
       <fieldset className="space-y-4">
-        <legend className="text-lg font-medium text-gray-900">Location</legend>
+        <legend className="text-lg font-medium text-content">Location</legend>
 
         <div>
-          <label htmlFor="container-parent" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="container-parent" className="block text-sm font-medium text-content-secondary">
             Parent <span className="text-red-500">*</span>
           </label>
           <select
@@ -204,8 +204,8 @@ export function ContainerForm({
             onChange={handleParentChange}
             disabled={isSubmitting || isLoadingParents}
             className={`mt-1 block w-full rounded-md shadow-sm px-3 py-2 border ${
-              errors.parent ? 'border-red-500' : 'border-gray-300'
-            } focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-white`}
+              errors.parent ? 'border-red-500' : 'border-border'
+            } bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none`}
           >
             <option value="">
               {isLoadingParents ? 'Loading...' : 'Select a parent...'}
@@ -217,7 +217,7 @@ export function ContainerForm({
             ))}
           </select>
           {errors.parent && <p className="mt-1 text-sm text-red-500">{errors.parent}</p>}
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-content-muted">
             Containers must be inside a location, another container, or a container-item.
           </p>
         </div>
@@ -225,7 +225,7 @@ export function ContainerForm({
 
       {/* Photos Section */}
       <fieldset className="space-y-4">
-        <legend className="text-lg font-medium text-gray-900">Photos</legend>
+        <legend className="text-lg font-medium text-content">Photos</legend>
         <PhotoCapture photos={photos} onChange={setPhotos} maxPhotos={5} label="Container Photos" />
       </fieldset>
 
@@ -234,7 +234,7 @@ export function ContainerForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+          className="flex-1 bg-accent-500 text-white py-2 px-4 rounded-md hover:bg-accent-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
         >
           {isSubmitting ? 'Saving...' : isEditMode ? 'Update Container' : 'Create Container'}
         </button>
@@ -242,7 +242,7 @@ export function ContainerForm({
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
+          className="px-4 py-2 border border-border text-content-secondary rounded-md hover:bg-surface-tertiary transition-colors disabled:opacity-50"
         >
           Cancel
         </button>

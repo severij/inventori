@@ -41,10 +41,10 @@ export function EntityCard({ entity }: EntityCardProps) {
   return (
     <button
       onClick={handleClick}
-      className="w-full bg-white rounded-lg shadow-sm border border-gray-200 p-3 flex items-center gap-3 hover:shadow-md hover:border-gray-300 transition-all text-left"
+      className="w-full bg-surface rounded-lg shadow-sm border border-border p-3 flex items-center gap-3 hover:shadow-md hover:border-border-focus transition-all text-left"
     >
       {/* Thumbnail or icon */}
-      <div className="w-12 h-12 flex-shrink-0 rounded-md bg-gray-100 flex items-center justify-center overflow-hidden">
+      <div className="w-12 h-12 flex-shrink-0 rounded-md bg-surface-tertiary flex items-center justify-center overflow-hidden">
         {thumbnailUrl ? (
           <img
             src={thumbnailUrl}
@@ -58,31 +58,31 @@ export function EntityCard({ entity }: EntityCardProps) {
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <h3 className="font-medium text-gray-900 truncate">{entity.name}</h3>
+        <h3 className="font-medium text-content truncate">{entity.name}</h3>
         {shortId ? (
-          <p className="text-xs text-gray-400 font-mono">{shortId}</p>
+          <p className="text-xs text-content-muted font-mono">{shortId}</p>
         ) : entity.description ? (
-          <p className="text-sm text-gray-500 truncate">{entity.description}</p>
+          <p className="text-sm text-content-secondary truncate">{entity.description}</p>
         ) : null}
       </div>
 
       {/* Container indicator badge for item-containers */}
       {isContainerItem && (
-        <span className="flex-shrink-0 bg-amber-100 text-amber-800 text-xs font-medium px-2 py-0.5 rounded">
+        <span className="flex-shrink-0 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400 text-xs font-medium px-2 py-0.5 rounded">
           Container
         </span>
       )}
 
       {/* Pure container badge */}
       {isPureContainer && (
-        <span className="flex-shrink-0 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">
+        <span className="flex-shrink-0 bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-400 text-xs font-medium px-2 py-0.5 rounded">
           Organizer
         </span>
       )}
 
       {/* Quantity badge for non-container items */}
       {quantity !== null && quantity > 1 && (
-        <span className="flex-shrink-0 bg-blue-100 text-blue-800 text-sm font-medium px-2 py-0.5 rounded">
+        <span className="flex-shrink-0 bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-400 text-sm font-medium px-2 py-0.5 rounded">
           x{quantity}
         </span>
       )}
@@ -94,7 +94,7 @@ export function EntityCard({ entity }: EntityCardProps) {
         viewBox="0 0 24 24"
         strokeWidth={2}
         stroke="currentColor"
-        className="w-5 h-5 text-gray-400 flex-shrink-0"
+        className="w-5 h-5 text-content-muted flex-shrink-0"
       >
         <path
           strokeLinecap="round"

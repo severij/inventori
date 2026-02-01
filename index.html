@@ -18,6 +18,27 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
     
     <title>Inventori</title>
+    
+    <!-- Theme initialization - runs before page renders to prevent flash -->
+    <script>
+      (function() {
+        var THEME_MODE_KEY = 'inventori-theme-mode';
+        var ACCENT_COLOR_KEY = 'inventori-accent-color';
+        
+        var mode = localStorage.getItem(THEME_MODE_KEY) || 'system';
+        var accent = localStorage.getItem(ACCENT_COLOR_KEY) || 'blue';
+        
+        // Resolve system preference
+        var effectiveTheme = mode;
+        if (mode === 'system') {
+          effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        
+        // Apply immediately to prevent flash
+        document.documentElement.dataset.theme = effectiveTheme;
+        document.documentElement.dataset.accent = accent;
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

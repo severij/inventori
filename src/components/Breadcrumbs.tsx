@@ -17,10 +17,10 @@ export function Breadcrumbs({ ancestors }: BreadcrumbsProps) {
 
   return (
     <nav aria-label="Breadcrumb" className="mb-4">
-      <ol className="flex items-center gap-1 text-sm text-gray-600 flex-wrap">
+      <ol className="flex items-center gap-1 text-sm text-content-secondary flex-wrap">
         {/* Home link */}
         <li>
-          <Link to="/" className="hover:text-blue-500 transition-colors">
+          <Link to="/" className="hover:text-accent-500 transition-colors">
             Home
           </Link>
         </li>
@@ -38,7 +38,7 @@ export function Breadcrumbs({ ancestors }: BreadcrumbsProps) {
                 viewBox="0 0 24 24"
                 strokeWidth={2}
                 stroke="currentColor"
-                className="w-4 h-4 text-gray-400"
+                className="w-4 h-4 text-content-muted"
               >
                 <path
                   strokeLinecap="round"
@@ -48,9 +48,9 @@ export function Breadcrumbs({ ancestors }: BreadcrumbsProps) {
               </svg>
 
               {isLast ? (
-                <span className="font-medium text-gray-900">{item.name}</span>
+                <span className="font-medium text-content">{item.name}</span>
               ) : (
-                <Link to={path} className="hover:text-blue-500 transition-colors">
+                <Link to={path} className="hover:text-accent-500 transition-colors">
                   {item.name}
                 </Link>
               )}

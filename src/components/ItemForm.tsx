@@ -147,11 +147,11 @@ export function ItemForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Label ID Section - only shown in edit mode when shortId exists */}
       {isEditMode && initialValues?.shortId && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <div className="bg-surface-tertiary border border-border rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-gray-700">Label ID</h3>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <h3 className="text-sm font-medium text-content-secondary">Label ID</h3>
+              <p className="text-xs text-content-muted mt-0.5">
                 Use this ID on physical labels to quickly find this item
               </p>
             </div>
@@ -161,18 +161,18 @@ export function ItemForm({
       )}
 
       {/* Container Toggle - at top for visibility */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="bg-accent-50 dark:bg-surface-tertiary border border-accent-200 dark:border-accent-600/50 rounded-lg p-4">
         <label className="flex items-center gap-3 cursor-pointer">
           <input
             type="checkbox"
             checked={isContainer}
             onChange={(e) => handleIsContainerChange(e.target.checked)}
             disabled={isSubmitting}
-            className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            className="w-5 h-5 rounded border-border text-accent-500 focus:ring-accent-500"
           />
           <div>
-            <span className="font-medium text-gray-900">This item can hold other items</span>
-            <p className="text-sm text-gray-600">
+            <span className="font-medium text-content">This item can hold other items</span>
+            <p className="text-sm text-content-secondary">
               Enable this for containers like boxes, shelves, drawers, bags, etc.
             </p>
           </div>
@@ -181,11 +181,11 @@ export function ItemForm({
 
       {/* Basic Information Section */}
       <fieldset className="space-y-4">
-        <legend className="text-lg font-medium text-gray-900">Basic Information</legend>
+        <legend className="text-lg font-medium text-content">Basic Information</legend>
 
         {/* Name field */}
         <div>
-          <label htmlFor="item-name" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="item-name" className="block text-sm font-medium text-content-secondary">
             Name <span className="text-red-500">*</span>
           </label>
           <input
@@ -194,8 +194,8 @@ export function ItemForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
             className={`mt-1 block w-full rounded-md shadow-sm px-3 py-2 border ${
-              errors.name ? 'border-red-500' : 'border-gray-300'
-            } focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none`}
+              errors.name ? 'border-red-500' : 'border-border'
+            } bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none`}
             placeholder={isContainer ? "e.g., Toolbox, Shelf, Storage Bin" : "e.g., Hammer, Laptop, Winter Jacket"}
             disabled={isSubmitting}
           />
@@ -204,7 +204,7 @@ export function ItemForm({
 
         {/* Description field */}
         <div>
-          <label htmlFor="item-description" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="item-description" className="block text-sm font-medium text-content-secondary">
             Description
           </label>
           <textarea
@@ -212,7 +212,7 @@ export function ItemForm({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
-            className="mt-1 block w-full rounded-md shadow-sm px-3 py-2 border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none"
+            className="mt-1 block w-full rounded-md shadow-sm px-3 py-2 border border-border bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none resize-none"
             placeholder="Optional description..."
             disabled={isSubmitting}
           />
@@ -220,7 +220,7 @@ export function ItemForm({
 
         {/* Quantity field */}
         <div>
-          <label htmlFor="item-quantity" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="item-quantity" className="block text-sm font-medium text-content-secondary">
             Quantity {!isContainer && <span className="text-red-500">*</span>}
           </label>
           <input
@@ -230,14 +230,14 @@ export function ItemForm({
             onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
             min={1}
             className={`mt-1 block w-full rounded-md shadow-sm px-3 py-2 border ${
-              errors.quantity ? 'border-red-500' : 'border-gray-300'
-            } focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none ${
-              isContainer ? 'bg-gray-100 text-gray-500' : ''
+              errors.quantity ? 'border-red-500' : 'border-border'
+            } bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none ${
+              isContainer ? 'bg-surface-tertiary text-content-muted' : ''
             }`}
             disabled={isSubmitting || isContainer}
           />
           {isContainer && (
-            <p className="mt-1 text-xs text-gray-500">Containers always have quantity 1</p>
+            <p className="mt-1 text-xs text-content-muted">Containers always have quantity 1</p>
           )}
           {errors.quantity && <p className="mt-1 text-sm text-red-500">{errors.quantity}</p>}
         </div>
@@ -245,10 +245,10 @@ export function ItemForm({
 
       {/* Location Section */}
       <fieldset className="space-y-4">
-        <legend className="text-lg font-medium text-gray-900">Location</legend>
+        <legend className="text-lg font-medium text-content">Location</legend>
 
         <div>
-          <label htmlFor="item-parent" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="item-parent" className="block text-sm font-medium text-content-secondary">
             Parent Location/Container
           </label>
           <select
@@ -256,7 +256,7 @@ export function ItemForm({
             value={parentId}
             onChange={handleParentChange}
             disabled={isSubmitting || isLoadingParents}
-            className="mt-1 block w-full rounded-md shadow-sm px-3 py-2 border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-white"
+            className="mt-1 block w-full rounded-md shadow-sm px-3 py-2 border border-border bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none"
           >
             <option value="">
               {isLoadingParents ? 'Loading...' : 'Unassigned (no location)'}
@@ -267,7 +267,7 @@ export function ItemForm({
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-content-muted">
             Items can be unassigned and added to a location later.
           </p>
         </div>
@@ -275,7 +275,7 @@ export function ItemForm({
 
       {/* Photos Section */}
       <fieldset className="space-y-4">
-        <legend className="text-lg font-medium text-gray-900">Photos</legend>
+        <legend className="text-lg font-medium text-content">Photos</legend>
         <PhotoCapture photos={photos} onChange={setPhotos} maxPhotos={10} label="Item Photos" />
       </fieldset>
 
@@ -284,7 +284,7 @@ export function ItemForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+          className="flex-1 bg-accent-500 text-white py-2 px-4 rounded-md hover:bg-accent-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
         >
           {isSubmitting ? 'Saving...' : isEditMode ? 'Update Item' : 'Create Item'}
         </button>
@@ -292,7 +292,7 @@ export function ItemForm({
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
+          className="px-4 py-2 border border-border text-content-secondary rounded-md hover:bg-surface-tertiary transition-colors disabled:opacity-50"
         >
           Cancel
         </button>

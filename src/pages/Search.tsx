@@ -131,13 +131,13 @@ export function Search() {
       {/* Loading state */}
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <div className="text-gray-500">Loading...</div>
+          <div className="text-content-tertiary">Loading...</div>
         </div>
       )}
 
       {/* Initial state - no search term */}
       {!loading && !hasSearchTerm && (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-content-tertiary">
           <div className="text-5xl mb-4">🔍</div>
           <p>Search across all your inventory</p>
           <p className="text-sm mt-1">
@@ -148,7 +148,7 @@ export function Search() {
 
       {/* No results */}
       {!loading && !shortIdSearching && hasSearchTerm && results.length === 0 && !shortIdMatch && (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-content-tertiary">
           <div className="text-5xl mb-4">😕</div>
           <p>No results found for "{searchTerm}"</p>
           <p className="text-sm mt-1">Try a different search term</p>
@@ -158,8 +158,8 @@ export function Search() {
       {/* Short ID exact match - shown prominently at top */}
       {!loading && shortIdMatch && (
         <div className="mb-6">
-          <section className="bg-green-50 rounded-lg p-4 border border-green-200">
-            <h2 className="text-sm font-medium text-green-700 uppercase tracking-wide mb-3">
+          <section className="bg-green-100 dark:bg-green-900/30 rounded-lg p-4 border border-green-300 dark:border-green-700">
+            <h2 className="text-sm font-medium text-green-700 dark:text-green-400 uppercase tracking-wide mb-3">
               Label ID Match
             </h2>
             <EntityCard entity={shortIdMatch} />
@@ -171,14 +171,14 @@ export function Search() {
       {!loading && hasSearchTerm && results.length > 0 && (
         <div className="space-y-6">
           {/* Summary */}
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-content-tertiary">
             Found {results.length} result{results.length !== 1 ? 's' : ''} for "{searchTerm}"
           </p>
 
           {/* Locations */}
           {groupedResults.locations.length > 0 && (
             <section>
-              <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
+              <h2 className="text-sm font-medium text-content-tertiary uppercase tracking-wide mb-3">
                 Locations ({groupedResults.locations.length})
               </h2>
               <div className="space-y-2">
@@ -192,7 +192,7 @@ export function Search() {
           {/* Containers */}
           {groupedResults.containers.length > 0 && (
             <section>
-              <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
+              <h2 className="text-sm font-medium text-content-tertiary uppercase tracking-wide mb-3">
                 Containers ({groupedResults.containers.length})
               </h2>
               <div className="space-y-2">
@@ -206,7 +206,7 @@ export function Search() {
           {/* Items */}
           {groupedResults.items.length > 0 && (
             <section>
-              <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
+              <h2 className="text-sm font-medium text-content-tertiary uppercase tracking-wide mb-3">
                 Items ({groupedResults.items.length})
               </h2>
               <div className="space-y-2">

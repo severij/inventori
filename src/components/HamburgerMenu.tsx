@@ -4,6 +4,7 @@ import { importData, previewImport, type ImportResult } from '../utils/import';
 import { clearAllData } from '../db';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
 import { ConfirmDialog } from './ConfirmDialog';
+import { ThemeSettings } from './ThemeSettings';
 
 /**
  * Hamburger menu with dropdown containing app actions.
@@ -34,6 +35,9 @@ export function HamburgerMenu() {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [clearConfirmText, setClearConfirmText] = useState('');
   const [isClearing, setIsClearing] = useState(false);
+
+  // Theme settings state
+  const [showThemeSettings, setShowThemeSettings] = useState(false);
 
   const { isInstallable, promptInstall } = useInstallPrompt();
 
@@ -204,7 +208,7 @@ export function HamburgerMenu() {
         {/* Hamburger button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="p-2 rounded-full hover:bg-blue-600 transition-colors"
+          className="p-2 rounded-full hover:bg-accent-600 transition-colors"
           aria-label="Menu"
           aria-expanded={isOpen}
           aria-haspopup="true"
@@ -227,16 +231,16 @@ export function HamburgerMenu() {
 
         {/* Dropdown menu */}
         {isOpen && (
-          <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
+          <div className="absolute right-0 top-full mt-2 w-48 bg-surface rounded-lg shadow-lg border border-border py-1 z-20">
             {/* Export Data */}
             <button
               onClick={handleExport}
               disabled={isExporting}
-              className="flex items-center gap-3 w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-3 w-full px-4 py-3 text-left text-content-secondary hover:bg-surface-tertiary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isExporting ? (
                 <svg
-                  className="w-5 h-5 text-gray-500 animate-spin"
+                  className="w-5 h-5 text-content-muted animate-spin"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -262,7 +266,7 @@ export function HamburgerMenu() {
                   viewBox="0 0 24 24"
                   strokeWidth={2}
                   stroke="currentColor"
-                  className="w-5 h-5 text-gray-500"
+                  className="w-5 h-5 text-content-muted"
                 >
                   <path
                     strokeLinecap="round"
@@ -278,11 +282,11 @@ export function HamburgerMenu() {
             <button
               onClick={handleImportClick}
               disabled={isImporting}
-              className="flex items-center gap-3 w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-3 w-full px-4 py-3 text-left text-content-secondary hover:bg-surface-tertiary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isImporting ? (
                 <svg
-                  className="w-5 h-5 text-gray-500 animate-spin"
+                  className="w-5 h-5 text-content-muted animate-spin"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -308,7 +312,7 @@ export function HamburgerMenu() {
                   viewBox="0 0 24 24"
                   strokeWidth={2}
                   stroke="currentColor"
-                  className="w-5 h-5 text-gray-500"
+                  className="w-5 h-5 text-content-muted"
                 >
                   <path
                     strokeLinecap="round"
@@ -357,7 +361,7 @@ export function HamburgerMenu() {
             {isInstallable && (
               <button
                 onClick={handleInstall}
-                className="flex items-center gap-3 w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-3 w-full px-4 py-3 text-left text-content-secondary hover:bg-surface-tertiary transition-colors"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -365,7 +369,7 @@ export function HamburgerMenu() {
                   viewBox="0 0 24 24"
                   strokeWidth={2}
                   stroke="currentColor"
-                  className="w-5 h-5 text-gray-500"
+                  className="w-5 h-5 text-content-muted"
                 >
                   <path
                     strokeLinecap="round"
@@ -377,8 +381,33 @@ export function HamburgerMenu() {
               </button>
             )}
 
+            {/* Appearance */}
+            <button
+              onClick={() => {
+                setShowThemeSettings(true);
+                setIsOpen(false);
+              }}
+              className="flex items-center gap-3 w-full px-4 py-3 text-left text-content-secondary hover:bg-surface-tertiary transition-colors"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                className="w-5 h-5 text-content-muted"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 1-2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128Zm0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42"
+                />
+              </svg>
+              <span>Appearance</span>
+            </button>
+
             {/* Divider */}
-            <div className="my-1 border-t border-gray-200" />
+            <div className="my-1 border-t border-border" />
 
             {/* Clear All Data */}
             <button
@@ -475,6 +504,12 @@ export function HamburgerMenu() {
         onCancel={handleClearCancel}
         isDestructive
         confirmDisabled={clearConfirmText !== 'DELETE' || isClearing}
+      />
+
+      {/* Theme Settings Dialog */}
+      <ThemeSettings
+        isOpen={showThemeSettings}
+        onClose={() => setShowThemeSettings(false)}
       />
     </>
   );

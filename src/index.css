@@ -1,1 +1,198 @@
 @import "tailwindcss";
+
+/*
+ * Theme CSS Custom Properties
+ * These are applied via data-theme and data-accent attributes on <html>
+ */
+
+/* Base theme variables - Light mode (default) */
+:root {
+  /* Background colors */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f3f4f6;
+  --color-bg-tertiary: #e5e7eb;
+  
+  /* Text colors */
+  --color-text-primary: #111827;
+  --color-text-secondary: #4b5563;
+  --color-text-tertiary: #6b7280;
+  --color-text-muted: #9ca3af;
+  
+  /* Border colors */
+  --color-border: #e5e7eb;
+  --color-border-focus: #d1d5db;
+  
+  /* Accent color - default blue (overridden by data-accent) */
+  --color-accent-50: #eff6ff;
+  --color-accent-100: #dbeafe;
+  --color-accent-200: #bfdbfe;
+  --color-accent-300: #93c5fd;
+  --color-accent-400: #60a5fa;
+  --color-accent-500: #3b82f6;
+  --color-accent-600: #2563eb;
+  --color-accent-700: #1d4ed8;
+  
+  /* Status colors */
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-600: #16a34a;
+  --color-success-700: #15803d;
+  
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-600: #d97706;
+  
+  --color-error-50: #fef2f2;
+  --color-error-100: #fee2e2;
+  --color-error-500: #ef4444;
+  --color-error-600: #dc2626;
+  --color-error-700: #b91c1c;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  
+  /* Overlay */
+  --color-overlay: rgb(0 0 0 / 0.5);
+}
+
+/* Dark mode - using zinc (neutral gray) palette */
+:root[data-theme="dark"] {
+  /* Background colors - zinc palette (neutral, no blue tint) */
+  --color-bg-primary: #27272a;   /* zinc-800 */
+  --color-bg-secondary: #18181b; /* zinc-900 */
+  --color-bg-tertiary: #3f3f46;  /* zinc-700 */
+  
+  /* Text colors */
+  --color-text-primary: #fafafa;  /* zinc-50 */
+  --color-text-secondary: #d4d4d8; /* zinc-300 */
+  --color-text-tertiary: #a1a1aa;  /* zinc-400 */
+  --color-text-muted: #71717a;     /* zinc-500 */
+  
+  /* Border colors */
+  --color-border: #3f3f46;   /* zinc-700 */
+  --color-border-focus: #52525b; /* zinc-600 */
+  
+  /* Status colors - slightly adjusted for dark mode */
+  --color-success-50: #052e16;
+  --color-success-100: #14532d;
+  --color-success-600: #22c55e;
+  --color-success-700: #4ade80;
+  
+  --color-warning-50: #422006;
+  --color-warning-100: #713f12;
+  --color-warning-600: #fbbf24;
+  
+  --color-error-50: #450a0a;
+  --color-error-100: #7f1d1d;
+  --color-error-500: #f87171;
+  --color-error-600: #ef4444;
+  --color-error-700: #fca5a5;
+  
+  /* Shadows - more subtle in dark mode */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+  
+  /* Overlay */
+  --color-overlay: rgb(0 0 0 / 0.7);
+}
+
+/* Accent color: Blue (default) */
+:root[data-accent="blue"] {
+  --color-accent-50: #eff6ff;
+  --color-accent-100: #dbeafe;
+  --color-accent-200: #bfdbfe;
+  --color-accent-300: #93c5fd;
+  --color-accent-400: #60a5fa;
+  --color-accent-500: #3b82f6;
+  --color-accent-600: #2563eb;
+  --color-accent-700: #1d4ed8;
+}
+
+/* Accent color: Green */
+:root[data-accent="green"] {
+  --color-accent-50: #f0fdf4;
+  --color-accent-100: #dcfce7;
+  --color-accent-200: #bbf7d0;
+  --color-accent-300: #86efac;
+  --color-accent-400: #4ade80;
+  --color-accent-500: #22c55e;
+  --color-accent-600: #16a34a;
+  --color-accent-700: #15803d;
+}
+
+/* Accent color: Purple */
+:root[data-accent="purple"] {
+  --color-accent-50: #faf5ff;
+  --color-accent-100: #f3e8ff;
+  --color-accent-200: #e9d5ff;
+  --color-accent-300: #d8b4fe;
+  --color-accent-400: #c084fc;
+  --color-accent-500: #a855f7;
+  --color-accent-600: #9333ea;
+  --color-accent-700: #7e22ce;
+}
+
+/* Accent color: Orange */
+:root[data-accent="orange"] {
+  --color-accent-50: #fff7ed;
+  --color-accent-100: #ffedd5;
+  --color-accent-200: #fed7aa;
+  --color-accent-300: #fdba74;
+  --color-accent-400: #fb923c;
+  --color-accent-500: #f97316;
+  --color-accent-600: #ea580c;
+  --color-accent-700: #c2410c;
+}
+
+/* Accent color: Teal */
+:root[data-accent="teal"] {
+  --color-accent-50: #f0fdfa;
+  --color-accent-100: #ccfbf1;
+  --color-accent-200: #99f6e4;
+  --color-accent-300: #5eead4;
+  --color-accent-400: #2dd4bf;
+  --color-accent-500: #14b8a6;
+  --color-accent-600: #0d9488;
+  --color-accent-700: #0f766e;
+}
+
+/*
+ * Tailwind CSS v4 theme overrides using @theme
+ * This maps our CSS variables to Tailwind utilities
+ */
+@theme {
+  /* Map accent colors to Tailwind */
+  --color-accent-50: var(--color-accent-50);
+  --color-accent-100: var(--color-accent-100);
+  --color-accent-200: var(--color-accent-200);
+  --color-accent-300: var(--color-accent-300);
+  --color-accent-400: var(--color-accent-400);
+  --color-accent-500: var(--color-accent-500);
+  --color-accent-600: var(--color-accent-600);
+  --color-accent-700: var(--color-accent-700);
+  
+  /* Map semantic colors */
+  --color-surface: var(--color-bg-primary);
+  --color-surface-secondary: var(--color-bg-secondary);
+  --color-surface-tertiary: var(--color-bg-tertiary);
+  
+  --color-content: var(--color-text-primary);
+  --color-content-secondary: var(--color-text-secondary);
+  --color-content-tertiary: var(--color-text-tertiary);
+  --color-content-muted: var(--color-text-muted);
+  
+  --color-border: var(--color-border);
+  --color-border-focus: var(--color-border-focus);
+  
+  --color-overlay: var(--color-overlay);
+}
+
+/* Base styles */
+body {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}

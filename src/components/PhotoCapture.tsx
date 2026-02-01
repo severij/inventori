@@ -94,7 +94,7 @@ export function PhotoCapture({
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">{label}</label>
+      <label className="block text-sm font-medium text-content-secondary">{label}</label>
 
       {/* Photo previews */}
       {photos.length > 0 && (
@@ -104,7 +104,7 @@ export function PhotoCapture({
               <img
                 src={URL.createObjectURL(photo)}
                 alt={`Photo ${index + 1}`}
-                className="w-20 h-20 object-cover rounded-md border border-gray-200"
+                className="w-20 h-20 object-cover rounded-md border border-border"
               />
               <button
                 type="button"
@@ -126,7 +126,7 @@ export function PhotoCapture({
           <button
             type="button"
             onClick={handleCameraCapture}
-            className="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm"
+            className="flex items-center gap-2 px-3 py-2 bg-surface-tertiary text-content-secondary rounded-md hover:bg-border transition-colors text-sm"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -154,7 +154,7 @@ export function PhotoCapture({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm"
+            className="flex items-center gap-2 px-3 py-2 bg-surface-tertiary text-content-secondary rounded-md hover:bg-border transition-colors text-sm"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -188,7 +188,7 @@ export function PhotoCapture({
       {cameraError && <p className="text-sm text-red-500">{cameraError}</p>}
 
       {/* Photo count */}
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-content-muted">
         {photos.length} / {maxPhotos} photos
       </p>
     </div>

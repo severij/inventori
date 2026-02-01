@@ -67,7 +67,7 @@ export function ConfirmDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50"
+        className="absolute inset-0 bg-overlay"
         onClick={onCancel}
         aria-hidden="true"
       />
@@ -78,23 +78,23 @@ export function ConfirmDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="dialog-title"
-        className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+        className="relative bg-surface rounded-lg shadow-xl max-w-md w-full p-6"
       >
         <h2
           id="dialog-title"
-          className="text-lg font-semibold text-gray-900 mb-2"
+          className="text-lg font-semibold text-content mb-2"
         >
           {title}
         </h2>
 
-        <div className="text-gray-600 mb-6">
+        <div className="text-content-secondary mb-6">
           {message}
         </div>
 
         <div className="flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            className="px-4 py-2 text-content-secondary bg-surface-tertiary rounded-lg hover:bg-border transition-colors"
           >
             {cancelLabel}
           </button>
@@ -105,7 +105,7 @@ export function ConfirmDialog({
             className={`px-4 py-2 text-white rounded-lg transition-colors ${
               isDestructive
                 ? 'bg-red-600 hover:bg-red-700'
-                : 'bg-blue-600 hover:bg-blue-700'
+                : 'bg-accent-500 hover:bg-accent-600'
             } ${confirmDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {confirmLabel}

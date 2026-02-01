@@ -17,16 +17,16 @@ export function Layout({ children, title = 'Inventori', showBack = false }: Layo
   const isHome = location.pathname === '/';
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-surface-secondary">
       {/* Header */}
-      <header className="bg-blue-500 text-white shadow-md sticky top-0 z-10">
+      <header className="bg-accent-500 text-white shadow-md sticky top-0 z-10">
         <div className="flex items-center justify-between px-4 h-14">
           {/* Left: Back button or spacer */}
           <div className="w-10">
             {(showBack || !isHome) && (
               <button
                 onClick={() => navigate(-1)}
-                className="p-2 -ml-2 rounded-full hover:bg-blue-600 transition-colors"
+                className="p-2 -ml-2 rounded-full hover:bg-accent-600 transition-colors"
                 aria-label="Go back"
               >
                 <svg
@@ -54,7 +54,7 @@ export function Layout({ children, title = 'Inventori', showBack = false }: Layo
           <div className="flex items-center gap-1">
             <button
               onClick={() => navigate('/search')}
-              className="p-2 rounded-full hover:bg-blue-600 transition-colors"
+              className="p-2 rounded-full hover:bg-accent-600 transition-colors"
               aria-label="Search"
             >
               <svg

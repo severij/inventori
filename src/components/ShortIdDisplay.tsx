@@ -31,13 +31,13 @@ export function ShortIdDisplay({ shortId, size = 'md' }: ShortIdDisplayProps) {
 
   return (
     <div className="inline-flex items-center gap-2">
-      <span className={`font-mono ${sizeClasses[size]} text-gray-700 bg-gray-100 px-2 py-1 rounded`}>
+      <span className={`font-mono ${sizeClasses[size]} text-content-secondary bg-surface-tertiary px-2 py-1 rounded`}>
         {formatted}
       </span>
       <button
         type="button"
         onClick={handleCopy}
-        className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+        className="p-1.5 text-content-muted hover:text-content-secondary hover:bg-surface-tertiary rounded transition-colors"
         title={copied ? 'Copied!' : 'Copy to clipboard'}
       >
         {copied ? (

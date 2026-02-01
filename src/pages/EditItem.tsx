@@ -38,13 +38,13 @@ export function EditItem() {
       {/* Loading state */}
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <div className="text-gray-500">Loading...</div>
+          <div className="text-content-tertiary">Loading...</div>
         </div>
       )}
 
       {/* Error state */}
       {error && (
-        <div className="bg-red-50 text-red-700 p-4 rounded-lg">
+        <div className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 p-4 rounded-lg">
           <p>Error: {error.message}</p>
         </div>
       )}
@@ -53,8 +53,8 @@ export function EditItem() {
       {!loading && !error && !item && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🔍</div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Item not found</h2>
-          <Link to="/" className="text-blue-600 hover:underline">
+          <h2 className="text-xl font-semibold text-content mb-2">Item not found</h2>
+          <Link to="/" className="text-accent-600 hover:underline">
             Go back home
           </Link>
         </div>

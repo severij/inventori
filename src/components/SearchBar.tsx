@@ -58,7 +58,7 @@ export function SearchBar({
           viewBox="0 0 24 24"
           strokeWidth={2}
           stroke="currentColor"
-          className="w-5 h-5 text-gray-400"
+          className="w-5 h-5 text-content-muted"
         >
           <path
             strokeLinecap="round"
@@ -75,7 +75,7 @@ export function SearchBar({
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder={placeholder}
-        className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-900 placeholder-gray-400"
+        className="block w-full pl-10 pr-10 py-2 border border-border rounded-lg bg-surface focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none text-content placeholder-content-muted"
         aria-label="Search"
       />
 
@@ -84,7 +84,7 @@ export function SearchBar({
         <button
           type="button"
           onClick={handleClear}
-          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+          className="absolute inset-y-0 right-0 pr-3 flex items-center text-content-muted hover:text-content-secondary"
           aria-label="Clear search"
         >
           <svg
