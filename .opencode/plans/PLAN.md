@@ -69,9 +69,9 @@ src/
 ### 2.1 Define TypeScript Types
 
 Create `src/types/index.ts` with interfaces:
-- `Location` (with optional `shortId` field)
-- `Container` (with optional `shortId` field)
-- `Item` (with optional `shortId` field)
+- `Location` (with 8-char Crockford Base32 `id` as primary key)
+- `Container` (with 8-char Crockford Base32 `id` as primary key)
+- `Item` (with 8-char Crockford Base32 `id` as primary key)
 - Union type `Entity = Location | Container | Item`
 - Input types for create/update operations (`CreateLocationInput`, etc.)
 - `BreadcrumbItem` for navigation
@@ -80,11 +80,10 @@ Create `src/types/index.ts` with interfaces:
 
 Create `src/db/index.ts`:
 - Database name: `inventori`
-- Version: `4`
+- Version: `5`
 - Object stores: `locations`, `containers`, `items`
 - Indexes:
   - `by-parent` on `parentId` for containers and items
-  - `by-shortId` (unique) on all stores for Label ID lookup
 
 ### 2.3 Implement CRUD Operations
 
@@ -93,49 +92,42 @@ Create database operation modules:
 **`src/db/locations.ts`:**
 - `getAllLocations(): Promise<Location[]>`
 - `getLocation(id: string): Promise<Location | undefined>`
-- `getLocationByShortId(shortId: string): Promise<Location | undefined>`
-- `createLocation(input: CreateLocationInput): Promise<Location>` (auto-generates shortId)
+- `createLocation(input: CreateLocationInput): Promise<Location>` (auto-generates ID)
 - `updateLocation(id: string, updates: UpdateLocationInput): Promise<Location>`
 - `deleteLocation(id: string): Promise<void>` (cascade delete children)
 
 **`src/db/containers.ts`:**
 - `getAllContainers(): Promise<Container[]>`
 - `getContainer(id: string): Promise<Container | undefined>`
-- `getContainerByShortId(shortId: string): Promise<Container | undefined>`
 - `getContainersByParent(parentId: string): Promise<Container[]>`
-- `createContainer(input: CreateContainerInput): Promise<Container>` (auto-generates shortId)
+- `createContainer(input: CreateContainerInput): Promise<Container>` (auto-generates ID)
 - `updateContainer(id: string, updates: UpdateContainerInput): Promise<Container>`
 - `deleteContainer(id: string): Promise<void>` (cascade delete children)
 
 **`src/db/items.ts`:**
 - `getAllItems(): Promise<Item[]>`
 - `getItem(id: string): Promise<Item | undefined>`
-- `getItemByShortId(shortId: string): Promise<Item | undefined>`
 - `getItemsByParent(parentId: string): Promise<Item[]>`
 - `getUnassignedItems(): Promise<Item[]>`
-- `createItem(input: CreateItemInput): Promise<Item>` (auto-generates shortId)
+- `createItem(input: CreateItemInput): Promise<Item>` (auto-generates ID)
 - `updateItem(id: string, updates: UpdateItemInput): Promise<Item>`
 - `deleteItem(id: string): Promise<void>` (cascade delete children if isContainer)
 
 ### 2.4 Create Utility Functions
 
-**`src/utils/uuid.ts`:**
-- Use `crypto.randomUUID()` for generating UUIDs
-
 **`src/utils/shortId.ts`:**
-- `generateShortId(): string` - Generate 8-char Crockford Base32 ID
-- `generateUniqueShortId(isCollision): Promise<string>` - Generate with collision checking
+- `generateId(): string` - Generate 8-char Crockford Base32 ID
+- `generateUniqueId(isCollision): Promise<string>` - Generate with collision checking
 - `formatShortId(id: string): string` - Format as `XXXX-XXXX`
 - `normalizeShortId(input: string): string | null` - Normalize user input
-- `looksLikeShortId(query: string): boolean` - Check if input looks like a Label ID
+- `looksLikeShortId(query: string): boolean` - Check if input looks like an ID
 
 **Deliverables:**
-- [x] TypeScript interfaces defined (with shortId field)
-- [x] IndexedDB initialized with schema (v4 with shortId indexes)
-- [x] CRUD operations for all entity types (with auto-generated shortId)
+- [x] TypeScript interfaces defined (with Crockford Base32 ID as primary key)
+- [x] IndexedDB initialized with schema (v5)
+- [x] CRUD operations for all entity types (with auto-generated ID)
 - [x] Cascade delete implemented for locations and containers
-- [x] UUID utility created
-- [x] Short ID utility created (Crockford Base32)
+- [x] ID utility created (Crockford Base32)
 
 ---
 
@@ -194,7 +186,7 @@ Create database operation modules:
 
 **`src/components/EntityCard.tsx`:**
 - Unified card component for displaying location/container/item
-- Shows: photo thumbnail (if available), name, type icon, Label ID (if present)
+- Shows: photo thumbnail (if available), name, type icon
 - For items: shows quantity badge if > 1
 - Click navigates to detail view
 
@@ -203,10 +195,10 @@ Create database operation modules:
 - Clickable links to each ancestor
 - Current location shown but not clickable
 
-**`src/components/ShortIdDisplay.tsx`:**
-- Displays formatted Label ID (XXXX-XXXX)
+**`src/components/IdDisplay.tsx`:**
+- Displays formatted ID (XXXX-XXXX)
 - Copy to clipboard button
-- Used in entity views and forms
+- Used in entity view pages
 
 ### 4.3 Form Components
 
@@ -246,9 +238,9 @@ Create database operation modules:
 
 **Deliverables:**
 - [x] Layout with navigation
-- [x] EntityCard for unified display (with Label ID)
+- [x] EntityCard for unified display
 - [x] Breadcrumbs component
-- [x] ShortIdDisplay component for Label IDs
+- [x] IdDisplay component for IDs
 - [x] All form components (LocationForm, ContainerForm, ItemForm)
 - [x] PhotoCapture with camera and upload
 - [x] SearchBar component
@@ -292,21 +284,21 @@ All routes configured in `src/App.tsx`. Query parameters (`?parentId=X&parentTyp
 
 **`src/pages/LocationView.tsx`:**
 - Breadcrumbs (just location name)
-- Location details (name, description, photo, Label ID)
+- Location details (name, description, photo, ID)
 - List of containers and items in this location
 - "Add Container" and "Add Item" buttons
 - Edit and Delete actions
 
 **`src/pages/ContainerView.tsx`:**
 - Breadcrumbs showing full path
-- Container details (with Label ID)
+- Container details (with ID)
 - List of child containers and items
 - "Add Container" and "Add Item" buttons
 - Edit and Delete actions
 
 **`src/pages/ItemView.tsx`:**
 - Breadcrumbs showing full path
-- Item details (name, description, quantity, Label ID)
+- Item details (name, description, quantity, ID)
 - Photo gallery
 - If isContainer, list child items
 - Edit and Delete actions
@@ -325,7 +317,7 @@ All routes configured in `src/App.tsx`. Query parameters (`?parentId=X&parentTyp
 **`src/pages/Search.tsx`:**
 - SearchBar at top
 - Search across all entities (locations, containers, items)
-- Label ID exact match search (when input looks like a Label ID)
+- ID exact match search (when input looks like an ID)
 - Display results grouped by type or unified list
 - Click result navigates to detail view
 
@@ -398,7 +390,7 @@ SVG format used for scalability. PNG versions can be added later if compatibilit
 
 **`src/utils/export.ts`:**
 - `exportData(): Promise<Blob>` - Export all data as ZIP file
-- Include all locations, containers, items (with shortId fields)
+- Include all locations, containers, items (with ID fields)
 - Store photos as separate files (not embedded base64)
 - Return ZIP blob
 
@@ -408,7 +400,7 @@ Implemented with:
 - Images stored uncompressed (STORE mode) for speed
 - Metadata: `version` (1.1) and `exportedAt` timestamp
 - All dates converted to ISO strings
-- shortId fields included in export
+- ID fields included in export
 - Helper function `downloadExport()` to trigger browser download
 - Helper function `generateExportFilename()` for consistent naming
 
@@ -427,7 +419,7 @@ data.json structure:
 {
   "version": "1.1",
   "exportedAt": "2026-02-01T12:00:00.000Z",
-  "locations": [{ "shortId": "ABCD1234", "photos": ["location-abc-0.jpg"], ... }],
+  "locations": [{ "id": "ABCD1234", "photos": ["location-ABCD1234-0.jpg"], ... }],
   "containers": [...],
   "items": [...]
 }
@@ -445,10 +437,9 @@ Implemented with:
 - Only supports v1.1 ZIP format (no backward compatibility)
 - Extracts images from ZIP and converts filenames back to Blobs
 - ISO date strings converted back to Date objects
-- shortId collision handling: if imported shortId conflicts with different entity (different UUID), shortId is cleared and warning added
 - Validation of export format and version compatibility
 - `ImportResult` includes:
-  - `warnings`: Array of non-fatal issues (e.g., missing images, shortId collisions)
+  - `warnings`: Array of non-fatal issues (e.g., missing images)
   - `errors`: Array of fatal issues
   - Counts of added/updated items per entity type
 
@@ -465,12 +456,12 @@ Implemented with:
   - Install App option (shows when PWA is installable)
 - `src/components/ConfirmDialog.tsx` - Reusable confirmation dialog
 - Import confirmation shows file details (version, date, counts) before importing
-- Displays warnings for missing images and shortId collisions after import
+- Displays warnings for missing images after import
 - Page reloads after successful import to reflect changes
 
 **Deliverables:**
-- [x] Export function implemented (ZIP with separate images, includes shortId)
-- [x] Import function implemented (merge by ID, shortId collision handling)
+- [x] Export function implemented (ZIP with separate images, includes ID)
+- [x] Import function implemented (merge by ID)
 - [x] Download trigger in UI (hamburger menu)
 - [x] Import trigger in UI with confirmation dialog
 
@@ -532,12 +523,12 @@ Implemented with:
 
 2. **Cascade Deletes:** When deleting a location or container, all child containers and items must also be deleted. Implement recursively.
 
-3. **UUIDs:** Always use `crypto.randomUUID()` for IDs to ensure compatibility with future QR codes and P2P sync.
+3. **IDs:** Use 8-character Crockford Base32 IDs as primary keys. These provide high entropy (~1 trillion combinations) for future sync compatibility and can be used on physical labels.
 
-4. **Short IDs (Label IDs):** Auto-generated on entity creation using Crockford Base32. Globally unique across all entity types. Used for physical labels and quick search.
+4. **ID Format:** Crockford Base32 alphabet excludes I, L, O, U to avoid confusion. The `shortId.ts` utility handles generation, formatting (XXXX-XXXX), and normalization.
 
 5. **Timestamps:** Always set `createdAt` on creation and update `updatedAt` on every modification.
 
 6. **Parent References:** When moving items/containers, update both `parentId` and `parentType`.
 
-7. **Search:** For v1, a simple in-memory filter is sufficient. Label ID search uses exact match via IndexedDB index. For larger inventories, consider IndexedDB full-text search or a search index.
+7. **Search:** For v1, a simple in-memory filter is sufficient. ID search uses exact match. For larger inventories, consider IndexedDB full-text search or a search index.

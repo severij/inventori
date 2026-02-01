@@ -20,17 +20,32 @@ Inventori helps users catalog and organize their physical belongings with a hier
 
 ## Data Model
 
+### ID Format
+
+All entities use an 8-character Crockford Base32 ID as their primary key:
+
+- **Format**: 8 characters using Crockford Base32 alphabet
+- **Alphabet**: `0123456789ABCDEFGHJKMNPQRSTVWXYZ` (32 characters)
+- **Excluded characters**: I, L, O, U (to avoid confusion with 1, 1, 0, and V)
+- **Display**: Formatted as `XXXX-XXXX` with hyphen for readability
+- **Storage**: Stored as `ABCDEFGH` (no hyphen)
+- **Entropy**: 40 bits (~1 trillion combinations)
+- **Generation**: Automatically generated when entity is created
+- **Uniqueness**: Globally unique across all entity types
+- **Use case**: Can be used on physical labels for quick lookup
+
+Example: `7KM3-QRST`
+
 ### Location
 
 A top-level place where items and containers are stored (room, building, storage unit, etc.).
 
 ```typescript
 interface Location {
-  id: string;              // UUID
+  id: string;              // 8-char Crockford Base32 ID (primary key)
   type: 'location';
   name: string;            // e.g., "Living Room", "Garage", "Storage Unit #5"
   description?: string;
-  shortId?: string;        // 8-char Crockford Base32 Label ID (auto-generated)
   photos: Blob[];
   createdAt: Date;
   updatedAt: Date;
@@ -43,11 +58,10 @@ A storage unit that can hold items or other containers. Can be nested infinitely
 
 ```typescript
 interface Container {
-  id: string;              // UUID
+  id: string;              // 8-char Crockford Base32 ID (primary key)
   type: 'container';
   name: string;            // e.g., "Blue plastic bin", "Top drawer"
   description?: string;
-  shortId?: string;        // 8-char Crockford Base32 Label ID (auto-generated)
   parentId: string;        // Location ID or Container ID
   parentType: 'location' | 'container' | 'item';
   photos: Blob[];
@@ -62,11 +76,10 @@ An individual inventory item. Items can also act as containers (e.g., a toolbox 
 
 ```typescript
 interface Item {
-  id: string;              // UUID
+  id: string;              // 8-char Crockford Base32 ID (primary key)
   type: 'item';
   name: string;
   description?: string;
-  shortId?: string;        // 8-char Crockford Base32 Label ID (auto-generated)
   
   // Hierarchy (optional - items can be unassigned)
   parentId?: string;
@@ -81,19 +94,6 @@ interface Item {
   updatedAt: Date;
 }
 ```
-
-### Short ID (Label ID)
-
-All entities have an auto-generated `shortId` for use on physical labels:
-
-- **Format**: 8 characters using Crockford Base32 alphabet (excludes I, L, O, U for readability)
-- **Display**: Formatted as `XXXX-XXXX` with hyphen for readability
-- **Storage**: Stored as `ABCDEFGH` (no hyphen)
-- **Uniqueness**: Globally unique across all entity types (locations, containers, items)
-- **Generation**: Automatically generated when entity is created
-- **Search**: Can search by Label ID in the search page (exact match)
-
-Example: `7KM3-QRST`
 
 ### Hierarchy Example
 
@@ -123,14 +123,14 @@ Living Room (location)
    - Create, view, edit, delete locations
    - View all containers and items within a location
    - Photo attachments
-   - Auto-generated Label ID for physical labels
+   - ID displayed for physical labels
 
 2. **Container Management**
    - Create, view, edit, delete containers
    - Nest containers within locations or other containers (infinite depth)
    - View all contents (child containers and items)
    - Photo attachments
-   - Auto-generated Label ID for physical labels
+   - ID displayed for physical labels
 
 3. **Item Management**
    - Create, view, edit, delete items
@@ -138,7 +138,7 @@ Living Room (location)
    - Items can be unassigned (no parent) or assigned to a location/container/item
    - Items can be marked as containers (`isContainer=true`) to hold other items
    - Photo attachments (multiple photos per item)
-   - Auto-generated Label ID for physical labels
+   - ID displayed for physical labels
 
 4. **Navigation & Organization**
    - Home page showing all locations
@@ -148,7 +148,7 @@ Living Room (location)
 5. **Search**
    - Global search across all items, containers, and locations
    - Search by name, description
-   - Search by Label ID (exact match when input looks like a Label ID)
+   - Search by ID (exact match when input looks like an ID)
 
 6. **Photo Capture**
    - Camera integration for taking photos
@@ -187,7 +187,7 @@ interface ExportData {
 Key transformations from IndexedDB to export:
 - **Photos (Blob[])**: Stored as separate files in `images/` folder, referenced by filename
 - **Dates**: Converted to ISO 8601 strings
-- **shortId**: Included in export, collision-checked on import
+- **IDs**: 8-char Crockford Base32 IDs preserved
 - **Structure**: Flat format with separate arrays (not nested hierarchy)
 
 The flat format preserves relationships via `parentId` and `parentType` fields, making it easy to re-import into IndexedDB.
@@ -195,12 +195,11 @@ The flat format preserves relationships via `parentId` and `parentType` fields, 
 ### Import Behavior
 
 Import uses a **merge by ID** strategy:
-- Items with matching UUIDs are **updated** with imported data
-- Items with new UUIDs are **added** to the database
+- Items with matching IDs are **updated** with imported data
+- Items with new IDs are **added** to the database
 - Existing items not in the import file are **preserved**
-- **shortId collision handling**: If imported shortId conflicts with a different entity (different UUID), the shortId is cleared and a warning is shown
 
-This is safe because UUIDs are globally unique - items created on different devices will have different IDs and won't conflict.
+This is safe because IDs are generated with high entropy (~1 trillion combinations) - items created on different devices will have different IDs and won't conflict.
 
 #### PWA Features
 
@@ -228,7 +227,7 @@ This is safe because UUIDs are globally unique - items created on different devi
 
 1. **QR Code Generation**
    - Generate printable QR codes for locations, containers, and items
-   - QR code contains entity UUID or Label ID
+   - QR code contains entity ID
    - Print-friendly layout
 
 2. **QR Code Scanning**
@@ -259,21 +258,21 @@ This is safe because UUIDs are globally unique - items created on different devi
    - Screen reader support
 
 4. **Data Integrity**
-   - All IDs are UUIDs (for future sync compatibility)
+   - All IDs are 8-char Crockford Base32 (high entropy for sync compatibility)
    - Timestamps on all entities for conflict resolution
    - Cascade considerations when deleting locations/containers
 
 ## IndexedDB Schema
 
-Database version: **4**
+Database version: **5**
 
 ### Object Stores
 
 | Store | Key Path | Indexes |
 |-------|----------|---------|
-| `locations` | `id` | `by-shortId` (unique) |
-| `containers` | `id` | `by-parent` (parentId), `by-shortId` (unique) |
-| `items` | `id` | `by-parent` (parentId), `by-shortId` (unique) |
+| `locations` | `id` | - |
+| `containers` | `id` | `by-parent` (parentId) |
+| `items` | `id` | `by-parent` (parentId) |
 
 ## Project Structure
 
@@ -289,14 +288,14 @@ inventori/
 │   │   ├── PhotoCapture.tsx    # Camera/upload component
 │   │   ├── EntityCard.tsx      # Card for displaying location/container/item
 │   │   ├── Breadcrumbs.tsx     # Navigation breadcrumbs
-│   │   ├── ShortIdDisplay.tsx  # Label ID display with copy button
+│   │   ├── IdDisplay.tsx       # ID display with copy button
 │   │   ├── LocationForm.tsx    # Form for creating/editing locations
 │   │   ├── ContainerForm.tsx   # Form for creating/editing containers
 │   │   ├── ItemForm.tsx        # Form for creating/editing items
 │   │   ├── InstallButton.tsx   # PWA install prompt button (standalone)
 │   │   └── ExportButton.tsx    # Data export trigger button (standalone)
 │   ├── db/
-│   │   ├── index.ts            # DB initialization and schema (v4)
+│   │   ├── index.ts            # DB initialization and schema (v5)
 │   │   ├── locations.ts        # Location CRUD operations
 │   │   ├── containers.ts       # Container CRUD operations
 │   │   └── items.ts            # Item CRUD operations
@@ -319,12 +318,11 @@ inventori/
 │   │   ├── EditLocation.tsx
 │   │   ├── EditContainer.tsx
 │   │   ├── EditItem.tsx
-│   │   └── Search.tsx          # Global search page (includes Label ID search)
+│   │   └── Search.tsx          # Global search page (includes ID search)
 │   ├── types/
 │   │   └── index.ts            # TypeScript interfaces
 │   ├── utils/
-│   │   ├── uuid.ts             # UUID generation
-│   │   ├── shortId.ts          # Label ID generation (Crockford Base32)
+│   │   ├── shortId.ts          # ID generation (Crockford Base32)
 │   │   ├── export.ts           # ZIP export functionality
 │   │   └── import.ts           # ZIP import functionality
 │   ├── App.tsx                 # Main app with routing
