@@ -5,6 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/inventori/',
   plugins: [
     react(),
     tailwindcss(),
@@ -19,8 +20,8 @@ export default defineConfig({
         theme_color: '#3b82f6',
         background_color: '#f3f4f6',
         display: 'standalone',
-        scope: '/',
-        start_url: '/',
+        scope: '/inventori/',
+        start_url: '/inventori/',
         orientation: 'portrait-primary',
         categories: ['productivity', 'utilities'],
         icons: [
