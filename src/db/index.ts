@@ -102,3 +102,18 @@ export async function closeDB(): Promise<void> {
     dbPromise = null;
   }
 }
+
+/**
+ * Clear all data from the database.
+ * This removes all locations, containers, and items.
+ */
+export async function clearAllData(): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction(['locations', 'containers', 'items'], 'readwrite');
+  await Promise.all([
+    tx.objectStore('locations').clear(),
+    tx.objectStore('containers').clear(),
+    tx.objectStore('items').clear(),
+    tx.done,
+  ]);
+}

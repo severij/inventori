@@ -9,6 +9,7 @@ interface ConfirmDialogProps {
   onConfirm: () => void;
   onCancel: () => void;
   isDestructive?: boolean;
+  confirmDisabled?: boolean;
 }
 
 /**
@@ -24,6 +25,7 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
   isDestructive = false,
+  confirmDisabled = false,
 }: ConfirmDialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
@@ -99,11 +101,12 @@ export function ConfirmDialog({
           <button
             ref={confirmButtonRef}
             onClick={onConfirm}
+            disabled={confirmDisabled}
             className={`px-4 py-2 text-white rounded-lg transition-colors ${
               isDestructive
                 ? 'bg-red-600 hover:bg-red-700'
                 : 'bg-blue-600 hover:bg-blue-700'
-            }`}
+            } ${confirmDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {confirmLabel}
           </button>
