@@ -513,6 +513,482 @@ Implemented with:
 
 ---
 
+## Phase 9: Data Model Consolidation
+
+### 9.1 Separate Location and Item Types with Rich Item Tracking
+
+Refactor to separate `Location` (simple organizational) and `Item` (rich tracking) types:
+
+**`src/types/index.ts`:**
+- Define `ItemContainerStatus` enum (16 values: IN_USE, STORED, PACKED, LENT, IN_REPAIR, CONSIGNED, TO_SELL, TO_DONATE, TO_REPAIR, SOLD, DONATED, GIFTED, STOLEN, LOST, DISPOSED, RECYCLED)
+- Define `Location` interface (simple):
+  - `id`, `name`, `description`, `parentId` (optional, can parent other locations), `photos`, `createdAt`, `updatedAt`
+  - No `type` field (separate entity type from Item)
+- Define `Item` interface (rich tracking):
+  - `id`, `name`, `description`
+  - `parentId` (required), `parentType: 'location' | 'item'` (tells which store to query)
+  - `canHoldItems: boolean` (can this item hold other items?)
+  - `quantity: number` (default: 1)
+  - `status: ItemContainerStatus` (default: 'IN_USE')
+  - `includeInTotal: boolean` (include in inventory totals? default: true)
+  - `tags: string[]` (categories, default: [])
+  - `purchasePrice?: number`, `currentValue?: number`, `dateAcquired?: Date`, `dateDisposed?: Date` (optional financial tracking)
+  - `photos`, `createdAt`, `updatedAt`
+- Add `CreateLocationInput`, `UpdateLocationInput`, `CreateItemInput`, `UpdateItemInput`
+- Keep `BreadcrumbItem` interface
+- Remove: old Container/Entity types, old input types, ParentType union
+
+### 9.2 Update Database Schema to v6
+
+**`src/db/index.ts`:**
+- Bump schema version to 6
+- Keep two separate stores (separate, not consolidated):
+  - `locations`: Location entities, key `id`, no indexes
+  - `items`: Item entities, key `id`, index `by-parent` on `parentId`
+- No automatic data migration needed (fresh schema v6)
+
+**`src/db/locations.ts` (UPDATED):**
+- Update function signatures to use new `Location` type
+- Functions:
+  - `getLocation(id: string): Promise<Location | undefined>`
+  - `getAllLocations(): Promise<Location[]>`
+  - `getLocationsByParent(parentId: string): Promise<Location[]>`
+  - `createLocation(input: CreateLocationInput): Promise<Location>`
+  - `updateLocation(id: string, updates: UpdateLocationInput): Promise<Location>`
+  - `deleteLocation(id: string, deleteChildren?: boolean): Promise<void>` - Soft cascade: orphan child locations, delete child items
+- Add parent validation (parent location must exist)
+- Only update `updatedAt` if content actually changed
+
+**`src/db/items.ts` (UPDATED):**
+- Consolidated Item CRUD operations
+- Functions:
+  - `getItem(id: string): Promise<Item | undefined>`
+  - `getAllItems(): Promise<Item[]>`
+  - `getItemsByParent(parentId: string, parentType: 'location' | 'item'): Promise<Item[]>`
+  - `getDisposalItems(): Promise<Item[]>` - Items with disposal-related statuses
+  - `createItem(input: CreateItemInput): Promise<Item>` - Apply defaults, validate parent exists
+  - `updateItem(id: string, updates: UpdateItemInput): Promise<Item>` - Validate, only update timestamp if changed
+  - `deleteItem(id: string, deleteChildren?: boolean): Promise<void>` - Soft cascade: delete children (items can't be orphaned)
+- Validate parentId and parentType on create/update
+- Validate parent exists in correct store (Location or Item)
+- If parentType='item', validate parent has `canHoldItems: true`
+- No circular hierarchies
+
+**Delete:**
+- `src/db/containers.ts` (merge functionality into items.ts)
+
+### 9.3 Update React Hooks
+
+**`src/hooks/useEntities.ts` (NEW):**
+- Consolidated from `useContainers.ts` and `useItems.ts`
+- Options: `parentId`, `unassignedOnly`, `excludeDisposal`, `countableOnly`
+
+**`src/hooks/useDescendantCount.ts` (NEW - KEY FEATURE):**
+- In-memory cache with React `useMemo` for recursive counting
+- Respects `isCountable` and `markedForDisposal` flags
+- Respects `quantity` field for entity counting
+- Cache invalidation on entity CRUD operations
+- Used on Home, LocationView, and EntityView pages
+
+**Update: `src/hooks/useChildren.ts`**
+- Now calls `getEntitiesByParent()` instead of separate container/item calls
+
+**Update: `src/hooks/useAncestors.ts`**
+- Support traversing with `parentType: 'entity'`
+
+**Delete:**
+- `src/hooks/useContainers.ts`
+- `src/hooks/useItems.ts`
+
+### 9.4 Update Components
+
+**`src/components/EntityForm.tsx` (NEW - MERGED):**
+- Consolidated from `LocationForm.tsx`, `ContainerForm.tsx`, `ItemForm.tsx`
+- Fields:
+  - Name (required)
+  - Description (optional)
+  - Can hold items toggle (shows/hides quantity field)
+  - Parent selector (locations + entities)
+  - **NEW:** Marked for disposal checkbox
+  - **NEW:** Count in totals checkbox
+  - Photos
+- Logic:
+  - If `canHoldItems: true` → hide quantity, force to 1
+  - If `canHoldItems: false` → show quantity field
+  - Defaults: `markedForDisposal: false`, `isCountable: true`
+
+**Update: `src/components/EntityCard.tsx`**
+- Add visual indicators:
+  - If `markedForDisposal: true` → strikethrough + 🗑️ badge
+  - Show child count badge if `canHoldItems: true`
+
+**Update: `src/components/HamburgerMenu.tsx`**
+- Add links to new pages:
+  - 🗑️ Disposal Items
+  - 📭 Unassigned Items
+
+**Delete:**
+- `src/components/ContainerForm.tsx`
+- `src/components/ItemForm.tsx`
+
+### 9.5 Create Unified Entity Pages
+
+**`src/pages/EntityView.tsx` (NEW - MERGED):**
+- Merged from `ContainerView.tsx` and `ItemView.tsx`
+- Shows entity details (name, description, ID, photos)
+- Status indicators (marked for disposal, countable flag)
+- If `canHoldItems: true`:
+  - List child entities
+  - Display total descendants count in header
+  - Example: "Red Toolbox (12 items inside)"
+- Edit/Delete actions
+- Route: `/entity/:id`
+
+**`src/pages/AddEntity.tsx` (NEW - MERGED):**
+- Use EntityForm
+- Support query params: `?parentId=X&parentType=location|entity`
+- Redirect to `/entity/:id` on success
+- Route: `/add/entity`
+
+**`src/pages/EditEntity.tsx` (NEW - MERGED):**
+- Fetch entity by ID
+- Use EntityForm with pre-filled values
+- Update on submit
+- Route: `/edit/entity/:id`
+
+**`src/pages/DisposalItems.tsx` (NEW - UTILITY PAGE):**
+- List all entities with `markedForDisposal: true`
+- Show total count at top: "🗑️ Items for Disposal (12)"
+- Each item shows:
+  - Name
+  - Full path (breadcrumb: Garage > Metal Shelf > Red Toolbox)
+  - Quantity
+  - Photo thumbnail
+- Actions:
+  - [View] → navigate to entity view
+  - [Restore] → toggle `markedForDisposal: false`
+- Route: `/disposal`
+
+**`src/pages/UnassignedItems.tsx` (NEW - UTILITY PAGE):**
+- List all entities with no `parentId` (unassigned)
+- Show total count: "📭 Unassigned Items (7)"
+- Display as grid/cards with:
+  - Name
+  - Photo thumbnail
+  - Quantity
+  - Type indicator (item vs container)
+- Click item → navigate to EntityView
+- In EntityView, user can edit and assign a parent
+- Route: `/unassigned`
+
+### 9.6 Update Counting Throughout App
+
+**`src/pages/Home.tsx`:**
+- Display global counts:
+  - "Total items: 245" (excludes disposal)
+  - "(Including disposal: 257)" (includes disposal items)
+- Per-location cards show: "📍 Living Room (45 items)"
+- Quick access buttons/links:
+  - [🗑️ Disposal Items] → `/disposal`
+  - [📭 Unassigned Items] → `/unassigned`
+- Uses `useDescendantCount()` hook for all counts
+
+**`src/pages/LocationView.tsx`:**
+- Header shows: "Garage" with subtitle "45 items inside"
+- Uses `useDescendantCount({ parentId: locationId })`
+
+**`src/pages/EntityView.tsx`:**
+- If `canHoldItems: true` → show "12 items inside"
+- Uses `useDescendantCount({ parentId: entityId })`
+
+**`src/pages/Search.tsx`:**
+- Search across locations + entities
+- Results show with counts where applicable
+
+### 9.7 Update Routing
+
+**`src/App.tsx`:**
+- Add new routes:
+  ```typescript
+  {
+    path: '/entity/:id',
+    element: <EntityView />,
+  },
+  {
+    path: '/add/entity',
+    element: <AddEntity />,
+  },
+  {
+    path: '/edit/entity/:id',
+    element: <EditEntity />,
+  },
+  {
+    path: '/disposal',
+    element: <DisposalItems />,
+  },
+  {
+    path: '/unassigned',
+    element: <UnassignedItems />,
+  },
+  ```
+- Remove old routes:
+  - `/container/:id`, `/item/:id`
+  - `/add/container`, `/add/item`
+  - `/edit/container/:id`, `/edit/item/:id`
+
+### 9.8 Update Export/Import
+
+**`src/utils/export.ts`:**
+- Bump version to 2.0
+- Export format includes new flags: `markedForDisposal`, `isCountable`
+- Combined entities array instead of separate containers/items
+- Image naming: `{id}-{index}.jpg` (no type prefix)
+
+**`src/utils/import.ts`:**
+- Handle v2.0 format with new flags
+- Merge by ID strategy (unchanged)
+
+### 9.9 Create v1.1 → v2.0 Conversion Script
+
+**`scripts/convert-backup.ts` (NEW):**
+- Standalone Node.js/TypeScript script
+- Reads v1.1 ZIP export (old format with containers/items)
+- Converts to v2.0 format (unified entities)
+- Conversion logic:
+  - Old containers → Entity with `canHoldItems: true, quantity: 1, markedForDisposal: false, isCountable: true`
+  - Old items → Entity with `canHoldItems: <original>, quantity: <original>, markedForDisposal: false, isCountable: true`
+  - Force `quantity: 1` if `canHoldItems: true`
+  - Image files: rename from `container-{id}-{index}.jpg`, `item-{id}-{index}.jpg` → `{id}-{index}.jpg`
+  - All IDs preserved
+  - All timestamps preserved
+- Outputs new ZIP with v2.0 structure
+- Usage: `pnpm convert-backup old-backup.zip new-backup-v2.zip`
+
+**Package additions:**
+```json
+{
+  "devDependencies": {
+    "jszip": "^3.10.1"
+  },
+  "scripts": {
+    "convert-backup": "ts-node scripts/convert-backup.ts"
+  }
+}
+```
+
+**Deliverables:**
+- [ ] Entity type consolidation complete
+- [ ] Database schema v6
+- [ ] In-memory caching for counts
+- [ ] Two new utility pages (Disposal, Unassigned)
+- [ ] Entity counts displayed throughout app
+- [ ] v1.1 → v2.0 conversion script working
+- [ ] Export/import v2.0 format
+- [ ] All routes updated to /entity
+- [ ] Manual testing complete
+
+---
+
+## Phase 10: Post-v2.0 Enhancements
+
+These are improvements after v2.0 release, focusing on user convenience features.
+
+### 10.1 Entity Text Export Feature
+
+**Problem:** Users want to share entity information (for selling, AI assistance, etc.) without manually typing details.
+
+**Solution:** Add copy-to-clipboard and download options for entity text + photos.
+
+**Files to Create:**
+- `src/utils/entityTextFormatter.ts` - Format entity as minimal text
+- `src/utils/photoZipDownloader.ts` - Create ZIP with text + photos
+
+**Files to Modify:**
+- `src/pages/EntityView.tsx` - Add two action buttons
+
+**Text Format (Minimal):**
+```
+Name: {name}
+Quantity: {quantity}
+Description: {description}
+```
+
+**Copy Options:**
+
+**Option 1: Copy as Text** `[📋 Copy Text]`
+- Copy formatted text to clipboard
+- Toast: "✅ Copied to clipboard"
+- Use case: Paste into AI chat, notes, email
+
+**Option 2: Download ZIP** `[📥 Download ZIP]`
+- Create ZIP file containing:
+  - `entity.txt` - Formatted entity text
+  - `images/` folder - All entity photos
+- Filename: `entity-{sanitized-name}-{id}.zip`
+- Toast: "✅ Downloaded entity-{name}-{id}.zip"
+- Use case: Marketplace listing, complete sharing package
+
+**Implementation Tasks:**
+1. Create `entityTextFormatter.ts` with `formatEntityAsText(entity): string` function
+2. Create `photoZipDownloader.ts` with `downloadEntityAsZip(entity, textContent)` function
+3. Add two buttons to EntityView action area
+4. Wire up click handlers
+5. Show toast notifications for feedback
+6. Test with various entity types and photo counts
+
+**Testing:**
+- [x] Text format correct (Name, Quantity, Description only)
+- [x] Copy to clipboard works on all browsers
+- [x] Download ZIP contains text file + all photos
+- [x] Works with 0, 1, and multiple photos
+- [x] Handles special characters in entity names
+- [x] Toast notifications appear correctly
+
+**Dependencies:**
+- JSZip library (for ZIP creation)
+- Browser Clipboard API (native)
+- Browser File Download API (native)
+
+**Deliverables:**
+- [x] Copy text button functional
+- [x] Download ZIP button functional
+- [x] Text format minimal and clean
+- [x] Photos included in ZIP export
+
+---
+
+### 10.2 Step-by-Step Parent Picker
+
+**Problem:** When editing an entity's parent, the dropdown shows 50+ nested items (locations + all containers + nested containers), making it overwhelming to find the right parent, especially if you don't remember the exact name.
+
+**Solution:** Replace dropdown with modal dialog containing a step-by-step breadcrumb-based picker that progressively narrows options.
+
+**Files to Create:**
+- `src/components/ParentPickerModal.tsx` - Modal with step-by-step picker
+- `src/hooks/useParentPicker.ts` - Logic for navigation and hierarchy traversal
+
+**Files to Modify:**
+- `src/components/EntityForm.tsx` - Replace dropdown with [Change] button
+- `src/pages/EditEntity.tsx` - Pass current entity to form
+
+**How It Works:**
+
+**Step 1: Select Location**
+```
+Where do you want to store this item?
+
+📍 Bedroom
+📍 Kitchen
+📍 Living Room
+📍 Garage
+```
+User clicks a location → advances to Step 2
+
+**Step 2+: Select Container (within location)**
+```
+Bedroom › Select container
+
+Options in Bedroom:
+📦 Closet
+📦 Dresser
+📦 Under Bed Storage
+🏠 Store directly in Bedroom
+```
+User clicks a container → advances to Step 3 (if container has children) or confirms
+
+**Step 3+ (Optional nested containers):**
+```
+Bedroom › Closet › Select sub-container
+
+Options in Closet:
+📦 Shelf 1
+📦 Shelf 2
+📦 Hanging Rod
+🏠 Store directly in Closet
+```
+User can continue deeper or select current level
+
+**Breadcrumb Navigation:**
+- Shows current path: `Bedroom > Closet > Shelf 1`
+- Click breadcrumb item to go back to that level
+- Back button to return to previous step
+- Cancel button to close without changing
+
+**Current Parent Pre-Selection:**
+- When editing existing entity, modal shows current parent path in breadcrumb
+- Current parent is pre-selected/highlighted
+- User can confirm or change selection
+
+**UI in EntityForm:**
+```
+Parent Selection:
+┌──────────────────────────────┐
+│ Bedroom > Closet > Shelf 1   │  [🔄 Change]
+└──────────────────────────────┘
+```
+
+When user clicks `[🔄 Change]` → Modal opens with step-by-step picker
+
+**Implementation Tasks:**
+1. Create `ParentPickerModal.tsx` component:
+   - Breadcrumb showing current path
+   - List of available options at current step
+   - Back button and breadcrumb navigation
+   - Select button to confirm choice
+2. Create `useParentPicker.ts` hook:
+   - Track current navigation step (location → containers → nested containers)
+   - Fetch items available at each step
+   - Handle back/forward navigation
+   - Return selected parent (parentId + parentType)
+3. Update `EntityForm.tsx`:
+   - Replace parent dropdown with modal trigger button
+   - Display selected parent path
+   - Handle modal confirm
+4. Test with deeply nested container hierarchies (5+ levels)
+
+**Benefits:**
+- ✅ Only relevant options shown at each step (progressively narrow)
+- ✅ Visual hierarchy through breadcrumb (easy to understand where you are)
+- ✅ Browse visually without needing to remember exact names
+- ✅ Mobile-friendly (modal takes full screen)
+- ✅ Scales well with large inventories (100+ containers)
+- ✅ Pre-selects current parent to speed up editing
+
+**Testing:**
+- [x] Modal opens when clicking [Change] button
+- [x] Step 1 displays all locations
+- [x] Selecting location → Step 2 (shows containers in that location)
+- [x] Can navigate back via Back button
+- [x] Can navigate back via breadcrumb clicks
+- [x] Breadcrumb shows correct path
+- [x] Current parent pre-selected when editing
+- [x] Can select container at any nesting depth
+- [x] "Store directly in [Parent]" option works
+- [x] Modal closes and form updates on selection
+- [x] Cancel closes modal without changes
+- [x] Works with deeply nested containers (5+ levels)
+- [x] Mobile-friendly interface
+- [x] Performance acceptable with many containers
+
+**Deliverables:**
+- [x] Modal component functional
+- [x] Step-by-step navigation works
+- [x] Breadcrumb navigation implemented
+- [x] Current parent pre-selected
+- [x] Form integration complete
+
+---
+
+## Phase 10 Summary
+
+| Feature | Files Created | Files Modified | Time Estimate |
+|---------|--------------|-----------------|---------------|
+| 10.1: Text Export | 2 | 1 | 1.5-2 hours |
+| 10.2: Parent Picker | 2 | 2 | 2-2.5 hours |
+| **Total** | 4 | 3 | 3.5-4.5 hours |
+
+---
+
 ## Summary Checklist
 
 - [x] **Phase 1:** Project setup (Vite, Tailwind, PWA config)
@@ -523,12 +999,14 @@ Implemented with:
 - [x] **Phase 6:** PWA features (offline, installable)
 - [x] **Phase 7:** Data export (JSON backup)
 - [x] **Phase 8:** Polish and testing
+- [ ] **Phase 9:** Data model consolidation (Entity merging, counting, utilities)
+- [ ] **Phase 10:** Post-v2.0 enhancements (Text export, parent picker)
 
 ## Notes for Implementers
 
 1. **Photo Storage:** Photos are stored as Blobs directly in IndexedDB. Consider size limits and potentially compressing images before storage.
 
-2. **Cascade Deletes:** When deleting a location or container, all child containers and items must also be deleted. Implement recursively.
+2. **Cascade Deletes:** When deleting a location or entity, all child entities must also be deleted. Implement recursively.
 
 3. **IDs:** Use 8-character Crockford Base32 IDs as primary keys. These provide high entropy (~1 trillion combinations) for future sync compatibility and can be used on physical labels.
 
@@ -536,6 +1014,19 @@ Implemented with:
 
 5. **Timestamps:** Always set `createdAt` on creation and update `updatedAt` on every modification.
 
-6. **Parent References:** When moving items/containers, update both `parentId` and `parentType`.
+6. **Parent References:** When moving entities, update both `parentId` and `parentType`.
 
 7. **Search:** For v1, a simple in-memory filter is sufficient. ID search uses exact match. For larger inventories, consider IndexedDB full-text search or a search index.
+
+8. **Entity Consolidation:** Container and Item are now unified as Entity. The three boolean flags control behavior:
+   - `canHoldItems` - Whether this entity can contain other entities
+   - `markedForDisposal` - Indicates item is for sale/donation/disposal
+   - `isCountable` - Whether to include in inventory totals (excludes built-in structures)
+
+9. **Counting Strategy:** Uses in-memory cache with React `useMemo`:
+   - Cache keyed by `parentId` + `excludeDisposal` flag
+   - Recursive counting for nested entities
+   - Automatic invalidation on entity changes
+   - Respects both `isCountable` and `markedForDisposal` flags in calculations
+
+10. **v1.1 to v2.0 Migration:** Old exports (with separate containers/items stores) can be converted using the standalone Node.js script. Users run conversion locally, then import new v2.0 format into app.

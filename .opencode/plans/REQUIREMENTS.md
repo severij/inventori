@@ -38,58 +38,80 @@ Example: `7KM3-QRST`
 
 ### Location
 
-A top-level place where items and containers are stored (room, building, storage unit, etc.).
+A top-level place where items are stored (room, building, storage unit, etc.). Simple organizational entity.
 
 ```typescript
 interface Location {
-  id: string;              // 8-char Crockford Base32 ID (primary key)
-  type: 'location';
+  id: string;              // 8-char Crockford Base32 ID
   name: string;            // e.g., "Living Room", "Garage", "Storage Unit #5"
   description?: string;
+  parentId?: string;       // Can parent another Location (e.g., House A > House B > Kitchen)
   photos: Blob[];
   createdAt: Date;
   updatedAt: Date;
 }
 ```
 
-### Container
+**Notes:**
+- No `type` field (separate entity type from Item)
+- Locations can be nested (House > Room)
+- No tracking fields (status, prices, dates)
 
-A storage unit that can hold items or other containers. Can be nested infinitely within locations or other containers.
+### Item Status Enum
+
+Item status tracking for lifecycle management:
 
 ```typescript
-interface Container {
-  id: string;              // 8-char Crockford Base32 ID (primary key)
-  type: 'container';
-  name: string;            // e.g., "Blue plastic bin", "Top drawer"
-  description?: string;
-  parentId: string;        // Location ID or Container ID
-  parentType: 'location' | 'container' | 'item';
-  photos: Blob[];
-  createdAt: Date;
-  updatedAt: Date;
-}
+type ItemContainerStatus = 
+  | 'IN_USE'        // Currently using/storing
+  | 'STORED'        // Put away, not actively using
+  | 'PACKED'        // Packed for moving/storage
+  | 'LENT'          // Lent to someone
+  | 'IN_REPAIR'     // Sent for repair
+  | 'CONSIGNED'     // Left with consignment shop
+  | 'TO_SELL'       // Marked to sell
+  | 'TO_DONATE'     // Marked to donate
+  | 'TO_REPAIR'     // Marked for repair
+  | 'SOLD'          // Sold/transferred
+  | 'DONATED'       // Donated
+  | 'GIFTED'        // Gifted to someone
+  | 'STOLEN'        // Reported stolen
+  | 'LOST'          // Lost/missing
+  | 'DISPOSED'      // Thrown away
+  | 'RECYCLED';     // Recycled
 ```
 
 ### Item
 
-An individual inventory item. Items can also act as containers (e.g., a toolbox that holds tools).
+Container or individual item stored in locations. Supports rich tracking data.
 
 ```typescript
 interface Item {
-  id: string;              // 8-char Crockford Base32 ID (primary key)
-  type: 'item';
+  id: string;                            // 8-char Crockford Base32 ID
   name: string;
   description?: string;
   
-  // Hierarchy (optional - items can be unassigned)
-  parentId?: string;
-  parentType?: 'location' | 'container' | 'item';  // Items can be nested in other items
+  // Hierarchy (required)
+  parentId: string;                      // Location ID or Item ID (must have parent)
+  parentType: 'location' | 'item';       // Which store to query for parent
   
-  // Item-specific fields
-  isContainer: boolean;    // If true, this item can hold other items (e.g., toolbox)
-  quantity: number;        // Default: 1
+  // Item capabilities
+  canHoldItems: boolean;                 // Can this item hold other items?
+  quantity: number;                      // Default: 1 (quantity of items)
+  
+  // Status and counting
+  status: ItemContainerStatus;           // Current state (default: 'IN_USE')
+  includeInTotal: boolean;               // Include in inventory totals? (default: true)
+                                         // Set to false for built-in structures (shelves, drawers)
+  
+  // Categorization and tracking
+  tags: string[];                        // Categories/labels (e.g., ['electronics', 'gifts', 'seasonal'])
+  purchasePrice?: number;                // Original purchase cost (currency assumed consistent)
+  currentValue?: number;                 // Estimated current worth
+  dateAcquired?: Date;                   // When purchased/acquired
+  dateDisposed?: Date;                   // When sold/donated/thrown away
+  
   photos: Blob[];
-  
   createdAt: Date;
   updatedAt: Date;
 }
@@ -98,20 +120,38 @@ interface Item {
 ### Hierarchy Example
 
 ```
-Garage (location)
-  Metal Shelf Unit (container)
-    Red Toolbox (item, isContainer=true)
-      Hammer (item)
-      Screwdriver Set (item)
-    Blue Bin (container)
-      Christmas Lights (item)
-  Car Jack (item - directly in location)
-
-Living Room (location)
-  TV (item - directly in location)
-  Entertainment Center (container)
-    PlayStation 5 (item)
+House A (Location)
+├── House B (Location, parent: House A)
+│   └── Kitchen (Location, parent: House B)
+│       ├── Refrigerator (Item, canHoldItems: true, parent: Kitchen)
+│       │   └── Leftovers (Item, quantity: 3, parent: Refrigerator)
+│       └── Dishes (Item, quantity: 12, parent: Kitchen)
+└── Garage (Location)
+    ├── Metal Shelf (Item, canHoldItems: true, includeInTotal: false)
+    │   ├── Red Toolbox (Item, canHoldItems: true, parent: Metal Shelf)
+    │   │   ├── Hammer (Item, parent: Red Toolbox)
+    │   │   └── Wrench (Item, parent: Red Toolbox)
+    │   └── Blue Bin (Item, canHoldItems: true, parent: Metal Shelf)
+    │       └── Christmas Lights (Item, quantity: 1, parent: Blue Bin)
+    └── Car Jack (Item, quantity: 1)
 ```
+
+### Item Counting Rules
+
+Counting respects both `includeInTotal` flag and quantity:
+
+```
+count = SUM(
+  quantity for item
+  WHERE includeInTotal: true
+  Recursively includes nested items
+)
+```
+
+Example:
+- Garage has: Metal Shelf (notCounted), Car Jack, Toolbox with 2 items
+- Count: Car Jack (1) + Toolbox (1) + 2 items = 4
+- Metal Shelf excluded (includeInTotal: false)
 
 ## Version Roadmap
 
@@ -264,14 +304,17 @@ This is safe because IDs are generated with high entropy (~1 trillion combinatio
 
 ## IndexedDB Schema
 
-Database version: **5**
+Database version: **6** (v2.0+)
+
+Previous versions:
+- v1-5: Original schema with separate locations, containers, items stores
+- v6: Location and Item stores (Phase 9)
 
 ### Object Stores
 
 | Store | Key Path | Indexes |
 |-------|----------|---------|
 | `locations` | `id` | - |
-| `containers` | `id` | `by-parent` (parentId) |
 | `items` | `id` | `by-parent` (parentId) |
 
 ## Project Structure
@@ -286,22 +329,19 @@ inventori/
 │   │   ├── ConfirmDialog.tsx   # Reusable confirmation dialog
 │   │   ├── SearchBar.tsx       # Debounced search input component
 │   │   ├── PhotoCapture.tsx    # Camera/upload component
-│   │   ├── EntityCard.tsx      # Card for displaying location/container/item
+│   │   ├── EntityCard.tsx      # Card for displaying location/item
 │   │   ├── Breadcrumbs.tsx     # Navigation breadcrumbs
 │   │   ├── IdDisplay.tsx       # ID display with copy button
 │   │   ├── LocationForm.tsx    # Form for creating/editing locations
-│   │   ├── ContainerForm.tsx   # Form for creating/editing containers
 │   │   ├── ItemForm.tsx        # Form for creating/editing items
 │   │   ├── InstallButton.tsx   # PWA install prompt button (standalone)
 │   │   └── ExportButton.tsx    # Data export trigger button (standalone)
 │   ├── db/
-│   │   ├── index.ts            # DB initialization and schema (v5)
+│   │   ├── index.ts            # DB initialization and schema (v6)
 │   │   ├── locations.ts        # Location CRUD operations
-│   │   ├── containers.ts       # Container CRUD operations
 │   │   └── items.ts            # Item CRUD operations
 │   ├── hooks/
 │   │   ├── useLocations.ts     # Location data hook
-│   │   ├── useContainers.ts    # Container data hook
 │   │   ├── useItems.ts         # Item data hook
 │   │   ├── useChildren.ts      # Get children of a parent
 │   │   ├── useAncestors.ts     # Get breadcrumb path
@@ -309,18 +349,15 @@ inventori/
 │   │   └── useInstallPrompt.ts # PWA install prompt hook
 │   ├── pages/
 │   │   ├── Home.tsx            # List all locations
-│   │   ├── LocationView.tsx    # View location contents
-│   │   ├── ContainerView.tsx   # View container contents
+│   │   ├── LocationView.tsx    # View location contents and items
 │   │   ├── ItemView.tsx        # View item details
-│   │   ├── AddLocation.tsx
-│   │   ├── AddContainer.tsx
-│   │   ├── AddItem.tsx
-│   │   ├── EditLocation.tsx
-│   │   ├── EditContainer.tsx
-│   │   ├── EditItem.tsx
+│   │   ├── AddLocation.tsx     # Create location
+│   │   ├── AddItem.tsx         # Create item
+│   │   ├── EditLocation.tsx    # Edit location
+│   │   ├── EditItem.tsx        # Edit item
 │   │   └── Search.tsx          # Global search page (includes ID search)
 │   ├── types/
-│   │   └── index.ts            # TypeScript interfaces
+│   │   └── index.ts            # TypeScript interfaces (Location, Item, ItemContainerStatus)
 │   ├── utils/
 │   │   ├── shortId.ts          # ID generation (Crockford Base32)
 │   │   ├── export.ts           # ZIP export functionality
@@ -352,3 +389,99 @@ export NVM_DIR="$HOME/.config/nvm"
 | `pnpm build` | Build for production |
 | `pnpm preview` | Preview production build |
 | `pnpm lint` | Run ESLint |
+
+---
+
+## Phase 10 Features (Post-v2.0 Enhancements)
+
+### Phase 10.1: Entity Text Export
+
+**Feature:** Allow users to share entity information with minimal text format, optionally including photos in a ZIP file.
+
+**Text Format (Minimal):**
+```
+Name: {name}
+Quantity: {quantity}
+Description: {description}
+```
+
+**Copy Options:**
+
+1. **Copy as Text** `[📋 Copy Text]`
+   - Copy formatted text to clipboard
+   - Perfect for: AI agents, notes, quick sharing
+   - Toast: "✅ Copied to clipboard"
+
+2. **Download ZIP** `[📥 Download ZIP]`
+   - ZIP file containing:
+     - `entity.txt` - Formatted text
+     - `images/` folder - All entity photos
+   - Filename: `entity-{name}-{id}.zip`
+   - Perfect for: Marketplace listings, complete sharing package
+   - Toast: "✅ Downloaded entity-{name}-{id}.zip"
+
+**UI Location:** EntityView page action buttons
+
+**Use Cases:**
+- Create AI-assisted marketplace listings
+- Share item details with buyers/sellers
+- Quick reference copying
+- Organize information before selling/trading
+
+---
+
+### Phase 10.2: Step-by-Step Parent Picker
+
+**Problem Fixed:** Current dropdown shows 50+ nested items (locations + all containers), making it overwhelming to select a parent, especially when exact name not remembered.
+
+**Solution:** Modal with progressive step-by-step breadcrumb navigation that narrows options at each step.
+
+**How It Works:**
+
+1. **Step 1: Select Location**
+   - Lists all locations
+   - User selects one or continues to nested containers
+
+2. **Step 2+: Select Container (within location)**
+   - Shows containers available in that location
+   - User can:
+     - Select a container as final parent
+     - Drill deeper into container's children
+     - Go back to previous step
+
+3. **Breadcrumb Navigation**
+   - Shows current path: `Bedroom > Closet > Shelf 1`
+   - Click to go back to any level
+   - Visual hierarchy shows where you are
+
+**Current Parent Pre-Selection:**
+- When editing existing entity, modal opens with current parent already selected
+- User can confirm or change selection
+
+**UI in EntityForm:**
+```
+Parent Selection:
+┌──────────────────────────────┐
+│ Bedroom > Closet > Shelf 1   │  [🔄 Change]
+└──────────────────────────────┘
+```
+
+**Benefits:**
+- ✅ Only relevant options at each step
+- ✅ Browse visually without remembering exact names
+- ✅ Works with deeply nested containers (5+ levels)
+- ✅ Mobile-friendly (full-screen modal)
+- ✅ Scales with large inventories (100+ containers)
+- ✅ Pre-selects current parent for fast editing
+
+---
+
+## Version History
+
+| Version | Status | Key Features |
+|---------|--------|--------------|
+| v1.0 | Released | Basic inventory: locations, containers, items |
+| v1.1 | Released | Photos, search, export/import, PWA |
+| v2.0 | Planned | Entity consolidation, disposal tracking, counting |
+| v2.1 | Planned | Entity text export, improved parent picker |
+
