@@ -1,35 +1,18 @@
 import JSZip from 'jszip';
 import { getAllLocations } from '../db/locations';
-import { getAllContainers } from '../db/containers';
 import { getAllItems } from '../db/items';
-import type { Location, Container, Item } from '../types';
+import type { Location, Item } from '../types';
 
 /** Current export format version */
-export const EXPORT_VERSION = '1.1';
+export const EXPORT_VERSION = '2.0';
 
 /**
  * Exported location with photos as filenames
  */
 export interface ExportedLocation {
   id: string; // 8-char Crockford Base32 ID (used for physical labels)
-  type: 'location';
   name: string;
   description?: string;
-  photos: string[]; // filenames in images/ folder
-  createdAt: string; // ISO date string
-  updatedAt: string; // ISO date string
-}
-
-/**
- * Exported container with photos as filenames
- */
-export interface ExportedContainer {
-  id: string; // 8-char Crockford Base32 ID (used for physical labels)
-  type: 'container';
-  name: string;
-  description?: string;
-  parentId: string;
-  parentType: 'location' | 'container' | 'item';
   photos: string[]; // filenames in images/ folder
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
@@ -40,12 +23,11 @@ export interface ExportedContainer {
  */
 export interface ExportedItem {
   id: string; // 8-char Crockford Base32 ID (used for physical labels)
-  type: 'item';
   name: string;
   description?: string;
   parentId?: string;
-  parentType?: 'location' | 'container' | 'item';
-  isContainer: boolean;
+  parentType?: 'location' | 'item';
+  canHoldItems: boolean; // Can this item hold other items?
   quantity: number;
   photos: string[]; // filenames in images/ folder
   createdAt: string; // ISO date string
@@ -59,7 +41,6 @@ export interface ExportData {
   version: string;
   exportedAt: string;
   locations: ExportedLocation[];
-  containers: ExportedContainer[];
   items: ExportedItem[];
 }
 
@@ -92,7 +73,7 @@ function getExtensionFromMimeType(mimeType: string): string {
  * Generate a filename for an image
  */
 function generateImageFilename(
-  entityType: 'location' | 'container' | 'item',
+  entityType: 'location' | 'item',
   entityId: string,
   index: number,
   blob: Blob
@@ -105,7 +86,7 @@ function generateImageFilename(
  * Process photos for an entity, returning filenames and image files
  */
 function processPhotos(
-  entityType: 'location' | 'container' | 'item',
+  entityType: 'location' | 'item',
   entityId: string,
   photos: Blob[]
 ): { filenames: string[]; images: ImageFile[] } {
@@ -133,37 +114,11 @@ function exportLocation(location: Location): {
   return {
     data: {
       id: location.id,
-      type: location.type,
       name: location.name,
       description: location.description,
       photos: filenames,
       createdAt: location.createdAt.toISOString(),
       updatedAt: location.updatedAt.toISOString(),
-    },
-    images,
-  };
-}
-
-/**
- * Export a container, returning the exported data and any images
- */
-function exportContainer(container: Container): {
-  data: ExportedContainer;
-  images: ImageFile[];
-} {
-  const { filenames, images } = processPhotos('container', container.id, container.photos);
-
-  return {
-    data: {
-      id: container.id,
-      type: container.type,
-      name: container.name,
-      description: container.description,
-      parentId: container.parentId,
-      parentType: container.parentType,
-      photos: filenames,
-      createdAt: container.createdAt.toISOString(),
-      updatedAt: container.updatedAt.toISOString(),
     },
     images,
   };
@@ -181,12 +136,11 @@ function exportItem(item: Item): {
   return {
     data: {
       id: item.id,
-      type: item.type,
       name: item.name,
       description: item.description,
       parentId: item.parentId,
       parentType: item.parentType,
-      isContainer: item.isContainer,
+      canHoldItems: item.canHoldItems,
       quantity: item.quantity,
       photos: filenames,
       createdAt: item.createdAt.toISOString(),
@@ -200,16 +154,15 @@ function exportItem(item: Item): {
  * Export all data from IndexedDB as a ZIP file.
  *
  * The ZIP contains:
- * - data.json: All locations, containers, and items with photo filenames
+ * - data.json: All locations and items with photo filenames
  * - images/: Folder containing all photos
  *
  * @returns Blob containing the ZIP file
  */
 export async function exportData(): Promise<Blob> {
   // Fetch all entities from IndexedDB
-  const [locations, containers, items] = await Promise.all([
+  const [locations, items] = await Promise.all([
     getAllLocations(),
-    getAllContainers(),
     getAllItems(),
   ]);
 
@@ -218,12 +171,6 @@ export async function exportData(): Promise<Blob> {
 
   const exportedLocations = locations.map((loc) => {
     const { data, images } = exportLocation(loc);
-    allImages.push(...images);
-    return data;
-  });
-
-  const exportedContainers = containers.map((cont) => {
-    const { data, images } = exportContainer(cont);
     allImages.push(...images);
     return data;
   });
@@ -239,7 +186,6 @@ export async function exportData(): Promise<Blob> {
     version: EXPORT_VERSION,
     exportedAt: new Date().toISOString(),
     locations: exportedLocations,
-    containers: exportedContainers,
     items: exportedItems,
   };
 
