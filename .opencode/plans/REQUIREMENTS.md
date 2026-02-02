@@ -4,7 +4,7 @@ A local-first home inventory progressive web app (PWA) for tracking items, their
 
 ## Overview
 
-Inventori helps users catalog and organize their physical belongings with a hierarchical structure of locations, containers, and items. The app works entirely offline using IndexedDB, with future plans for QR code scanning and peer-to-peer sync.
+Inventori helps users catalog and organize their physical belongings with a hierarchical structure of locations and items. The app works entirely offline using IndexedDB, with future plans for QR code scanning and peer-to-peer sync.
 
 ## Tech Stack
 
@@ -38,14 +38,14 @@ Example: `7KM3-QRST`
 
 ### Location
 
-A top-level place where items are stored (room, building, storage unit, etc.). Simple organizational entity.
+A place where items are stored (room, building, storage unit, etc.). Simple organizational entity.
 
 ```typescript
 interface Location {
   id: string;              // 8-char Crockford Base32 ID
   name: string;            // e.g., "Living Room", "Garage", "Storage Unit #5"
   description?: string;
-  parentId?: string;       // Can parent another Location (e.g., House A > House B > Kitchen)
+  parentId?: string;       // Can parent another Location (e.g., House > Kitchen)
   photos: Blob[];
   createdAt: Date;
   updatedAt: Date;
@@ -53,33 +53,9 @@ interface Location {
 ```
 
 **Notes:**
-- No `type` field (separate entity type from Item)
 - Locations can be nested (House > Room)
-- No tracking fields (status, prices, dates)
-
-### Item Status Enum
-
-Item status tracking for lifecycle management:
-
-```typescript
-type ItemContainerStatus = 
-  | 'IN_USE'        // Currently using/storing
-  | 'STORED'        // Put away, not actively using
-  | 'PACKED'        // Packed for moving/storage
-  | 'LENT'          // Lent to someone
-  | 'IN_REPAIR'     // Sent for repair
-  | 'CONSIGNED'     // Left with consignment shop
-  | 'TO_SELL'       // Marked to sell
-  | 'TO_DONATE'     // Marked to donate
-  | 'TO_REPAIR'     // Marked for repair
-  | 'SOLD'          // Sold/transferred
-  | 'DONATED'       // Donated
-  | 'GIFTED'        // Gifted to someone
-  | 'STOLEN'        // Reported stolen
-  | 'LOST'          // Lost/missing
-  | 'DISPOSED'      // Thrown away
-  | 'RECYCLED';     // Recycled
-```
+- No tracking fields (tags, prices, dates)
+- Child count cached for display
 
 ### Item
 
@@ -91,25 +67,23 @@ interface Item {
   name: string;
   description?: string;
   
-  // Hierarchy (required)
-  parentId: string;                      // Location ID or Item ID (must have parent)
-  parentType: 'location' | 'item';       // Which store to query for parent
+  // Hierarchy (optional - allows unassigned items)
+  parentId?: string;                     // Location ID or Item ID
+  parentType?: 'location' | 'item';      // Which store to query for parent
   
   // Item capabilities
-  canHoldItems: boolean;                 // Can this item hold other items?
+  canHoldItems: boolean;                 // Can this item hold other items? (default: false)
   quantity: number;                      // Default: 1 (quantity of items)
   
-  // Status and counting
-  status: ItemContainerStatus;           // Current state (default: 'IN_USE')
+  // Counting
   includeInTotal: boolean;               // Include in inventory totals? (default: true)
                                          // Set to false for built-in structures (shelves, drawers)
   
   // Categorization and tracking
-  tags: string[];                        // Categories/labels (e.g., ['electronics', 'gifts', 'seasonal'])
-  purchasePrice?: number;                // Original purchase cost (currency assumed consistent)
+  tags: string[];                        // Categories/labels (e.g., ['electronics', 'to-sell'])
+  purchasePrice?: number;                // Original purchase cost
   currentValue?: number;                 // Estimated current worth
   dateAcquired?: Date;                   // When purchased/acquired
-  dateDisposed?: Date;                   // When sold/donated/thrown away
   
   photos: Blob[];
   createdAt: Date;
@@ -117,28 +91,36 @@ interface Item {
 }
 ```
 
+**Notes:**
+- Items can be unassigned (no parent) or assigned to a location/item
+- Items with `canHoldItems: true` act as containers
+- Tags replace the old status system for flexible categorization
+
 ### Hierarchy Example
 
 ```
 House A (Location)
-├── House B (Location, parent: House A)
-│   └── Kitchen (Location, parent: House B)
-│       ├── Refrigerator (Item, canHoldItems: true, parent: Kitchen)
-│       │   └── Leftovers (Item, quantity: 3, parent: Refrigerator)
-│       └── Dishes (Item, quantity: 12, parent: Kitchen)
+├── Kitchen (Location, parent: House A)
+│   ├── Refrigerator (Item, canHoldItems: true, parent: Kitchen)
+│   │   └── Leftovers (Item, quantity: 3, parent: Refrigerator)
+│   └── Dishes (Item, quantity: 12, parent: Kitchen)
 └── Garage (Location)
     ├── Metal Shelf (Item, canHoldItems: true, includeInTotal: false)
     │   ├── Red Toolbox (Item, canHoldItems: true, parent: Metal Shelf)
     │   │   ├── Hammer (Item, parent: Red Toolbox)
     │   │   └── Wrench (Item, parent: Red Toolbox)
     │   └── Blue Bin (Item, canHoldItems: true, parent: Metal Shelf)
-    │       └── Christmas Lights (Item, quantity: 1, parent: Blue Bin)
+    │       └── Christmas Lights (Item, parent: Blue Bin, tags: ['seasonal'])
     └── Car Jack (Item, quantity: 1)
+
+Unassigned:
+├── Mystery Cable (Item, no parent)
+└── Old Phone (Item, no parent, tags: ['to-sell'])
 ```
 
 ### Item Counting Rules
 
-Counting respects both `includeInTotal` flag and quantity:
+Counting respects `includeInTotal` flag and quantity:
 
 ```
 count = SUM(
@@ -149,66 +131,171 @@ count = SUM(
 ```
 
 Example:
-- Garage has: Metal Shelf (notCounted), Car Jack, Toolbox with 2 items
+- Garage has: Metal Shelf (not counted), Car Jack, Toolbox with 2 items
 - Count: Car Jack (1) + Toolbox (1) + 2 items = 4
 - Metal Shelf excluded (includeInTotal: false)
 
+### Tags
+
+Tags provide flexible categorization:
+- User-defined (not a fixed list)
+- Multiple tags per item
+- Used for filtering in Search
+- Replaces the old `status` field
+
+Common tag patterns:
+- `to-sell`, `to-donate` - Items marked for disposal
+- `lent-to-john` - Items lent out
+- `seasonal`, `christmas` - Seasonal items
+- `electronics`, `tools` - Category tags
+
+---
+
+## User Interface
+
+See `UI_DESIGN.md` for detailed ASCII mockups of all pages and components.
+
+### Home Page
+
+Two-tab layout:
+- **Locations tab**: List of top-level locations with child counts
+- **Unassigned tab**: List of items without a parent
+
+Features:
+- Tab badges always show counts
+- Context-sensitive FAB (+ Location or + Item)
+- Empty states for each tab
+
+### Location/Item View
+
+- Breadcrumbs with icons (📍 location, 📦 container, 📄 item)
+- Hero photo at top
+- Collapsible sections for "Locations" and "Items" (collapsed by default)
+- Edit/Delete in header overflow menu (⋮)
+- "[+ Add Location]" and "[+ Add Item]" buttons always visible
+
+### Entity Cards
+
+Show at-a-glance information:
+- Thumbnail on left
+- Name and type icon
+- Child counts as subtitle: `📍2 📦3 📄5`
+- Quantity badge (if > 1)
+- No description or ID (too cluttered)
+
+### Forms
+
+- Name, description, parent selector, quantity
+- Tags with autocomplete from existing tags
+- Photos (camera + upload)
+- "Additional Info" section (collapsed by default): purchase price, current value, date acquired, include in totals
+- "This item can hold other items" checkbox
+
+### Search
+
+- Text search across name/description
+- ID exact match
+- Filter by type: All, Locations, Items
+- Filter by tags
+- Results show location path as subtitle
+
+### Tags Page
+
+- Accessible via hamburger menu → "Manage Tags"
+- List all tags with item counts
+- Overflow menu (⋮) for Rename/Delete actions
+- Tap tag → Search filtered by that tag
+
+### Navigation
+
+- Back button (←): Goes to parent in hierarchy (not browser back)
+- Browser back: Goes to previous page in history
+- After save: Replace history (skip edit page on back)
+- Hamburger menu (☰): App-wide options (Tags, Export, Import, Install)
+
+---
+
 ## Version Roadmap
 
-### v1 (Current Scope)
+### v1 (Current)
 
 #### Core Features
 
 1. **Location Management**
    - Create, view, edit, delete locations
-   - View all containers and items within a location
+   - Nested locations (location inside location)
    - Photo attachments
    - ID displayed for physical labels
 
-2. **Container Management**
-   - Create, view, edit, delete containers
-   - Nest containers within locations or other containers (infinite depth)
-   - View all contents (child containers and items)
-   - Photo attachments
-   - ID displayed for physical labels
-
-3. **Item Management**
+2. **Item Management**
    - Create, view, edit, delete items
-   - All data fields as defined in the data model
-   - Items can be unassigned (no parent) or assigned to a location/container/item
-   - Items can be marked as containers (`isContainer=true`) to hold other items
-   - Photo attachments (multiple photos per item)
+   - Items can be assigned to locations or other items
+   - Items can be unassigned
+   - Items can hold other items (`canHoldItems: true`)
+   - Tags for categorization
+   - Optional: purchase price, current value, date acquired
+   - Photo attachments (multiple)
    - ID displayed for physical labels
 
-4. **Navigation & Organization**
-   - Home page showing all locations
-   - Drill-down navigation into locations and containers
-   - Breadcrumb navigation showing current path
+3. **Navigation & Organization**
+   - Two-tab home page (Locations, Unassigned)
+   - Drill-down navigation with collapsible sections
+   - Breadcrumb navigation with icons
 
-5. **Search**
-   - Global search across all items, containers, and locations
+4. **Search**
    - Search by name, description
-   - Search by ID (exact match when input looks like an ID)
+   - Search by ID (exact match)
+   - Filter by type and tags
+
+5. **Tags**
+   - Add tags to items
+   - Autocomplete from existing tags
+   - Manage tags page (rename, delete)
+   - Tag filtering in search
 
 6. **Photo Capture**
-   - Camera integration for taking photos
-   - File upload for existing photos
+   - Camera integration
+   - File upload
    - Photo preview and deletion
 
 7. **Data Management**
-   - ZIP export/backup of all data (v1.1 format)
-   - ZIP import/restore from backup (merge by ID)
+   - ZIP export/backup
+   - ZIP import/restore (merge by ID)
+
+#### PWA Features
+
+1. **Offline-First**
+   - Full functionality without internet
+   - Service worker caching
+
+2. **Installable**
+   - Web app manifest
+   - "Add to Home Screen" support
+   - App icons
+
+3. **Static Hosting Compatible**
+   - HashRouter for GitHub Pages compatibility
+
+### v2 (Deferred)
+
+1. **QR Code Generation** - Printable QR codes for entities
+2. **QR Code Scanning** - Camera-based scanning to navigate
+
+### v3 (Deferred)
+
+1. **P2P Sync** - Peer-to-peer synchronization between devices
+
+---
 
 ## Export/Import Format
 
-The export utility produces a ZIP file with the following structure:
+The export utility produces a ZIP file:
 
 ```
 inventori-backup-YYYY-MM-DD.zip
 ├── data.json
 └── images/
     ├── location-{id}-{index}.{ext}
-    ├── container-{id}-{index}.{ext}
     └── item-{id}-{index}.{ext}
 ```
 
@@ -216,106 +303,57 @@ inventori-backup-YYYY-MM-DD.zip
 
 ```typescript
 interface ExportData {
-  version: "1.1";           // Export format version
+  version: "1.1";
   exportedAt: string;       // ISO 8601 timestamp
   locations: ExportedLocation[];
-  containers: ExportedContainer[];
   items: ExportedItem[];
 }
 ```
 
-Key transformations from IndexedDB to export:
-- **Photos (Blob[])**: Stored as separate files in `images/` folder, referenced by filename
-- **Dates**: Converted to ISO 8601 strings
-- **IDs**: 8-char Crockford Base32 IDs preserved
-- **Structure**: Flat format with separate arrays (not nested hierarchy)
-
-The flat format preserves relationships via `parentId` and `parentType` fields, making it easy to re-import into IndexedDB.
-
 ### Import Behavior
 
-Import uses a **merge by ID** strategy:
-- Items with matching IDs are **updated** with imported data
-- Items with new IDs are **added** to the database
-- Existing items not in the import file are **preserved**
+**Merge by ID** strategy:
+- Matching IDs: Updated with imported data
+- New IDs: Added to database
+- Missing from import: Preserved
 
-This is safe because IDs are generated with high entropy (~1 trillion combinations) - items created on different devices will have different IDs and won't conflict.
-
-#### PWA Features
-
-1. **Offline-First**
-   - Full functionality without internet connection
-   - Service worker caching for app shell and assets
-   - Runtime caching for images and fonts
-
-2. **Installable**
-   - Web app manifest
-   - "Add to Home Screen" support
-   - App icons (SVG format: 192x192, 512x512)
-   - Apple touch icon for iOS
-   - PWA meta tags for iOS standalone mode
-
-3. **Static Hosting Compatible**
-   - Uses HashRouter for compatibility with GitHub Pages and other static hosts
-   - No server-side configuration required
-
-4. **Sync Status Indicator (v3)**
-   - Visual indicator showing connection to sync server
-   - Deferred until P2P sync is implemented
-
-### v2 (Deferred)
-
-1. **QR Code Generation**
-   - Generate printable QR codes for locations, containers, and items
-   - QR code contains entity ID
-   - Print-friendly layout
-
-2. **QR Code Scanning**
-   - Camera-based QR code scanning
-   - Scan to navigate directly to location/container/item
-
-### v3 (Deferred)
-
-1. **P2P Sync**
-   - Peer-to-peer synchronization between devices
-   - Conflict resolution using timestamps
+---
 
 ## Non-Functional Requirements
 
 1. **Performance**
-   - Fast initial load time
-   - Smooth scrolling and navigation
-   - Efficient IndexedDB queries with proper indexes
+   - Fast initial load
+   - Smooth scrolling
+   - Cached child counts
 
 2. **Responsiveness**
    - Mobile-first design
-   - Works on phone, tablet, and desktop
-   - Touch-friendly UI
+   - Works on phone, tablet, desktop
+   - Touch-friendly (44px min targets)
 
 3. **Accessibility**
    - Semantic HTML
    - Keyboard navigation
    - Screen reader support
+   - Focus management
 
 4. **Data Integrity**
-   - All IDs are 8-char Crockford Base32 (high entropy for sync compatibility)
-   - Timestamps on all entities for conflict resolution
-   - Cascade considerations when deleting locations/containers
+   - High-entropy IDs
+   - Timestamps for conflict resolution
+   - Cascade delete handling
+
+---
 
 ## IndexedDB Schema
 
-Database version: **6** (v2.0+)
-
-Previous versions:
-- v1-5: Original schema with separate locations, containers, items stores
-- v6: Location and Item stores (Phase 9)
-
-### Object Stores
+**Database version: 7**
 
 | Store | Key Path | Indexes |
 |-------|----------|---------|
-| `locations` | `id` | - |
+| `locations` | `id` | `by-parent` (parentId) |
 | `items` | `id` | `by-parent` (parentId) |
+
+---
 
 ## Project Structure
 
@@ -324,155 +362,76 @@ inventori/
 ├── public/                       # Static assets
 ├── src/
 │   ├── components/
-│   │   ├── Layout.tsx          # App shell with navigation
-│   │   ├── HamburgerMenu.tsx   # Dropdown menu with app actions
-│   │   ├── ConfirmDialog.tsx   # Reusable confirmation dialog
-│   │   ├── SearchBar.tsx       # Debounced search input component
-│   │   ├── PhotoCapture.tsx    # Camera/upload component
-│   │   ├── EntityCard.tsx      # Card for displaying location/item
-│   │   ├── Breadcrumbs.tsx     # Navigation breadcrumbs
-│   │   ├── IdDisplay.tsx       # ID display with copy button
-│   │   ├── LocationForm.tsx    # Form for creating/editing locations
-│   │   ├── ItemForm.tsx        # Form for creating/editing items
-│   │   ├── InstallButton.tsx   # PWA install prompt button (standalone)
-│   │   └── ExportButton.tsx    # Data export trigger button (standalone)
+│   │   ├── Layout.tsx           # App shell with header
+│   │   ├── Tabs.tsx             # Tab navigation component
+│   │   ├── CollapsibleSection.tsx # Collapsible content section
+│   │   ├── OverflowMenu.tsx     # Dropdown menu (⋮)
+│   │   ├── EntityCard.tsx       # Card for location/item
+│   │   ├── Breadcrumbs.tsx      # Navigation breadcrumbs with icons
+│   │   ├── TagInput.tsx         # Tag chip input with autocomplete
+│   │   ├── HamburgerMenu.tsx    # App menu
+│   │   ├── ConfirmDialog.tsx    # Confirmation dialog
+│   │   ├── SearchBar.tsx        # Debounced search input
+│   │   ├── PhotoCapture.tsx     # Camera/upload component
+│   │   ├── IdDisplay.tsx        # ID display with copy
+│   │   ├── LocationForm.tsx     # Location form
+│   │   └── ItemForm.tsx         # Item form with collapsible sections
 │   ├── db/
-│   │   ├── index.ts            # DB initialization and schema (v6)
-│   │   ├── locations.ts        # Location CRUD operations
-│   │   └── items.ts            # Item CRUD operations
+│   │   ├── index.ts             # DB initialization (v7)
+│   │   ├── locations.ts         # Location CRUD
+│   │   ├── items.ts             # Item CRUD
+│   │   └── tags.ts              # Tag management (rename, delete)
 │   ├── hooks/
-│   │   ├── useLocations.ts     # Location data hook
-│   │   ├── useItems.ts         # Item data hook
-│   │   ├── useChildren.ts      # Get children of a parent
-│   │   ├── useAncestors.ts     # Get breadcrumb path
-│   │   ├── useOffline.ts       # Offline status hook
-│   │   └── useInstallPrompt.ts # PWA install prompt hook
+│   │   ├── useLocations.ts      # Location data
+│   │   ├── useItems.ts          # Item data
+│   │   ├── useChildren.ts       # Children of parent
+│   │   ├── useChildCounts.ts    # Cached descendant counts
+│   │   ├── useAncestors.ts      # Breadcrumb path
+│   │   ├── useTags.ts           # All tags with counts
+│   │   ├── useOffline.ts        # Offline status
+│   │   └── useInstallPrompt.ts  # PWA install
 │   ├── pages/
-│   │   ├── Home.tsx            # List all locations
-│   │   ├── LocationView.tsx    # View location contents and items
-│   │   ├── ItemView.tsx        # View item details
-│   │   ├── AddLocation.tsx     # Create location
-│   │   ├── AddItem.tsx         # Create item
-│   │   ├── EditLocation.tsx    # Edit location
-│   │   ├── EditItem.tsx        # Edit item
-│   │   └── Search.tsx          # Global search page (includes ID search)
+│   │   ├── Home.tsx             # Two-tab home (Locations, Unassigned)
+│   │   ├── LocationView.tsx     # Location details
+│   │   ├── ItemView.tsx         # Item details
+│   │   ├── AddLocation.tsx      # Create location
+│   │   ├── AddItem.tsx          # Create item
+│   │   ├── EditLocation.tsx     # Edit location
+│   │   ├── EditItem.tsx         # Edit item
+│   │   ├── Search.tsx           # Search with filters
+│   │   └── Tags.tsx             # Tag management
 │   ├── types/
-│   │   └── index.ts            # TypeScript interfaces (Location, Item, ItemContainerStatus)
+│   │   └── index.ts             # TypeScript interfaces
 │   ├── utils/
-│   │   ├── shortId.ts          # ID generation (Crockford Base32)
-│   │   ├── export.ts           # ZIP export functionality
-│   │   └── import.ts           # ZIP import functionality
-│   ├── App.tsx                 # Main app with routing
-│   ├── main.tsx                # Entry point
-│   └── index.css               # Tailwind imports
+│   │   ├── shortId.ts           # ID generation
+│   │   ├── counts.ts            # Count calculation
+│   │   ├── export.ts            # ZIP export
+│   │   └── import.ts            # ZIP import
+│   ├── App.tsx                  # Main app with routing
+│   ├── main.tsx                 # Entry point
+│   └── index.css                # Tailwind imports
 ├── index.html
 ├── package.json
 ├── tsconfig.json
 └── vite.config.ts
 ```
 
+---
+
 ## Development
 
 ### Prerequisites
 
-Node.js 18+ installed via nvm. Add to `~/.bashrc`:
-```bash
-export NVM_DIR="$HOME/.config/nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-```
+Node.js 18+ installed via nvm.
 
 ### Commands
 
 | Command | Description |
 |---------|-------------|
-| `pnpm dev` | Start dev server at http://localhost:5173 |
+| `pnpm dev` | Start dev server |
 | `pnpm build` | Build for production |
 | `pnpm preview` | Preview production build |
 | `pnpm lint` | Run ESLint |
-
----
-
-## Phase 10 Features (Post-v2.0 Enhancements)
-
-### Phase 10.1: Entity Text Export
-
-**Feature:** Allow users to share entity information with minimal text format, optionally including photos in a ZIP file.
-
-**Text Format (Minimal):**
-```
-Name: {name}
-Quantity: {quantity}
-Description: {description}
-```
-
-**Copy Options:**
-
-1. **Copy as Text** `[📋 Copy Text]`
-   - Copy formatted text to clipboard
-   - Perfect for: AI agents, notes, quick sharing
-   - Toast: "✅ Copied to clipboard"
-
-2. **Download ZIP** `[📥 Download ZIP]`
-   - ZIP file containing:
-     - `entity.txt` - Formatted text
-     - `images/` folder - All entity photos
-   - Filename: `entity-{name}-{id}.zip`
-   - Perfect for: Marketplace listings, complete sharing package
-   - Toast: "✅ Downloaded entity-{name}-{id}.zip"
-
-**UI Location:** EntityView page action buttons
-
-**Use Cases:**
-- Create AI-assisted marketplace listings
-- Share item details with buyers/sellers
-- Quick reference copying
-- Organize information before selling/trading
-
----
-
-### Phase 10.2: Step-by-Step Parent Picker
-
-**Problem Fixed:** Current dropdown shows 50+ nested items (locations + all containers), making it overwhelming to select a parent, especially when exact name not remembered.
-
-**Solution:** Modal with progressive step-by-step breadcrumb navigation that narrows options at each step.
-
-**How It Works:**
-
-1. **Step 1: Select Location**
-   - Lists all locations
-   - User selects one or continues to nested containers
-
-2. **Step 2+: Select Container (within location)**
-   - Shows containers available in that location
-   - User can:
-     - Select a container as final parent
-     - Drill deeper into container's children
-     - Go back to previous step
-
-3. **Breadcrumb Navigation**
-   - Shows current path: `Bedroom > Closet > Shelf 1`
-   - Click to go back to any level
-   - Visual hierarchy shows where you are
-
-**Current Parent Pre-Selection:**
-- When editing existing entity, modal opens with current parent already selected
-- User can confirm or change selection
-
-**UI in EntityForm:**
-```
-Parent Selection:
-┌──────────────────────────────┐
-│ Bedroom > Closet > Shelf 1   │  [🔄 Change]
-└──────────────────────────────┘
-```
-
-**Benefits:**
-- ✅ Only relevant options at each step
-- ✅ Browse visually without remembering exact names
-- ✅ Works with deeply nested containers (5+ levels)
-- ✅ Mobile-friendly (full-screen modal)
-- ✅ Scales with large inventories (100+ containers)
-- ✅ Pre-selects current parent for fast editing
 
 ---
 
@@ -482,6 +441,4 @@ Parent Selection:
 |---------|--------|--------------|
 | v1.0 | Released | Basic inventory: locations, containers, items |
 | v1.1 | Released | Photos, search, export/import, PWA |
-| v2.0 | Planned | Entity consolidation, disposal tracking, counting |
-| v2.1 | Planned | Entity text export, improved parent picker |
-
+| v2.0 | In Progress | UI redesign: two-tab home, collapsible sections, tags system, unassigned items, cached counts |
