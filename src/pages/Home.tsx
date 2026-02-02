@@ -35,14 +35,14 @@ export function Home() {
         />
       )}
 
-      {/* Location list */}
-      {!loading && !error && locations.length > 0 && (
-        <div className="space-y-3">
-          {locations.map((location) => (
-            <EntityCard key={location.id} entity={location} />
-          ))}
-        </div>
-      )}
+       {/* Location list */}
+       {!loading && !error && locations.length > 0 && (
+         <div className="space-y-3">
+           {locations.map((location) => (
+             <EntityCard key={location.id} entity={location} entityType="location" />
+           ))}
+         </div>
+       )}
 
       {/* Floating Action Button */}
       {!loading && locations.length > 0 && (

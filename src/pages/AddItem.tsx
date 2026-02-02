@@ -4,7 +4,7 @@ import { Layout } from '../components/Layout';
 import { ItemForm } from '../components/ItemForm';
 import { createItem } from '../db/items';
 import { useToast } from '../contexts/ToastContext';
-import type { CreateItemInput, ParentType } from '../types';
+import type { CreateItemInput } from '../types';
 
 /**
  * Add Item page
@@ -17,7 +17,12 @@ export function AddItem() {
 
   // Get parent from URL params if provided
   const defaultParentId = searchParams.get('parentId') ?? undefined;
-  const defaultParentType = (searchParams.get('parentType') as ParentType) ?? undefined;
+  let defaultParentType = (searchParams.get('parentType') as 'location' | 'item' | 'container' | null) ?? undefined;
+  
+  // Convert 'container' to 'item' for backward compatibility with old URLs
+  if (defaultParentType === 'container') {
+    defaultParentType = 'item' as 'location' | 'item' | undefined;
+  }
 
   const handleSubmit = async (data: CreateItemInput) => {
     setIsSubmitting(true);

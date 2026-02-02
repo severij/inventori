@@ -133,7 +133,6 @@ export function ItemForm({
       canHoldItems,
       quantity: canHoldItems ? 1 : quantity, // Containers always have quantity 1
       photos,
-      status: 'IN_USE',
       includeInTotal: true,
       tags: [],
     };
