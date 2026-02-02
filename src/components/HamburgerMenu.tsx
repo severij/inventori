@@ -28,7 +28,7 @@ export function HamburgerMenu() {
   const [importPreview, setImportPreview] = useState<{
     version?: string;
     exportedAt?: string;
-    counts?: { locations: number; containers: number; items: number };
+    counts?: { locations: number; items: number };
   } | null>(null);
 
   // Clear data confirmation state
@@ -136,22 +136,20 @@ export function HamburgerMenu() {
         setImportError(`Import completed with errors: ${result.errors[0]}`);
       }
 
-      // Reload the page to reflect imported data
-      if (
-        result.success ||
-        result.locations.added +
-          result.locations.updated +
-          result.containers.added +
-          result.containers.updated +
-          result.items.added +
-          result.items.updated >
-          0
-      ) {
-        // Small delay to show result, then reload
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
-      }
+       // Reload the page to reflect imported data
+       if (
+         result.success ||
+         result.locations.added +
+           result.locations.updated +
+           result.items.added +
+           result.items.updated >
+           0
+       ) {
+         // Small delay to show result, then reload
+         setTimeout(() => {
+           window.location.reload();
+         }, 1500);
+       }
     } catch (err) {
       setImportError(err instanceof Error ? err.message : 'Import failed');
     } finally {
@@ -450,18 +448,17 @@ export function HamburgerMenu() {
               IDs will be updated.
             </p>
             {importPreview && (
-              <div className="bg-gray-50 rounded-lg p-3 text-sm">
-                <p>
-                  <strong>File details:</strong>
-                </p>
-                <ul className="mt-1 space-y-1 text-gray-600">
-                  <li>Format version: {importPreview.version ?? 'Unknown'}</li>
-                  <li>Exported: {formatDate(importPreview.exportedAt)}</li>
-                  <li>Locations: {importPreview.counts?.locations ?? 0}</li>
-                  <li>Containers: {importPreview.counts?.containers ?? 0}</li>
-                  <li>Items: {importPreview.counts?.items ?? 0}</li>
-                </ul>
-              </div>
+               <div className="bg-gray-50 rounded-lg p-3 text-sm">
+                 <p>
+                   <strong>File details:</strong>
+                 </p>
+                 <ul className="mt-1 space-y-1 text-gray-600">
+                   <li>Format version: {importPreview.version ?? 'Unknown'}</li>
+                   <li>Exported: {formatDate(importPreview.exportedAt)}</li>
+                   <li>Locations: {importPreview.counts?.locations ?? 0}</li>
+                   <li>Items: {importPreview.counts?.items ?? 0}</li>
+                 </ul>
+               </div>
             )}
             <p className="text-sm text-amber-600">
               Tip: Export your current data first if you want a backup.

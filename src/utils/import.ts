@@ -1,13 +1,12 @@
 import JSZip from 'jszip';
 import { getDB } from '../db/index';
 import { getLocation } from '../db/locations';
-import { getContainer } from '../db/containers';
 import { getItem } from '../db/items';
-import type { Location, Container, Item } from '../types';
-import type { ExportData, ExportedLocation, ExportedContainer, ExportedItem } from './export';
+import type { Location, Item } from '../types';
+import type { ExportData, ExportedLocation, ExportedItem } from './export';
 
-/** Supported export format version */
-const SUPPORTED_VERSION = '1.1';
+/** Supported export format versions */
+const SUPPORTED_VERSIONS = ['1.1', '2.0'];
 
 /**
  * Result of an import operation
@@ -15,7 +14,6 @@ const SUPPORTED_VERSION = '1.1';
 export interface ImportResult {
   success: boolean;
   locations: { added: number; updated: number };
-  containers: { added: number; updated: number };
   items: { added: number; updated: number };
   warnings: string[];
   errors: string[];
@@ -47,15 +45,10 @@ function getImagesFromMap(
  * Check if an ID is already used by a different entity type
  * (prevents collisions when importing data that might have ID conflicts)
  */
-async function isIdCollision(id: string, expectedType: 'location' | 'container' | 'item'): Promise<boolean> {
+async function isIdCollision(id: string, expectedType: 'location' | 'item'): Promise<boolean> {
   if (expectedType !== 'location') {
     const existingLocation = await getLocation(id);
     if (existingLocation) return true;
-  }
-
-  if (expectedType !== 'container') {
-    const existingContainer = await getContainer(id);
-    if (existingContainer) return true;
   }
 
   if (expectedType !== 'item') {
@@ -83,37 +76,8 @@ async function importLocation(
 
   return {
     id: exported.id,
-    type: 'location',
     name: exported.name,
     description: exported.description,
-    photos: getImagesFromMap(exported.photos, imagesMap, warnings),
-    createdAt: new Date(exported.createdAt),
-    updatedAt: new Date(exported.updatedAt),
-  };
-}
-
-/**
- * Convert an exported container back to a Container
- */
-async function importContainer(
-  exported: ExportedContainer,
-  imagesMap: Map<string, Blob>,
-  warnings: string[]
-): Promise<Container | null> {
-  // Check for ID collision with a different entity type
-  const hasCollision = await isIdCollision(exported.id, 'container');
-  if (hasCollision) {
-    warnings.push(`ID "${exported.id}" for container "${exported.name}" conflicts with another entity type. Skipped.`);
-    return null;
-  }
-
-  return {
-    id: exported.id,
-    type: 'container',
-    name: exported.name,
-    description: exported.description,
-    parentId: exported.parentId,
-    parentType: exported.parentType,
     photos: getImagesFromMap(exported.photos, imagesMap, warnings),
     createdAt: new Date(exported.createdAt),
     updatedAt: new Date(exported.updatedAt),
@@ -137,13 +101,14 @@ async function importItem(
 
   return {
     id: exported.id,
-    type: 'item',
     name: exported.name,
     description: exported.description,
     parentId: exported.parentId,
     parentType: exported.parentType,
-    isContainer: exported.isContainer,
+    canHoldItems: exported.canHoldItems,
     quantity: exported.quantity ?? 1,
+    includeInTotal: true,
+    tags: [],
     photos: getImagesFromMap(exported.photos, imagesMap, warnings),
     createdAt: new Date(exported.createdAt),
     updatedAt: new Date(exported.updatedAt),
@@ -151,7 +116,8 @@ async function importItem(
 }
 
 /**
- * Validate the export data structure
+ * Validate the export data structure.
+ * Supports both v1.1 (with containers) and v2.0 (containers as items with canHoldItems).
  */
 function validateExportData(data: unknown): data is ExportData {
   if (!data || typeof data !== 'object') {
@@ -163,11 +129,10 @@ function validateExportData(data: unknown): data is ExportData {
   // Check required fields
   if (typeof d.version !== 'string') return false;
   if (!Array.isArray(d.locations)) return false;
-  if (!Array.isArray(d.containers)) return false;
   if (!Array.isArray(d.items)) return false;
 
-  // Check version compatibility
-  if (d.version !== SUPPORTED_VERSION) {
+  // Check version compatibility - support both v1.1 and v2.0
+  if (!SUPPORTED_VERSIONS.includes(d.version)) {
     return false;
   }
 
@@ -229,7 +194,6 @@ export async function importData(file: File): Promise<ImportResult> {
   const result: ImportResult = {
     success: false,
     locations: { added: 0, updated: 0 },
-    containers: { added: 0, updated: 0 },
     items: { added: 0, updated: 0 },
     warnings: [],
     errors: [],
@@ -265,7 +229,7 @@ export async function importData(file: File): Promise<ImportResult> {
 
   // Validate structure
   if (!validateExportData(data)) {
-    result.errors.push('Invalid export file format or unsupported version (requires v1.1)');
+    result.errors.push('Invalid export file format or unsupported version (requires v1.1 or v2.0)');
     return result;
   }
 
@@ -293,28 +257,6 @@ export async function importData(file: File): Promise<ImportResult> {
     }
   }
 
-  // Import containers
-  for (const exported of data.containers) {
-    try {
-      const container = await importContainer(exported, imagesMap, result.warnings);
-      if (!container) continue; // Skipped due to collision
-
-      const existing = await db.get('containers', container.id);
-
-      if (existing) {
-        await db.put('containers', container);
-        result.containers.updated++;
-      } else {
-        await db.add('containers', container);
-        result.containers.added++;
-      }
-    } catch (err) {
-      result.errors.push(
-        `Failed to import container "${exported.name}": ${err instanceof Error ? err.message : 'Unknown error'}`
-      );
-    }
-  }
-
   // Import items
   for (const exported of data.items) {
     try {
@@ -334,6 +276,43 @@ export async function importData(file: File): Promise<ImportResult> {
       result.errors.push(
         `Failed to import item "${exported.name}": ${err instanceof Error ? err.message : 'Unknown error'}`
       );
+    }
+  }
+
+  // For v1.1 files, convert containers to items with canHoldItems=true
+  if (data.version === '1.1' && 'containers' in data && Array.isArray((data as any).containers)) {
+    for (const container of (data as any).containers) {
+      try {
+        // Convert old container to new item format with canHoldItems
+        const item: Item = {
+          id: container.id,
+          name: container.name,
+          description: container.description,
+          parentId: container.parentId,
+          parentType: container.parentType === 'container' ? 'item' : container.parentType,
+          canHoldItems: true,
+          quantity: 1,
+          includeInTotal: true,
+          tags: [],
+          photos: getImagesFromMap(container.photos || [], imagesMap, result.warnings),
+          createdAt: new Date(container.createdAt),
+          updatedAt: new Date(container.updatedAt),
+        };
+
+        const existing = await db.get('items', item.id);
+
+        if (existing) {
+          await db.put('items', item);
+          result.items.updated++;
+        } else {
+          await db.add('items', item);
+          result.items.added++;
+        }
+      } catch (err) {
+        result.errors.push(
+          `Failed to import container "${container.name}": ${err instanceof Error ? err.message : 'Unknown error'}`
+        );
+      }
     }
   }
 
@@ -366,7 +345,7 @@ export async function previewImport(file: File): Promise<{
   valid: boolean;
   version?: string;
   exportedAt?: string;
-  counts?: { locations: number; containers: number; items: number };
+  counts?: { locations: number; items: number };
   error?: string;
 }> {
   try {
@@ -384,7 +363,7 @@ export async function previewImport(file: File): Promise<{
     const data = JSON.parse(jsonString);
 
     if (!validateExportData(data)) {
-      return { valid: false, error: 'Invalid export file format or unsupported version (requires v1.1)' };
+      return { valid: false, error: 'Invalid export file format or unsupported version (requires v1.1 or v2.0)' };
     }
 
     return {
@@ -393,7 +372,6 @@ export async function previewImport(file: File): Promise<{
       exportedAt: data.exportedAt,
       counts: {
         locations: data.locations.length,
-        containers: data.containers.length,
         items: data.items.length,
       },
     };
