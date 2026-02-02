@@ -23,14 +23,14 @@ export function LocationView() {
   const { showToast } = useToast();
 
   const { location, loading: locationLoading, error: locationError, refetch } = useLocation(id);
-  const { containers, items, loading: childrenLoading } = useChildren(id);
+  const { children, loading: childrenLoading } = useChildren(id, 'location');
   const { ancestors } = useAncestors(id, 'location');
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const loading = locationLoading || childrenLoading;
-  const hasChildren = containers.length > 0 || items.length > 0;
+  const hasChildren = children.length > 0;
 
   const handleDelete = async () => {
     if (!location) return;
@@ -114,61 +114,52 @@ export function LocationView() {
             </div>
           </div>
 
-          {/* Add buttons */}
-          <div className="flex gap-2 mb-4">
-            <Link
-              to={`/add/container?parentId=${location.id}&parentType=location`}
-              className="flex-1 text-center px-4 py-2 bg-accent-100 dark:bg-surface-tertiary text-accent-600 dark:text-accent-400 border border-accent-300 dark:border-accent-600/50 rounded-lg hover:bg-accent-200 dark:hover:bg-surface-secondary transition-colors font-medium min-h-[44px] flex items-center justify-center"
-            >
-              + Add Container
-            </Link>
-            <Link
-              to={`/add/item?parentId=${location.id}&parentType=location`}
-              className="flex-1 text-center px-4 py-2 bg-accent-100 dark:bg-surface-tertiary text-accent-600 dark:text-accent-400 border border-accent-300 dark:border-accent-600/50 rounded-lg hover:bg-accent-200 dark:hover:bg-surface-secondary transition-colors font-medium min-h-[44px] flex items-center justify-center"
-            >
-              + Add Item
-            </Link>
-          </div>
+           {/* Add button */}
+           <div className="flex gap-2 mb-4">
+             <Link
+               to={`/add/item?parentId=${location.id}&parentType=location`}
+               className="flex-1 text-center px-4 py-2 bg-accent-100 dark:bg-surface-tertiary text-accent-600 dark:text-accent-400 border border-accent-300 dark:border-accent-600/50 rounded-lg hover:bg-accent-200 dark:hover:bg-surface-secondary transition-colors font-medium min-h-[44px] flex items-center justify-center"
+             >
+               + Add Item
+             </Link>
+           </div>
 
-          {/* Contents */}
-          {childrenLoading ? (
-            <CardListSkeleton count={2} />
-          ) : hasChildren ? (
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium text-content-tertiary uppercase tracking-wide">
-                Contents ({containers.length + items.length})
-              </h3>
-              {containers.map((container) => (
-                <EntityCard key={container.id} entity={container} />
-              ))}
-              {items.map((item) => (
-                <EntityCard key={item.id} entity={item} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-content-tertiary bg-surface-tertiary/50 rounded-lg">
-              <p className="font-medium">This location is empty</p>
-              <p className="text-sm mt-1">Add a container or item to get started</p>
-            </div>
-          )}
+           {/* Contents */}
+           {childrenLoading ? (
+             <CardListSkeleton count={2} />
+           ) : hasChildren ? (
+             <div className="space-y-3">
+               <h3 className="text-sm font-medium text-content-tertiary uppercase tracking-wide">
+                 Contents ({children.length})
+               </h3>
+               {children.map((child) => (
+                 <EntityCard key={child.id} entity={child} entityType="item" />
+               ))}
+             </div>
+           ) : (
+             <div className="text-center py-8 text-content-tertiary bg-surface-tertiary/50 rounded-lg">
+               <p className="font-medium">This location is empty</p>
+               <p className="text-sm mt-1">Add an item to get started</p>
+             </div>
+           )}
         </>
       )}
 
-      {/* Delete confirmation dialog */}
-      <ConfirmDialog
-        isOpen={showDeleteDialog}
-        title="Delete Location"
-        message={
-          hasChildren
-            ? `Are you sure you want to delete "${location?.name}" and all its contents (${containers.length + items.length} items)? This action cannot be undone.`
-            : `Are you sure you want to delete "${location?.name}"? This action cannot be undone.`
-        }
-        confirmLabel={isDeleting ? 'Deleting...' : 'Delete'}
-        onConfirm={handleDelete}
-        onCancel={() => setShowDeleteDialog(false)}
-        isDestructive
-        confirmDisabled={isDeleting}
-      />
+       {/* Delete confirmation dialog */}
+       <ConfirmDialog
+         isOpen={showDeleteDialog}
+         title="Delete Location"
+         message={
+           hasChildren
+             ? `Are you sure you want to delete "${location?.name}" and all its contents (${children.length} items)? This action cannot be undone.`
+             : `Are you sure you want to delete "${location?.name}"? This action cannot be undone.`
+         }
+         confirmLabel={isDeleting ? 'Deleting...' : 'Delete'}
+         onConfirm={handleDelete}
+         onCancel={() => setShowDeleteDialog(false)}
+         isDestructive
+         confirmDisabled={isDeleting}
+       />
     </Layout>
   );
 }

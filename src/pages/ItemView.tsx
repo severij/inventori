@@ -24,14 +24,14 @@ export function ItemView() {
   const { showToast } = useToast();
 
   const { item, loading: itemLoading, error, refetch } = useItem(id);
-  const { containers, items: childItems, loading: childrenLoading } = useChildren(id);
+  const { children, loading: childrenLoading } = useChildren(id, 'item');
   const { ancestors } = useAncestors(id, 'item');
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const loading = itemLoading || (item?.isContainer && childrenLoading);
-  const hasChildren = containers.length > 0 || childItems.length > 0;
+  const loading = itemLoading || (item?.canHoldItems && childrenLoading);
+  const hasChildren = children.length > 0;
 
   const handleDelete = async () => {
     if (!item) return;
@@ -143,48 +143,39 @@ export function ItemView() {
             </div>
           </div>
 
-          {/* Container Contents - only shown for items with isContainer */}
-          {item.isContainer && (
-            <>
-              {/* Add buttons */}
-              <div className="flex gap-2 mb-4">
-                <Link
-                  to={`/add/container?parentId=${item.id}&parentType=item`}
-                  className="flex-1 text-center px-4 py-2 bg-accent-100 dark:bg-surface-tertiary text-accent-600 dark:text-accent-400 border border-accent-300 dark:border-accent-600/50 rounded-lg hover:bg-accent-200 dark:hover:bg-surface-secondary transition-colors font-medium min-h-[44px] flex items-center justify-center"
-                >
-                  + Add Container
-                </Link>
-                <Link
-                  to={`/add/item?parentId=${item.id}&parentType=item`}
-                  className="flex-1 text-center px-4 py-2 bg-accent-100 dark:bg-surface-tertiary text-accent-600 dark:text-accent-400 border border-accent-300 dark:border-accent-600/50 rounded-lg hover:bg-accent-200 dark:hover:bg-surface-secondary transition-colors font-medium min-h-[44px] flex items-center justify-center"
-                >
-                  + Add Item
-                </Link>
-              </div>
+           {/* Container Contents - only shown for items with canHoldItems */}
+           {item.canHoldItems && (
+             <>
+               {/* Add button */}
+               <div className="flex gap-2 mb-4">
+                 <Link
+                   to={`/add/item?parentId=${item.id}&parentType=item`}
+                   className="flex-1 text-center px-4 py-2 bg-accent-100 dark:bg-surface-tertiary text-accent-600 dark:text-accent-400 border border-accent-300 dark:border-accent-600/50 rounded-lg hover:bg-accent-200 dark:hover:bg-surface-secondary transition-colors font-medium min-h-[44px] flex items-center justify-center"
+                 >
+                   + Add Item
+                 </Link>
+               </div>
 
-              {/* Contents list */}
-              {childrenLoading ? (
-                <CardListSkeleton count={2} />
-              ) : hasChildren ? (
-                <div className="space-y-3 mb-6">
-                  <h3 className="text-sm font-medium text-content-tertiary uppercase tracking-wide">
-                    Contents ({containers.length + childItems.length})
-                  </h3>
-                  {containers.map((container) => (
-                    <EntityCard key={container.id} entity={container} />
-                  ))}
-                  {childItems.map((childItem) => (
-                    <EntityCard key={childItem.id} entity={childItem} />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-6 text-content-tertiary mb-6 bg-surface-tertiary/50 rounded-lg">
-                  <p className="font-medium">This container is empty</p>
-                  <p className="text-sm mt-1">Add a container or item to get started</p>
-                </div>
-              )}
-            </>
-          )}
+               {/* Contents list */}
+               {childrenLoading ? (
+                 <CardListSkeleton count={2} />
+               ) : hasChildren ? (
+                 <div className="space-y-3 mb-6">
+                   <h3 className="text-sm font-medium text-content-tertiary uppercase tracking-wide">
+                     Contents ({children.length})
+                   </h3>
+                   {children.map((child) => (
+                     <EntityCard key={child.id} entity={child} entityType="item" />
+                   ))}
+                 </div>
+               ) : (
+                 <div className="text-center py-6 text-content-tertiary mb-6 bg-surface-tertiary/50 rounded-lg">
+                   <p className="font-medium">This container is empty</p>
+                   <p className="text-sm mt-1">Add an item to get started</p>
+                 </div>
+               )}
+             </>
+           )}
 
           {/* Metadata */}
           <div className="text-xs text-content-muted space-y-1">
@@ -194,21 +185,21 @@ export function ItemView() {
         </>
       )}
 
-      {/* Delete confirmation dialog */}
-      <ConfirmDialog
-        isOpen={showDeleteDialog}
-        title="Delete Item"
-        message={
-          item?.isContainer && hasChildren
-            ? `Are you sure you want to delete "${item?.name}" and all its contents (${containers.length + childItems.length} items)? This action cannot be undone.`
-            : `Are you sure you want to delete "${item?.name}"? This action cannot be undone.`
-        }
-        confirmLabel={isDeleting ? 'Deleting...' : 'Delete'}
-        onConfirm={handleDelete}
-        onCancel={() => setShowDeleteDialog(false)}
-        isDestructive
-        confirmDisabled={isDeleting}
-      />
+       {/* Delete confirmation dialog */}
+       <ConfirmDialog
+         isOpen={showDeleteDialog}
+         title="Delete Item"
+         message={
+           item?.canHoldItems && hasChildren
+             ? `Are you sure you want to delete "${item?.name}" and all its contents (${children.length} items)? This action cannot be undone.`
+             : `Are you sure you want to delete "${item?.name}"? This action cannot be undone.`
+         }
+         confirmLabel={isDeleting ? 'Deleting...' : 'Delete'}
+         onConfirm={handleDelete}
+         onCancel={() => setShowDeleteDialog(false)}
+         isDestructive
+         confirmDisabled={isDeleting}
+       />
     </Layout>
   );
 }

@@ -3,7 +3,7 @@ import type { Item } from '../types';
 import { getItemsByParent } from '../db/items';
 
 interface UseChildrenResult {
-  children: Item[];
+  children: Item[]; // All children - items with canHoldItems=true appear first
   loading: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
@@ -32,7 +32,12 @@ export function useChildren(
     setError(null);
     try {
       const childData = await getItemsByParent(parentId, parentType);
-      setChildren(childData);
+      // Sort so items with canHoldItems=true (containers) appear first
+      const sorted = childData.sort((a, b) => {
+        if (a.canHoldItems === b.canHoldItems) return 0;
+        return a.canHoldItems ? -1 : 1;
+      });
+      setChildren(sorted);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch children'));
     } finally {
