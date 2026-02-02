@@ -4,7 +4,8 @@ import type { Location, Item } from '../types';
 
 /**
  * IndexedDB schema definition for type safety with idb
- * v6: Location and Item stores (separate, not consolidated)
+ * v7: Location and Item stores. Item.parentId and Item.parentType made optional (allows unassigned items).
+ *     Removed Item.status and Item.dateDisposed fields (use tags for categorization).
  */
 interface InventoriDB extends DBSchema {
   locations: {
@@ -21,7 +22,7 @@ interface InventoriDB extends DBSchema {
 }
 
 const DB_NAME = 'inventori';
-const DB_VERSION = 6; // v6: Location and Item stores (Phase 9.1)
+const DB_VERSION = 7; // v7: Made Item.parentId/parentType optional, removed status/dateDisposed
 
 let dbPromise: Promise<IDBPDatabase<InventoriDB>> | null = null;
 
@@ -42,7 +43,7 @@ export function getDB(): Promise<IDBPDatabase<InventoriDB>> {
          if (!db.objectStoreNames.contains('items')) {
            const itemStore = db.createObjectStore('items', { keyPath: 'id' });
            itemStore.createIndex('by-parent', 'parentId');
-         } else if (oldVersion < 6) {
+         } else if (oldVersion < 7) {
            // For existing items store, ensure by-parent index exists
            const itemStore = transaction.objectStore('items');
            if (!itemStore.indexNames.contains('by-parent')) {
