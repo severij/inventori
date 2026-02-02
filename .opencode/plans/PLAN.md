@@ -457,124 +457,145 @@ Replaced dropdown with modal dialog containing step-by-step breadcrumb-based pic
 
 ---
 
-## Phase 11: Critical Fixes 🔧
+## Phase 11: Critical Fixes ✅
 
-**Status: NOT STARTED**
+**Status: COMPLETE** 
 
-The codebase has TypeScript errors from incomplete Phase 9 work. This phase fixes those errors to get the build passing again.
+Fixed TypeScript errors and aligned codebase with new data model (removed Containers, made items unassignable optional).
 
-### 11.1 Delete Orphaned Container Files
+### 11.1 Delete Orphaned Container Files ✅
 
-Files to delete:
+Files deleted:
 - `src/pages/AddContainer.tsx`
 - `src/pages/ContainerView.tsx`
 - `src/pages/EditContainer.tsx`
-- `src/db/containers.ts` (if exists)
-- `src/hooks/useContainers.ts` (if exists)
-- `src/components/ContainerForm.tsx` (if exists)
 
-### 11.2 Update Data Model
+### 11.2 Update Data Model ✅
 
 **`src/types/index.ts`:**
-- Remove `ItemContainerStatus` enum entirely
-- Remove `status` field from Item interface
-- Remove `dateDisposed` field from Item interface
-- Make `parentId` optional on Item (allows unassigned items)
-- Make `parentType` optional on Item (only needed when parentId is set)
+- ✅ Removed `ItemContainerStatus` enum entirely
+- ✅ Removed `status` field from Item interface
+- ✅ Removed `dateDisposed` field from Item interface
+- ✅ Made `parentId` optional on Item (allows unassigned items)
+- ✅ Made `parentType` optional on Item
 
-**Before:**
-```typescript
-interface Item {
-  parentId: string;                    // Required
-  parentType: 'location' | 'item';     // Required
-  status: ItemContainerStatus;         // Remove
-  dateDisposed?: Date;                 // Remove
-  // ...
-}
-```
-
-**After:**
-```typescript
-interface Item {
-  parentId?: string;                   // Optional (unassigned if missing)
-  parentType?: 'location' | 'item';    // Optional (only if parentId set)
-  // status removed
-  // dateDisposed removed
-  // ...
-}
-```
-
-### 11.3 Update Database Schema
+### 11.3 Update Database Schema ✅
 
 **`src/db/index.ts`:**
-- Bump `DB_VERSION` from 6 to 7
-- No migration needed (fields are being removed/made optional)
+- ✅ Bumped `DB_VERSION` from 6 to 7
+- ✅ No migration needed (fields optional/removed at type level only)
 
-### 11.4 Update Database Functions
+### 11.4 Update Database Functions ✅
 
 **`src/db/items.ts`:**
-- Add `getUnassignedItems(): Promise<Item[]>` - items where `parentId` is undefined
-- Update `createItem` to handle optional `parentId`/`parentType`
-- Update `updateItem` to handle optional `parentId`/`parentType`
-- Remove any `status` or `dateDisposed` handling
+- ✅ Added `getUnassignedItems(): Promise<Item[]>` function
+- ✅ Updated `createItem` to handle optional `parentId`/`parentType`
+- ✅ Updated `updateItem` to handle optional `parentId`/`parentType`
+- ✅ Removed all `status` and `dateDisposed` handling
 
-### 11.5 Fix Search Page
+### 11.5 Fix Search Page ✅
 
 **`src/pages/Search.tsx`:**
-- Remove imports: `useContainers`, `getContainer`
-- Remove `Entity` type import (no longer exists)
-- Update filtering logic to work with items only
-- Fix any type errors
+- ✅ Removed `useContainers` and `getContainer` imports
+- ✅ Removed `Entity` type import, using `Location | Item` instead
+- ✅ Simplified to show only Locations and Items (no Containers section)
+- ✅ Updated filtering logic
+- ✅ No more TypeScript errors
 
-### 11.6 Fix LocationView Page
-
-**`src/pages/LocationView.tsx`:**
-- Fix `useChildren` signature/usage
-- Change "Add Container" button to "Add Location"
-- Remove any container-specific logic
-
-### 11.7 Fix ItemView Page
-
-**`src/pages/ItemView.tsx`:**
-- Fix `useChildren` signature/usage
-- Remove "Add Container" button
-- Use `canHoldItems` instead of `isContainer`
-
-### 11.8 Fix Home Page
-
-**`src/pages/Home.tsx`:**
-- Add missing `entityType` prop to EntityCard
-
-### 11.9 Update App.tsx Routes
+### 11.6 Fix App.tsx Routes ✅
 
 **`src/App.tsx`:**
-- Remove container routes (`/container/:id`, `/add/container`, `/edit/container/:id`)
+- ✅ Removed container route imports (ContainerView, AddContainer, EditContainer)
+- ✅ Removed container routes:
+  - `/container/:id`
+  - `/add/container`
+  - `/edit/container/:id`
 
-### 11.10 Update Forms and Other Files
+### 11.7 Fix ItemForm and Related Pages ✅
 
 **`src/components/ItemForm.tsx`:**
-- Remove `status` field/dropdown
-- Remove `dateDisposed` field
-- Handle optional `parentId` (show "Unassigned" option)
+- ✅ Removed `status: 'IN_USE'` field from createItem call
+- ✅ Kept `includeInTotal: true` (required field)
+- ✅ Kept `tags: []` (required field)
 
-**`src/utils/export.ts` and `src/utils/import.ts`:**
-- Remove `status` and `dateDisposed` from export/import
+**`src/pages/AddItem.tsx`:**
+- ✅ Removed `ParentType` import
+- ✅ Added logic to convert old `parentType=container` to `parentType=item` for backward compatibility
+
+**`src/pages/Home.tsx`:**
+- ✅ Added missing `entityType="location"` prop to EntityCard
+
+### 11.8 Fix View Pages ✅
+
+**`src/hooks/useChildren.ts`:**
+- ✅ Updated to return single `children` array (not split into containers/items)
+- ✅ Added sorting to put `canHoldItems: true` items first
+
+**`src/pages/ItemView.tsx`:**
+- ✅ Updated `useChildren(id, 'item')` call with explicit parentType
+- ✅ Changed from `containers` and `childItems` to single `children` array
+- ✅ Replaced `item.isContainer` with `item.canHoldItems`
+- ✅ Removed "Add Container" button - now only "+ Add Item"
+- ✅ Updated content list to use single `children` array
+- ✅ Added `entityType="item"` to EntityCard components
+
+**`src/pages/LocationView.tsx`:**
+- ✅ Updated `useChildren(id, 'location')` call with explicit parentType
+- ✅ Changed from `containers` and `items` to single `children` array
+- ✅ Removed "Add Container" button - now only "+ Add Item"
+- ✅ Updated content list to use single `children` array
+- ✅ Added `entityType="item"` to EntityCard components
+
+### 11.9 Fix Export Utility ✅
+
+**`src/utils/export.ts`:**
+- ✅ Removed `getAllContainers` import
+- ✅ Removed `Container` type import
+- ✅ Bumped `EXPORT_VERSION` to `'2.0'` (breaking change)
+- ✅ Removed `ExportedContainer` interface entirely
+- ✅ Updated `ExportedLocation` to remove `type` field
+- ✅ Updated `ExportedItem` to use `canHoldItems` instead of `isContainer`
+- ✅ Updated `ExportData` to remove `containers` array
+- ✅ Removed `exportContainer()` function
+- ✅ Updated `generateImageFilename()` to only accept `'location' | 'item'`
+- ✅ Updated `exportData()` to skip container processing
+
+### 11.10 Fix Import Utility ✅
+
+**`src/utils/import.ts`:**
+- ✅ Removed `getContainer` import
+- ✅ Removed `Container` and `ExportedContainer` imports
+- ✅ Updated `SUPPORTED_VERSION` to `SUPPORTED_VERSIONS = ['1.1', '2.0']`
+- ✅ Removed `containers` from `ImportResult` interface
+- ✅ Simplified `isIdCollision()` to only check locations/items
+- ✅ Removed `importContainer()` function
+- ✅ Updated `importItem()` to use `canHoldItems` instead of `isContainer`
+- ✅ Updated `validateExportData()` to support both v1.1 and v2.0
+- ✅ Added v1.1 backward compatibility: converts old containers to items with `canHoldItems: true`
+- ✅ Updated error messages to mention both versions
+- ✅ Updated `previewImport()` to remove containers from counts
+
+**`src/components/HamburgerMenu.tsx`:**
+- ✅ Updated `importPreview` type to remove containers
+- ✅ Updated import success check logic
+- ✅ Removed containers from UI display
 
 **Deliverables:**
-- [ ] All orphaned container files deleted
-- [ ] `ItemContainerStatus` enum removed
-- [ ] `status` and `dateDisposed` fields removed from Item
-- [ ] `parentId` and `parentType` made optional
-- [ ] Database version bumped to v7
-- [ ] `getUnassignedItems()` function added
-- [ ] Search page working without container imports
-- [ ] LocationView page fixed
-- [ ] ItemView page fixed
-- [ ] Home page fixed
-- [ ] Routes updated
-- [ ] Forms updated
-- [ ] Export/import updated
-- [ ] `pnpm build` passes without errors
+- ✅ All orphaned container files deleted
+- ✅ `ItemContainerStatus` enum removed
+- ✅ `status` and `dateDisposed` fields removed from Item
+- ✅ `parentId` and `parentType` made optional
+- ✅ Database version bumped to v7
+- ✅ `getUnassignedItems()` function added
+- ✅ Search page working without container imports
+- ✅ All view pages fixed with proper `useChildren` usage
+- ✅ Home page fixed with `entityType` props
+- ✅ Routes updated
+- ✅ Forms updated
+- ✅ Export/import updated with v2.0 format and v1.1 backward compatibility
+- ✅ `pnpm build` succeeds with zero TypeScript errors
+- ✅ Vite build succeeds
+- ✅ PWA manifest generated
 
 ---
 
@@ -886,8 +907,8 @@ Final navigation improvements and consistency.
 - [x] **Phase 7:** Data export (JSON backup)
 - [x] **Phase 8:** Polish and testing
 - [x] **Phase 9:** Data model consolidation
-- [ ] **Phase 10:** Post-v1.0 enhancements (10.1 deferred, 10.2 parent picker done)
-- [ ] **Phase 11:** Critical fixes (build errors)
+- [x] **Phase 10:** Post-v1.0 enhancements (10.1 deferred, 10.2 parent picker done)
+- [x] **Phase 11:** Critical fixes (build errors) ✅ COMPLETE
 - [ ] **Phase 12:** Home page redesign (two tabs)
 - [ ] **Phase 13:** Entity card redesign (icon counts)
 - [ ] **Phase 14:** View page improvements (collapsible, overflow menu)

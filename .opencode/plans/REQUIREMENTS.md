@@ -299,16 +299,45 @@ inventori-backup-YYYY-MM-DD.zip
     └── item-{id}-{index}.{ext}
 ```
 
-### data.json structure
+### data.json structure (v2.0)
 
 ```typescript
 interface ExportData {
-  version: "1.1";
+  version: "2.0";           // v2.0: Containers as items with canHoldItems
   exportedAt: string;       // ISO 8601 timestamp
   locations: ExportedLocation[];
   items: ExportedItem[];
 }
+
+interface ExportedLocation {
+  id: string;
+  name: string;
+  description?: string;
+  photos: string[];         // filenames in images/ folder
+  createdAt: string;        // ISO date string
+  updatedAt: string;        // ISO date string
+}
+
+interface ExportedItem {
+  id: string;
+  name: string;
+  description?: string;
+  parentId?: string;
+  parentType?: 'location' | 'item';
+  canHoldItems: boolean;    // v2.0: replaces isContainer
+  quantity: number;
+  photos: string[];
+  createdAt: string;
+  updatedAt: string;
+}
 ```
+
+### Backward Compatibility
+
+**v1.1 → v2.0 Migration:**
+- Old `ExportedContainer` objects are automatically converted to Items with `canHoldItems: true`
+- Old `parentType: 'container'` is converted to `parentType: 'item'`
+- Import utility supports both v1.1 and v2.0 formats
 
 ### Import Behavior
 
