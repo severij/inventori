@@ -33,44 +33,37 @@ export async function getItemsByParent(
 }
 
 /**
- * Get all items with disposal-related statuses
+ * Get all unassigned items (items with no parent)
  */
-export async function getDisposalItems(): Promise<Item[]> {
+export async function getUnassignedItems(): Promise<Item[]> {
   const db = await getDB();
   const allItems = await db.getAll('items');
-  const disposalStatuses = ['TO_SELL', 'TO_DONATE', 'TO_REPAIR', 'SOLD', 'DONATED', 'GIFTED', 'DISPOSED', 'RECYCLED', 'STOLEN', 'LOST'];
-  return allItems.filter((item) => disposalStatuses.includes(item.status));
+  return allItems.filter((item) => !item.parentId || !item.parentType);
 }
 
 /**
  * Create a new item
- * Applies defaults and validates parent
+ * Applies defaults. Items can be unassigned (no parent).
  */
 export async function createItem(input: CreateItemInput): Promise<Item> {
   const db = await getDB();
   const now = new Date();
 
-  // Validate required fields
-  if (!input.parentId) {
-    throw new Error('Item requires parentId');
-  }
-  if (!input.parentType) {
-    throw new Error('Item requires parentType');
-  }
-
-  // Validate parent exists and is correct type
-  if (input.parentType === 'location') {
-    const parent = await getLocation(input.parentId);
-    if (!parent) {
-      throw new Error(`Parent location ${input.parentId} not found`);
-    }
-  } else if (input.parentType === 'item') {
-    const parent = await getItem(input.parentId);
-    if (!parent) {
-      throw new Error(`Parent item ${input.parentId} not found`);
-    }
-    if (!parent.canHoldItems) {
-      throw new Error(`Parent item ${input.parentId} cannot hold items`);
+  // Validate parent if provided (both parentId and parentType must be present together)
+  if (input.parentId && input.parentType) {
+    if (input.parentType === 'location') {
+      const parent = await getLocation(input.parentId);
+      if (!parent) {
+        throw new Error(`Parent location ${input.parentId} not found`);
+      }
+    } else if (input.parentType === 'item') {
+      const parent = await getItem(input.parentId);
+      if (!parent) {
+        throw new Error(`Parent item ${input.parentId} not found`);
+      }
+      if (!parent.canHoldItems) {
+        throw new Error(`Parent item ${input.parentId} cannot hold items`);
+      }
     }
   }
 
@@ -88,7 +81,6 @@ export async function createItem(input: CreateItemInput): Promise<Item> {
     ...input,
     id,
     quantity: input.quantity ?? 1,
-    status: input.status ?? 'IN_USE',
     includeInTotal: input.includeInTotal ?? true,
     tags: input.tags ?? [],
     canHoldItems: input.canHoldItems ?? false,
@@ -122,23 +114,31 @@ export async function updateItem(
     createdAt: existing.createdAt,
   };
 
-  // Validate parent if changed
-  if (updates.parentId || updates.parentType) {
+  // Validate parent if changed (both must be present together or both undefined)
+  if (updates.parentId !== undefined || updates.parentType !== undefined) {
     const parentId = updates.parentId ?? existing.parentId;
     const parentType = updates.parentType ?? existing.parentType;
 
-    if (parentType === 'location') {
-      const parent = await getLocation(parentId);
-      if (!parent) {
-        throw new Error(`Parent location ${parentId} not found`);
-      }
-    } else if (parentType === 'item') {
-      const parent = await getItem(parentId);
-      if (!parent) {
-        throw new Error(`Parent item ${parentId} not found`);
-      }
-      if (!parent.canHoldItems) {
-        throw new Error(`Parent item ${parentId} cannot hold items`);
+    // If either is defined, both must be defined
+    if ((parentId === undefined) !== (parentType === undefined)) {
+      throw new Error('parentId and parentType must both be defined or both undefined');
+    }
+
+    // Validate parent exists if defined
+    if (parentId && parentType) {
+      if (parentType === 'location') {
+        const parent = await getLocation(parentId);
+        if (!parent) {
+          throw new Error(`Parent location ${parentId} not found`);
+        }
+      } else if (parentType === 'item') {
+        const parent = await getItem(parentId);
+        if (!parent) {
+          throw new Error(`Parent item ${parentId} not found`);
+        }
+        if (!parent.canHoldItems) {
+          throw new Error(`Parent item ${parentId} cannot hold items`);
+        }
       }
     }
   }

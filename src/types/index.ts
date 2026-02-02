@@ -3,27 +3,6 @@
  */
 
 /**
- * Item/Container status enum for tracking lifecycle
- */
-export type ItemContainerStatus =
-  | 'IN_USE'
-  | 'STORED'
-  | 'PACKED'
-  | 'LENT'
-  | 'IN_REPAIR'
-  | 'CONSIGNED'
-  | 'TO_SELL'
-  | 'TO_DONATE'
-  | 'TO_REPAIR'
-  | 'SOLD'
-  | 'DONATED'
-  | 'GIFTED'
-  | 'STOLEN'
-  | 'LOST'
-  | 'DISPOSED'
-  | 'RECYCLED';
-
-/**
  * A top-level place where items are stored
  * (room, building, storage unit, etc.)
  * Simple organizational entity - can parent other Locations or Items
@@ -40,24 +19,23 @@ export interface Location {
 
 /**
  * Container or individual item stored in locations
- * Supports rich tracking data (prices, dates, status, etc.)
- * Items MUST have a parent (Location or another Item)
+ * Supports rich tracking data (prices, dates, tags, etc.)
+ * Items can be unassigned (no parent) or assigned to a Location or another Item
  */
 export interface Item {
   id: string; // 8-char Crockford Base32 ID
   name: string;
   description?: string;
 
-  // Hierarchy (required)
-  parentId: string; // Location ID or Item ID
-  parentType: 'location' | 'item'; // Which store to query for parent
+  // Hierarchy (optional - allows unassigned items)
+  parentId?: string; // Location ID or Item ID (undefined for unassigned items)
+  parentType?: 'location' | 'item'; // Which store to query for parent
 
   // Item capabilities
   canHoldItems: boolean; // Can this item hold other items?
   quantity: number; // Default: 1
 
-  // Status and counting
-  status: ItemContainerStatus; // Default: 'IN_USE'
+  // Counting
   includeInTotal: boolean; // Include in inventory totals? Default: true
 
   // Categorization and tracking
@@ -65,7 +43,6 @@ export interface Item {
   purchasePrice?: number;
   currentValue?: number;
   dateAcquired?: Date;
-  dateDisposed?: Date;
 
   photos: Blob[];
   createdAt: Date;
