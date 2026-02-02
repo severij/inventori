@@ -2,109 +2,100 @@
  * Type definitions for Inventori home inventory app
  */
 
-/** Parent type for hierarchy relationships */
-export type ParentType = 'location' | 'container' | 'item';
-
-/** Entity type discriminator */
-export type EntityType = 'location' | 'container' | 'item';
+/**
+ * Item/Container status enum for tracking lifecycle
+ */
+export type ItemContainerStatus =
+  | 'IN_USE'
+  | 'STORED'
+  | 'PACKED'
+  | 'LENT'
+  | 'IN_REPAIR'
+  | 'CONSIGNED'
+  | 'TO_SELL'
+  | 'TO_DONATE'
+  | 'TO_REPAIR'
+  | 'SOLD'
+  | 'DONATED'
+  | 'GIFTED'
+  | 'STOLEN'
+  | 'LOST'
+  | 'DISPOSED'
+  | 'RECYCLED';
 
 /**
- * A top-level place where items and containers are stored
+ * A top-level place where items are stored
  * (room, building, storage unit, etc.)
+ * Simple organizational entity - can parent other Locations or Items
  */
 export interface Location {
-  id: string; // 8-char Crockford Base32 ID (used for physical labels)
-  type: 'location';
+  id: string; // 8-char Crockford Base32 ID
   name: string;
   description?: string;
+  parentId?: string; // Can parent another Location
   photos: Blob[];
   createdAt: Date;
   updatedAt: Date;
 }
 
 /**
- * A pure organizational container (drawer, shelf, etc.).
- * Does not have purchase/tracking info - use Item with isContainer for that.
- * Can be nested inside locations, other containers, or items with isContainer=true.
- */
-export interface Container {
-  id: string; // 8-char Crockford Base32 ID (used for physical labels)
-  type: 'container';
-  name: string;
-  description?: string;
-  parentId: string;
-  parentType: ParentType;
-  photos: Blob[];
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-/**
- * An individual inventory item.
- * Items with isContainer: true can hold containers and other items.
+ * Container or individual item stored in locations
+ * Supports rich tracking data (prices, dates, status, etc.)
+ * Items MUST have a parent (Location or another Item)
  */
 export interface Item {
-  id: string; // 8-char Crockford Base32 ID (used for physical labels)
-  type: 'item';
+  id: string; // 8-char Crockford Base32 ID
   name: string;
   description?: string;
 
-  // Hierarchy (optional - items can be unassigned)
-  parentId?: string;
-  parentType?: ParentType;
+  // Hierarchy (required)
+  parentId: string; // Location ID or Item ID
+  parentType: 'location' | 'item'; // Which store to query for parent
 
-  // Container capability - if true, this item can hold containers and other items
-  isContainer: boolean;
+  // Item capabilities
+  canHoldItems: boolean; // Can this item hold other items?
+  quantity: number; // Default: 1
 
-  // Item-specific fields
-  quantity: number;
+  // Status and counting
+  status: ItemContainerStatus; // Default: 'IN_USE'
+  includeInTotal: boolean; // Include in inventory totals? Default: true
+
+  // Categorization and tracking
+  tags: string[]; // Default: []
+  purchasePrice?: number;
+  currentValue?: number;
+  dateAcquired?: Date;
+  dateDisposed?: Date;
+
   photos: Blob[];
-
   createdAt: Date;
   updatedAt: Date;
 }
-
-/** Union type for any entity that can be stored */
-export type Entity = Location | Container | Item;
-
-/** Union type for entities that can have QR codes (all of them in v2) */
-export type Scannable = Entity;
 
 /**
  * Input type for creating a new Location
- * (excludes auto-generated fields)
  */
-export type CreateLocationInput = Omit<Location, 'id' | 'type' | 'createdAt' | 'updatedAt'>;
-
-/**
- * Input type for creating a new Container
- * (excludes auto-generated fields)
- */
-export type CreateContainerInput = Omit<Container, 'id' | 'type' | 'createdAt' | 'updatedAt'>;
-
-/**
- * Input type for creating a new Item
- * (excludes auto-generated fields)
- */
-export type CreateItemInput = Omit<Item, 'id' | 'type' | 'createdAt' | 'updatedAt'>;
+export type CreateLocationInput = Omit<
+  Location,
+  'id' | 'createdAt' | 'updatedAt'
+>;
 
 /**
  * Input type for updating a Location
- * (all fields optional except id)
  */
-export type UpdateLocationInput = Partial<Omit<Location, 'id' | 'type' | 'createdAt' | 'updatedAt'>>;
+export type UpdateLocationInput = Partial<
+  Omit<Location, 'id' | 'createdAt' | 'updatedAt'>
+>;
 
 /**
- * Input type for updating a Container
- * (all fields optional except id)
+ * Input type for creating a new Item
  */
-export type UpdateContainerInput = Partial<Omit<Container, 'id' | 'type' | 'createdAt' | 'updatedAt'>>;
+export type CreateItemInput = Omit<Item, 'id' | 'createdAt' | 'updatedAt'>;
 
 /**
  * Input type for updating an Item
- * (all fields optional except id)
  */
-export type UpdateItemInput = Partial<Omit<Item, 'id' | 'type' | 'createdAt' | 'updatedAt'>>;
+export type UpdateItemInput = Partial<Omit<Item, 'id' | 'createdAt' | 'updatedAt'>>;
 
 /**
  * Breadcrumb item for navigation
@@ -112,5 +103,5 @@ export type UpdateItemInput = Partial<Omit<Item, 'id' | 'type' | 'createdAt' | '
 export interface BreadcrumbItem {
   id: string;
   name: string;
-  type: EntityType;
+  type: 'location' | 'item';
 }

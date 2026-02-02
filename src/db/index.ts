@@ -1,21 +1,15 @@
 import { openDB } from 'idb';
 import type { DBSchema, IDBPDatabase } from 'idb';
-import type { Location, Container, Item } from '../types';
+import type { Location, Item } from '../types';
 
 /**
  * IndexedDB schema definition for type safety with idb
+ * v6: Location and Item stores (separate, not consolidated)
  */
 interface InventoriDB extends DBSchema {
   locations: {
     key: string;
     value: Location;
-  };
-  containers: {
-    key: string;
-    value: Container;
-    indexes: {
-      'by-parent': string;
-    };
   };
   items: {
     key: string;
@@ -27,7 +21,7 @@ interface InventoriDB extends DBSchema {
 }
 
 const DB_NAME = 'inventori';
-const DB_VERSION = 5; // Bump version: shortId is now the primary id field
+const DB_VERSION = 6; // v6: Location and Item stores (Phase 9.1)
 
 let dbPromise: Promise<IDBPDatabase<InventoriDB>> | null = null;
 
@@ -37,56 +31,31 @@ let dbPromise: Promise<IDBPDatabase<InventoriDB>> | null = null;
  */
 export function getDB(): Promise<IDBPDatabase<InventoriDB>> {
   if (!dbPromise) {
-    dbPromise = openDB<InventoriDB>(DB_NAME, DB_VERSION, {
-      upgrade(db, oldVersion, _newVersion, transaction) {
-        // Create locations store
-        if (!db.objectStoreNames.contains('locations')) {
-          db.createObjectStore('locations', { keyPath: 'id' });
-        } else if (oldVersion < 5) {
-          // Remove shortId index if it exists (no longer needed)
-          const locationStore = transaction.objectStore('locations');
-          if ((locationStore.indexNames as DOMStringList).contains('by-shortId')) {
-            locationStore.deleteIndex('by-shortId');
-          }
-        }
+     dbPromise = openDB<InventoriDB>(DB_NAME, DB_VERSION, {
+       upgrade(db, oldVersion, _newVersion, transaction) {
+         // Create locations store (no indexes)
+         if (!db.objectStoreNames.contains('locations')) {
+           db.createObjectStore('locations', { keyPath: 'id' });
+         }
 
-        // Create containers store with parentId index
-        if (!db.objectStoreNames.contains('containers')) {
-          const containerStore = db.createObjectStore('containers', { keyPath: 'id' });
-          containerStore.createIndex('by-parent', 'parentId');
-        } else if (oldVersion < 5) {
-          // Remove shortId index if it exists (no longer needed)
-          const containerStore = transaction.objectStore('containers');
-          if ((containerStore.indexNames as DOMStringList).contains('by-shortId')) {
-            containerStore.deleteIndex('by-shortId');
-          }
-          // Ensure by-parent index exists
-          if (!containerStore.indexNames.contains('by-parent')) {
-            containerStore.createIndex('by-parent', 'parentId');
-          }
-        }
+         // Create items store with parentId index
+         if (!db.objectStoreNames.contains('items')) {
+           const itemStore = db.createObjectStore('items', { keyPath: 'id' });
+           itemStore.createIndex('by-parent', 'parentId');
+         } else if (oldVersion < 6) {
+           // For existing items store, ensure by-parent index exists
+           const itemStore = transaction.objectStore('items');
+           if (!itemStore.indexNames.contains('by-parent')) {
+             itemStore.createIndex('by-parent', 'parentId');
+           }
+         }
 
-        // Create items store with parentId index
-        if (!db.objectStoreNames.contains('items')) {
-          const itemStore = db.createObjectStore('items', { keyPath: 'id' });
-          itemStore.createIndex('by-parent', 'parentId');
-        } else if (oldVersion < 5) {
-          // Remove shortId index if it exists (no longer needed)
-          const itemStore = transaction.objectStore('items');
-          if ((itemStore.indexNames as DOMStringList).contains('by-shortId')) {
-            itemStore.deleteIndex('by-shortId');
+          // Delete old containers store if it exists (from v5 or earlier)
+          if ((db.objectStoreNames as any).contains('containers')) {
+            (db as any).deleteObjectStore('containers');
           }
-          // Ensure by-parent index exists
-          if (!itemStore.indexNames.contains('by-parent')) {
-            itemStore.createIndex('by-parent', 'parentId');
-          }
-          // Remove old category index if it exists (from earlier versions)
-          if ((itemStore.indexNames as DOMStringList).contains('by-category')) {
-            itemStore.deleteIndex('by-category');
-          }
-        }
-      },
-    });
+       },
+     });
   }
   return dbPromise;
 }
@@ -105,14 +74,13 @@ export async function closeDB(): Promise<void> {
 
 /**
  * Clear all data from the database.
- * This removes all locations, containers, and items.
+ * This removes all locations and items.
  */
 export async function clearAllData(): Promise<void> {
   const db = await getDB();
-  const tx = db.transaction(['locations', 'containers', 'items'], 'readwrite');
+  const tx = db.transaction(['locations', 'items'], 'readwrite');
   await Promise.all([
     tx.objectStore('locations').clear(),
-    tx.objectStore('containers').clear(),
     tx.objectStore('items').clear(),
     tx.done,
   ]);

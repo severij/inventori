@@ -1,7 +1,6 @@
 import { getDB } from './index';
 import { generateUniqueId } from '../utils/shortId';
 import type { Item, CreateItemInput, UpdateItemInput } from '../types';
-import { deleteContainersByParent, getContainer } from './containers';
 import { getLocation } from './locations';
 
 /**
@@ -21,37 +20,59 @@ export async function getItem(id: string): Promise<Item | undefined> {
 }
 
 /**
- * Get all items by parent ID (location or another item)
+ * Get items by parent (location or item)
+ * Only returns items where parentId and parentType match
  */
-export async function getItemsByParent(parentId: string): Promise<Item[]> {
+export async function getItemsByParent(
+  parentId: string,
+  parentType: 'location' | 'item'
+): Promise<Item[]> {
   const db = await getDB();
-  return db.getAllFromIndex('items', 'by-parent', parentId);
+  const items = await db.getAllFromIndex('items', 'by-parent', parentId);
+  return items.filter((item) => item.parentType === parentType);
 }
 
 /**
- * Get all items that are containers (can hold other items)
+ * Get all items with disposal-related statuses
  */
-export async function getContainerItems(): Promise<Item[]> {
+export async function getDisposalItems(): Promise<Item[]> {
   const db = await getDB();
   const allItems = await db.getAll('items');
-  return allItems.filter((item) => item.isContainer);
-}
-
-/**
- * Get all unassigned items (no parent)
- */
-export async function getUnassignedItems(): Promise<Item[]> {
-  const db = await getDB();
-  const allItems = await db.getAll('items');
-  return allItems.filter((item) => !item.parentId);
+  const disposalStatuses = ['TO_SELL', 'TO_DONATE', 'TO_REPAIR', 'SOLD', 'DONATED', 'GIFTED', 'DISPOSED', 'RECYCLED', 'STOLEN', 'LOST'];
+  return allItems.filter((item) => disposalStatuses.includes(item.status));
 }
 
 /**
  * Create a new item
+ * Applies defaults and validates parent
  */
 export async function createItem(input: CreateItemInput): Promise<Item> {
   const db = await getDB();
   const now = new Date();
+
+  // Validate required fields
+  if (!input.parentId) {
+    throw new Error('Item requires parentId');
+  }
+  if (!input.parentType) {
+    throw new Error('Item requires parentType');
+  }
+
+  // Validate parent exists and is correct type
+  if (input.parentType === 'location') {
+    const parent = await getLocation(input.parentId);
+    if (!parent) {
+      throw new Error(`Parent location ${input.parentId} not found`);
+    }
+  } else if (input.parentType === 'item') {
+    const parent = await getItem(input.parentId);
+    if (!parent) {
+      throw new Error(`Parent item ${input.parentId} not found`);
+    }
+    if (!parent.canHoldItems) {
+      throw new Error(`Parent item ${input.parentId} cannot hold items`);
+    }
+  }
 
   // Generate unique id with collision detection across all stores
   const id = await generateUniqueId(async (candidateId) => {
@@ -59,15 +80,18 @@ export async function createItem(input: CreateItemInput): Promise<Item> {
     if (existingItem) return true;
     const existingLocation = await getLocation(candidateId);
     if (existingLocation) return true;
-    const existingContainer = await getContainer(candidateId);
-    if (existingContainer) return true;
     return false;
   });
 
+  // Create item with defaults
   const item: Item = {
     ...input,
     id,
-    type: 'item',
+    quantity: input.quantity ?? 1,
+    status: input.status ?? 'IN_USE',
+    includeInTotal: input.includeInTotal ?? true,
+    tags: input.tags ?? [],
+    canHoldItems: input.canHoldItems ?? false,
     createdAt: now,
     updatedAt: now,
   };
@@ -78,10 +102,14 @@ export async function createItem(input: CreateItemInput): Promise<Item> {
 
 /**
  * Update an existing item
+ * Only updates timestamp if content actually changed
  */
-export async function updateItem(id: string, updates: UpdateItemInput): Promise<Item> {
+export async function updateItem(
+  id: string,
+  updates: UpdateItemInput
+): Promise<Item> {
   const db = await getDB();
-  const existing = await db.get('items', id);
+  const existing = await getItem(id);
 
   if (!existing) {
     throw new Error(`Item not found: ${id}`);
@@ -90,46 +118,69 @@ export async function updateItem(id: string, updates: UpdateItemInput): Promise<
   const updated: Item = {
     ...existing,
     ...updates,
-    updatedAt: new Date(),
+    id: existing.id,
+    createdAt: existing.createdAt,
   };
+
+  // Validate parent if changed
+  if (updates.parentId || updates.parentType) {
+    const parentId = updates.parentId ?? existing.parentId;
+    const parentType = updates.parentType ?? existing.parentType;
+
+    if (parentType === 'location') {
+      const parent = await getLocation(parentId);
+      if (!parent) {
+        throw new Error(`Parent location ${parentId} not found`);
+      }
+    } else if (parentType === 'item') {
+      const parent = await getItem(parentId);
+      if (!parent) {
+        throw new Error(`Parent item ${parentId} not found`);
+      }
+      if (!parent.canHoldItems) {
+        throw new Error(`Parent item ${parentId} cannot hold items`);
+      }
+    }
+  }
+
+  // Only update timestamp if content actually changed
+  const changed = JSON.stringify(existing) !== JSON.stringify(updated);
+  if (changed) {
+    updated.updatedAt = new Date();
+  }
 
   await db.put('items', updated);
   return updated;
 }
 
 /**
- * Delete an item.
- * If the item is a container (isContainer: true), also deletes all children recursively.
+ * Delete an item with optional cascade delete
+ * Default (deleteChildren=false): delete the item, also delete all child items (items can't be orphaned)
+ * With deleteChildren=true: recursively delete all descendants
  */
-export async function deleteItem(id: string): Promise<void> {
+export async function deleteItem(id: string, deleteChildren: boolean = false): Promise<void> {
   const db = await getDB();
-  const item = await db.get('items', id);
-  
-  if (item?.isContainer) {
-    // Delete child containers first
-    await deleteContainersByParent(id);
-    // Then delete child items
-    await deleteItemsByParent(id);
+
+  const item = await getItem(id);
+  if (!item) {
+    throw new Error(`Item not found: ${id}`);
   }
-  
-  await db.delete('items', id);
-}
 
-/**
- * Delete all items that have the given parent ID.
- * This recursively deletes children of container-items.
- * Called when deleting a location, container, or item-container.
- */
-export async function deleteItemsByParent(parentId: string): Promise<void> {
-  const db = await getDB();
-  const items = await getItemsByParent(parentId);
+  // Get all child items
+  const childItems = await getItemsByParent(id, 'item');
 
-  for (const item of items) {
-    // If this item is also a container, recursively delete its children
-    if (item.isContainer) {
-      await deleteContainersByParent(item.id);
-      await deleteItemsByParent(item.id);
+  if (deleteChildren) {
+    // Recursive delete
+    for (const child of childItems) {
+      await deleteItem(child.id, true);
     }
-    await db.delete('items', item.id);
+  } else {
+    // Items can't be orphaned, so delete children
+    for (const child of childItems) {
+      await deleteItem(child.id, false);
+    }
   }
+
+  // Delete the item itself
+  await db.delete('items', id);
 }

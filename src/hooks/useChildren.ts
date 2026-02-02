@@ -1,30 +1,29 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Container, Item } from '../types';
-import { getContainersByParent } from '../db/containers';
+import type { Item } from '../types';
 import { getItemsByParent } from '../db/items';
 
 interface UseChildrenResult {
-  containers: Container[];
-  items: Item[];
+  children: Item[];
   loading: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
 }
 
 /**
- * Hook to fetch all direct children (containers + items) of a parent.
- * Used for displaying contents of a location, container, or item-container.
+ * Hook to fetch all direct children (items) of a parent entity.
+ * Used for displaying contents of a location or item-container.
  */
-export function useChildren(parentId: string | undefined): UseChildrenResult {
-  const [containers, setContainers] = useState<Container[]>([]);
-  const [items, setItems] = useState<Item[]>([]);
+export function useChildren(
+  parentId: string | undefined,
+  parentType: 'location' | 'item'
+): UseChildrenResult {
+  const [children, setChildren] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   const refetch = useCallback(async () => {
     if (!parentId) {
-      setContainers([]);
-      setItems([]);
+      setChildren([]);
       setLoading(false);
       return;
     }
@@ -32,22 +31,18 @@ export function useChildren(parentId: string | undefined): UseChildrenResult {
     setLoading(true);
     setError(null);
     try {
-      const [containerData, itemData] = await Promise.all([
-        getContainersByParent(parentId),
-        getItemsByParent(parentId),
-      ]);
-      setContainers(containerData);
-      setItems(itemData);
+      const childData = await getItemsByParent(parentId, parentType);
+      setChildren(childData);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch children'));
     } finally {
       setLoading(false);
     }
-  }, [parentId]);
+  }, [parentId, parentType]);
 
   useEffect(() => {
     refetch();
   }, [refetch]);
 
-  return { containers, items, loading, error, refetch };
+  return { children, loading, error, refetch };
 }

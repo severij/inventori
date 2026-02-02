@@ -1,40 +1,38 @@
 import { useNavigate } from 'react-router-dom';
-import type { Entity, Item } from '../types';
+import type { Location, Item } from '../types';
 import { formatShortId } from '../utils/shortId';
 
 interface EntityCardProps {
-  entity: Entity;
+  entity: Location | Item;
+  entityType: 'location' | 'item';
 }
 
 /**
- * Unified card component for displaying location/container/item.
+ * Unified card component for displaying location or item.
  * Shows photo thumbnail (if available), name, type icon, and quantity badge for items.
- * Items with isContainer show a container icon.
+ * Items with canHoldItems show a container icon.
  * Click navigates to detail view.
  * Minimum 48px height for touch accessibility.
  */
-export function EntityCard({ entity }: EntityCardProps) {
+export function EntityCard({ entity, entityType }: EntityCardProps) {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(`/${entity.type}/${entity.id}`);
+    navigate(`/${entityType}/${entity.id}`);
   };
 
   // Get first photo as thumbnail (if available)
   const thumbnail = entity.photos?.[0];
   const thumbnailUrl = thumbnail ? URL.createObjectURL(thumbnail) : null;
 
-  // Get icon based on entity type and isContainer flag
-  const icon = getEntityIcon(entity);
+  // Get icon based on entity type and canHoldItems flag
+  const icon = getEntityIcon(entityType, entity);
 
-  // Get quantity for items (non-containers only)
-  const quantity = entity.type === 'item' && !(entity as Item).isContainer ? (entity as Item).quantity : null;
+  // Get quantity for items (non-container items only)
+  const quantity = entityType === 'item' && !(entity as Item).canHoldItems ? (entity as Item).quantity : null;
 
-  // Check if this is a container item (not a pure container)
-  const isContainerItem = entity.type === 'item' && (entity as Item).isContainer;
-
-  // Check if this is a pure container
-  const isPureContainer = entity.type === 'container';
+  // Check if this is a container item (item with canHoldItems=true)
+  const isContainerItem = entityType === 'item' && (entity as Item).canHoldItems;
 
   // Get formatted ID for display
   const formattedId = formatShortId(entity.id);
@@ -74,13 +72,6 @@ export function EntityCard({ entity }: EntityCardProps) {
         </span>
       )}
 
-      {/* Pure container badge */}
-      {isPureContainer && (
-        <span className="flex-shrink-0 bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-400 text-xs font-medium px-2 py-0.5 rounded">
-          Organizer
-        </span>
-      )}
-
       {/* Quantity badge for non-container items */}
       {quantity !== null && quantity > 1 && (
         <span className="flex-shrink-0 bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-400 text-sm font-medium px-2 py-0.5 rounded">
@@ -111,17 +102,13 @@ export function EntityCard({ entity }: EntityCardProps) {
 /**
  * Get icon for entity type
  */
-function getEntityIcon(entity: Entity): string {
-  if (entity.type === 'location') {
+function getEntityIcon(entityType: 'location' | 'item', entity: Location | Item): string {
+  if (entityType === 'location') {
     return '📍';
   }
-  // Pure containers (organizational)
-  if (entity.type === 'container') {
-    return '🗄️';
-  }
-  // For items, show container icon if isContainer is true
-  if (entity.type === 'item') {
-    return (entity as Item).isContainer ? '📦' : '📄';
+  // For items, show container icon if canHoldItems is true
+  if (entityType === 'item') {
+    return (entity as Item).canHoldItems ? '📦' : '📄';
   }
   return '📄';
 }

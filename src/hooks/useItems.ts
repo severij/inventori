@@ -4,8 +4,6 @@ import {
   getAllItems,
   getItem,
   getItemsByParent,
-  getUnassignedItems,
-  getContainerItems,
 } from '../db/items';
 
 interface UseItemsResult {
@@ -46,7 +44,10 @@ export function useItems(): UseItemsResult {
 /**
  * Hook to fetch items by parent ID
  */
-export function useItemsByParent(parentId: string | undefined): UseItemsResult {
+export function useItemsByParent(
+  parentId: string | undefined,
+  parentType: 'location' | 'item'
+): UseItemsResult {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -61,14 +62,14 @@ export function useItemsByParent(parentId: string | undefined): UseItemsResult {
     setLoading(true);
     setError(null);
     try {
-      const data = await getItemsByParent(parentId);
+      const data = await getItemsByParent(parentId, parentType);
       setItems(data);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch items'));
     } finally {
       setLoading(false);
     }
-  }, [parentId]);
+  }, [parentId, parentType]);
 
   useEffect(() => {
     refetch();
@@ -77,33 +78,6 @@ export function useItemsByParent(parentId: string | undefined): UseItemsResult {
   return { items, loading, error, refetch };
 }
 
-/**
- * Hook to fetch unassigned items (items without a parent)
- */
-export function useUnassignedItems(): UseItemsResult {
-  const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  const refetch = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getUnassignedItems();
-      setItems(data);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch items'));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
-  return { items, loading, error, refetch };
-}
 
 interface UseItemResult {
   item: Item | null;
@@ -147,7 +121,7 @@ export function useItem(id: string | undefined): UseItemResult {
 }
 
 /**
- * Hook to fetch all container items (items that can hold other items)
+ * Hook to fetch all items that can hold other items (canHoldItems=true)
  */
 export function useContainerItems(): UseItemsResult {
   const [items, setItems] = useState<Item[]>([]);
@@ -158,8 +132,10 @@ export function useContainerItems(): UseItemsResult {
     setLoading(true);
     setError(null);
     try {
-      const data = await getContainerItems();
-      setItems(data);
+      const allItems = await getAllItems();
+      // Filter items that can hold other items
+      const containerItems = allItems.filter((item) => item.canHoldItems);
+      setItems(containerItems);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch container items'));
     } finally {
