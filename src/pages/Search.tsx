@@ -5,27 +5,24 @@ import { EntityCard } from '../components/EntityCard';
 import { CardListSkeleton } from '../components/Skeleton';
 import { EmptyState } from '../components/EmptyState';
 import { useLocations } from '../hooks/useLocations';
-import { useContainers } from '../hooks/useContainers';
 import { useItems } from '../hooks/useItems';
 import { looksLikeShortId, normalizeShortId } from '../utils/shortId';
 import { getLocation } from '../db/locations';
-import { getContainer } from '../db/containers';
 import { getItem } from '../db/items';
-import type { Entity } from '../types';
+import type { Location, Item } from '../types';
 
 /**
- * Search page - Global search across all entities
+ * Search page - Global search across locations and items
  */
 export function Search() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [idMatch, setIdMatch] = useState<Entity | null>(null);
+  const [idMatch, setIdMatch] = useState<Location | Item | null>(null);
   const [idSearching, setIdSearching] = useState(false);
 
   const { locations, loading: locationsLoading } = useLocations();
-  const { containers, loading: containersLoading } = useContainers();
   const { items, loading: itemsLoading } = useItems();
 
-  const loading = locationsLoading || containersLoading || itemsLoading;
+  const loading = locationsLoading || itemsLoading;
 
   // Check for ID exact match when search term looks like an ID
   useEffect(() => {
@@ -43,7 +40,7 @@ export function Search() {
 
       setIdSearching(true);
       try {
-        // Check all three stores for a match
+        // Check locations first
         const location = await getLocation(normalized);
         if (location) {
           setIdMatch(location);
@@ -51,13 +48,7 @@ export function Search() {
           return;
         }
 
-        const container = await getContainer(normalized);
-        if (container) {
-          setIdMatch(container);
-          setIdSearching(false);
-          return;
-        }
-
+        // Then check items
         const item = await getItem(normalized);
         if (item) {
           setIdMatch(item);
@@ -79,7 +70,7 @@ export function Search() {
 
   // Filter entities based on search term
   const filterEntities = useCallback(
-    (term: string): Entity[] => {
+    (term: string): (Location | Item)[] => {
       if (!term.trim()) {
         return [];
       }
@@ -92,21 +83,15 @@ export function Search() {
           loc.description?.toLowerCase().includes(lowerTerm)
       );
 
-      const matchingContainers = containers.filter(
-        (container) =>
-          container.name.toLowerCase().includes(lowerTerm) ||
-          container.description?.toLowerCase().includes(lowerTerm)
-      );
-
       const matchingItems = items.filter(
         (item) =>
           item.name.toLowerCase().includes(lowerTerm) ||
           item.description?.toLowerCase().includes(lowerTerm)
       );
 
-      return [...matchingLocations, ...matchingContainers, ...matchingItems];
+      return [...matchingLocations, ...matchingItems];
     },
-    [locations, containers, items]
+    [locations, items]
   );
 
   const results = filterEntities(searchTerm);
@@ -114,9 +99,8 @@ export function Search() {
 
   // Group results by type
   const groupedResults = {
-    locations: results.filter((e) => e.type === 'location'),
-    containers: results.filter((e) => e.type === 'container'),
-    items: results.filter((e) => e.type === 'item'),
+    locations: results.filter((e) => 'parentId' in e && e.parentId === undefined && !('canHoldItems' in e)),
+    items: results.filter((e) => 'canHoldItems' in e),
   };
 
   return (
@@ -125,7 +109,7 @@ export function Search() {
       <div className="mb-6">
         <SearchBar
           onSearch={setSearchTerm}
-          placeholder="Search locations, containers, items..."
+          placeholder="Search locations and items..."
           autoFocus
         />
       </div>
@@ -158,7 +142,10 @@ export function Search() {
             <h2 className="text-sm font-medium text-green-700 dark:text-green-400 uppercase tracking-wide mb-3">
               Label ID Match
             </h2>
-            <EntityCard entity={idMatch} />
+            <EntityCard 
+              entity={idMatch} 
+              entityType={'parentId' in idMatch && !('canHoldItems' in idMatch) ? 'location' : 'item'}
+            />
           </section>
         </div>
       )}
@@ -179,21 +166,7 @@ export function Search() {
               </h2>
               <div className="space-y-2">
                 {groupedResults.locations.map((entity) => (
-                  <EntityCard key={entity.id} entity={entity} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Containers */}
-          {groupedResults.containers.length > 0 && (
-            <section>
-              <h2 className="text-sm font-medium text-content-tertiary uppercase tracking-wide mb-3">
-                Containers ({groupedResults.containers.length})
-              </h2>
-              <div className="space-y-2">
-                {groupedResults.containers.map((entity) => (
-                  <EntityCard key={entity.id} entity={entity} />
+                  <EntityCard key={entity.id} entity={entity} entityType="location" />
                 ))}
               </div>
             </section>
@@ -207,7 +180,7 @@ export function Search() {
               </h2>
               <div className="space-y-2">
                 {groupedResults.items.map((entity) => (
-                  <EntityCard key={entity.id} entity={entity} />
+                  <EntityCard key={entity.id} entity={entity} entityType="item" />
                 ))}
               </div>
             </section>
