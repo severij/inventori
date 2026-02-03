@@ -181,26 +181,53 @@ export function ItemForm({
       <fieldset className="space-y-4">
         <legend className="text-lg font-medium text-content">Basic Information</legend>
 
-        {/* Name field */}
-        <div>
-          <label htmlFor="item-name" className="block text-sm font-medium text-content-secondary">
-            Name <span className="text-red-500" aria-hidden="true">*</span>
-            <span className="sr-only">(required)</span>
-          </label>
-          <input
-            type="text"
-            id="item-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className={`mt-1 block w-full rounded-md shadow-sm px-3 py-2 border ${
-              errors.name ? 'border-red-500' : 'border-border'
-            } bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none`}
-            placeholder={canHoldItems ? "e.g., Toolbox, Shelf, Storage Bin" : "e.g., Hammer, Laptop, Winter Jacket"}
-            disabled={isSubmitting}
-            aria-invalid={errors.name ? 'true' : undefined}
-            aria-describedby={errors.name ? 'item-name-error' : undefined}
-          />
-          {errors.name && <p id="item-name-error" className="mt-1 text-sm text-red-500" role="alert">{errors.name}</p>}
+        {/* Name + Quantity on same row */}
+        <div className="flex gap-3">
+          {/* Name field */}
+          <div className="flex-1">
+            <label htmlFor="item-name" className="block text-sm font-medium text-content-secondary">
+              Name <span className="text-red-500" aria-hidden="true">*</span>
+              <span className="sr-only">(required)</span>
+            </label>
+            <input
+              type="text"
+              id="item-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className={`mt-1 block w-full rounded-md shadow-sm px-3 py-2 border ${
+                errors.name ? 'border-red-500' : 'border-border'
+              } bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none`}
+              placeholder={canHoldItems ? "e.g., Toolbox, Shelf, Storage Bin" : "e.g., Hammer, Laptop, Winter Jacket"}
+              disabled={isSubmitting}
+              aria-invalid={errors.name ? 'true' : undefined}
+              aria-describedby={errors.name ? 'item-name-error' : undefined}
+            />
+            {errors.name && <p id="item-name-error" className="mt-1 text-sm text-red-500" role="alert">{errors.name}</p>}
+          </div>
+
+          {/* Quantity field - narrow, only show when not a container */}
+          {!canHoldItems && (
+            <div className="w-20">
+              <label htmlFor="item-quantity" className="block text-sm font-medium text-content-secondary">
+                Quantity <span className="text-red-500" aria-hidden="true">*</span>
+                <span className="sr-only">(required)</span>
+              </label>
+              <input
+                type="number"
+                id="item-quantity"
+                value={quantity}
+                onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                min={1}
+                className={`mt-1 block w-full rounded-md shadow-sm px-3 py-2 border ${
+                  errors.quantity ? 'border-red-500' : 'border-border'
+                } bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none`}
+                disabled={isSubmitting}
+                aria-invalid={errors.quantity ? 'true' : undefined}
+                aria-describedby={errors.quantity ? 'item-quantity-error' : undefined}
+              />
+              {errors.quantity && <p id="item-quantity-error" className="mt-1 text-sm text-red-500" role="alert">{errors.quantity}</p>}
+            </div>
+          )}
         </div>
 
         {/* Description field */}
@@ -219,40 +246,10 @@ export function ItemForm({
           />
         </div>
 
-        {/* Quantity field */}
-        <div>
-          <label htmlFor="item-quantity" className="block text-sm font-medium text-content-secondary">
-            Quantity {!canHoldItems && <><span className="text-red-500" aria-hidden="true">*</span><span className="sr-only">(required)</span></>}
-          </label>
-          <input
-            type="number"
-            id="item-quantity"
-            value={canHoldItems ? 1 : quantity}
-            onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-            min={1}
-            className={`mt-1 block w-full rounded-md shadow-sm px-3 py-2 border ${
-              errors.quantity ? 'border-red-500' : 'border-border'
-            } bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none ${
-              canHoldItems ? 'bg-surface-tertiary text-content-muted' : ''
-            }`}
-            disabled={isSubmitting || canHoldItems}
-            aria-invalid={errors.quantity ? 'true' : undefined}
-            aria-describedby={canHoldItems ? 'item-quantity-hint' : errors.quantity ? 'item-quantity-error' : undefined}
-          />
-          {canHoldItems && (
-            <p id="item-quantity-hint" className="mt-1 text-xs text-content-muted">Containers always have quantity 1</p>
-          )}
-          {errors.quantity && <p id="item-quantity-error" className="mt-1 text-sm text-red-500" role="alert">{errors.quantity}</p>}
-        </div>
-      </fieldset>
-
-      {/* Location Section */}
-      <fieldset className="space-y-4">
-        <legend className="text-lg font-medium text-content">Location</legend>
-
+        {/* Location field */}
         <div>
           <label htmlFor="item-parent" className="block text-sm font-medium text-content-secondary">
-            Parent Location/Container <span className="text-red-500" aria-hidden="true">*</span>
+            Location <span className="text-red-500" aria-hidden="true">*</span>
             <span className="sr-only">(required)</span>
           </label>
           <select
@@ -277,34 +274,36 @@ export function ItemForm({
           </select>
           {errors.parentId && <p id="item-parent-error" className="mt-1 text-sm text-red-500" role="alert">{errors.parentId}</p>}
         </div>
-      </fieldset>
 
-       {/* Photos Section */}
-       <fieldset className="space-y-4">
-         <legend className="text-lg font-medium text-content">Photos</legend>
-         <PhotoCapture photos={photos} onChange={setPhotos} maxPhotos={10} label="Item Photos" />
-       </fieldset>
+        {/* Tags field */}
+        <div>
+          <label htmlFor="item-tags" className="block text-sm font-medium text-content-secondary mb-2">
+            Tags
+          </label>
+          <TagInput
+            tags={tags}
+            onChange={setTags}
+            availableTags={allTags}
+            maxTags={10}
+            placeholder="Add tags to organize this item..."
+          />
+          <p className="text-xs text-content-muted mt-1">
+            Use tags to categorize and filter items (e.g., "urgent", "gift", "fragile")
+          </p>
+        </div>
+
+        {/* Photos field */}
+        <div>
+          <label className="block text-sm font-medium text-content-secondary mb-2">
+            Photos
+          </label>
+          <PhotoCapture photos={photos} onChange={setPhotos} maxPhotos={10} label="Item Photos" />
+        </div>
+      </fieldset>
 
        {/* Additional Information Section (Collapsible) */}
        <CollapsibleFormSection title="Additional Information" defaultOpen={false}>
-         {/* Tags */}
-         <div className="mb-4">
-           <label htmlFor="item-tags" className="block text-sm font-medium text-content-secondary mb-2">
-             Tags
-           </label>
-           <TagInput
-             tags={tags}
-             onChange={setTags}
-             availableTags={allTags}
-             maxTags={10}
-             placeholder="Add tags to organize this item..."
-           />
-           <p className="text-xs text-content-muted mt-1">
-             Use tags to categorize and filter items (e.g., "urgent", "gift", "fragile")
-           </p>
-         </div>
-
-         {/* Purchase Price */}
+          {/* Purchase Price */}
          <div className="mb-4">
            <label htmlFor="item-purchase-price" className="block text-sm font-medium text-content-secondary">
              Purchase Price
