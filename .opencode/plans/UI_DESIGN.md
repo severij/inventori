@@ -1,13 +1,15 @@
 # Inventori UI Design Specification
 
-**Last Updated:** Phase 11 Complete - Build passing ✅
+**Last Updated:** Phase 13.2 Complete - Count Utility & Hook ✅
 
 This document contains ASCII representations of all UI components, pages, and layouts for the Inventori app redesign.
 
 ## Current Status
 
 - ✅ **Phase 11 Complete:** Core data model consolidated, build passing with zero TypeScript errors
-- ⏳ **Next:** Phase 12 - Home page redesign with two tabs (these mockups show the target design for future phases)
+- ✅ **Phase 12 Complete:** Home page redesigned with two tabs (Locations, Unassigned) and context-sensitive FAB
+- ✅ **Phase 13.1-13.2 Complete:** Count utility and useChildCounts hook implemented
+- ⏳ **Next:** Phase 13.3 - Update EntityCard to show child counts instead of description
 
 ## Design Principles
 
@@ -314,24 +316,22 @@ This document contains ASCII representations of all UI components, pages, and la
 ```
 ┌─────────────────────────────────────┐
 │ [48x48]  📍 Kitchen                 │
-│  thumb       📍2  📦3  📄5         >│
+│  thumb       12 items              >│
 └─────────────────────────────────────┘
-         │         │    │    │
-         │         │    │    └── Items count
-         │         │    └─────── Containers count
-         │         └──────────── Sub-locations count
-         └────────────────────── Location icon
+          │         │
+          │         └── Total recursive item count
+          └────────────── Location icon
 ```
 
 ### Container Item Card
 ```
 ┌─────────────────────────────────────┐
 │ [48x48]  📦 Toolbox                 │
-│  thumb            📄8              >│
+│  thumb       8 items               >│
 └─────────────────────────────────────┘
-         │          │
-         │          └── Items inside count
-         └───────────── Container icon
+          │         │
+          │         └── Total recursive item count
+          └───────────── Container icon
 ```
 
 ### Regular Item Card
@@ -340,8 +340,8 @@ This document contains ASCII representations of all UI components, pages, and la
 │ [48x48]  📄 Hammer                  │
 │  thumb                        x2   >│
 └─────────────────────────────────────┘
-                                 │
-                                 └── Quantity (only if > 1)
+                                  │
+                                  └── Quantity (only if > 1)
 ```
 
 ### Item Card (No Photo)
@@ -351,8 +351,8 @@ This document contains ASCII representations of all UI components, pages, and la
 │ │  📄  │                      x5   >│
 │ └──────┘                            │
 └─────────────────────────────────────┘
-    │
-    └── Icon placeholder when no photo
+     │
+     └── Icon placeholder when no photo
 ```
 
 ### Icon Legend

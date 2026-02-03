@@ -694,40 +694,51 @@ Redesigned the home page with two-tab layout per UI_DESIGN.md. All components cr
 
 ## Phase 13: Entity Card Redesign
 
-**Status: NOT STARTED**
+**Status: IN PROGRESS (13.1-13.2 COMPLETE)**
 
-Update EntityCard per UI_DESIGN.md to show icon counts instead of description.
+Update EntityCard to show total item count (recursive) instead of description/ID.
 
-### 13.1 Create Count Calculation Utility
+### 13.1 Create Count Calculation Utility ✅ (UPDATED)
 
 **`src/utils/counts.ts`:**
-- `getChildCounts(parentId, parentType): { locations, containers, items }`
-- Caching strategy for performance
-- Considers `includeInTotal` flag
+- ✅ `getTotalItemCount(parentId, parentType): Promise<number>`
+- ✅ Recursive count of all descendant items
+- ✅ Factors in quantity (e.g., Eggs×12 = 12 items)
+- ✅ Respects `includeInTotal` flag (excludes items with false)
+- ✅ No caching (direct database queries)
 
-### 13.2 Create useChildCounts Hook
+### 13.2 Create useTotalItemCount Hook ✅ (UPDATED)
 
-**`src/hooks/useChildCounts.ts`:**
-- Wrapper around count utility
-- React state management
-- Cache invalidation on entity changes
+**`src/hooks/useTotalItemCount.ts` (renamed from useChildCounts):**
+- ✅ Wrapper around count utility with React state management
+- ✅ Returns: `{ count, loading, error, refetch }`
+- ✅ Re-fetches when parentId or parentType changes
+- ✅ No caching (direct database queries)
+
+**Build Verification:**
+- ✅ TypeScript compilation: 0 errors
+- ✅ Vite build: PASS (85 modules, 412.06 KB)
+- ✅ PWA manifest: PASS
 
 ### 13.3 Update EntityCard
 
 **`src/components/EntityCard.tsx`:**
-- Layout: Thumbnail (left) | Name + Icon + Subtitle (right) | Arrow
-- For locations: Show `📍2 📦3 📄5` as subtitle
-- For container items: Show `📄N` as subtitle
-- For regular items: Show quantity badge if > 1
-- Remove description display
+- Display total item count as subtitle: `{N} items`
+- Locations: Show recursive item count (all descendants, respecting includeInTotal)
+- Container items: Show recursive item count (items inside)
+- Regular items: No subtitle (only quantity badge if > 1)
 - Remove ID display
+- Remove "Container" badge (icon already indicates it)
+- Keep quantity badge for items > 1
+- Show skeleton text while counts load
 
 **Deliverables:**
-- [ ] Count utility created with caching
-- [ ] useChildCounts hook working
-- [ ] EntityCard shows icon counts
-- [ ] No description or ID on cards
-- [ ] Quantity badge working
+- [ ] Count utility updated with recursive counting ✅
+- [ ] useTotalItemCount hook working ✅
+- [ ] EntityCard shows `{N} items` subtitle
+- [ ] No ID display
+- [ ] No Container badge
+- [ ] Quantity badge still works
 
 ---
 

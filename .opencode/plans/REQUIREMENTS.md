@@ -179,7 +179,7 @@ Features:
 Show at-a-glance information:
 - Thumbnail on left
 - Name and type icon
-- Child counts as subtitle: `📍2 📦3 📄5`
+- Total item count as subtitle: `{N} items` (recursive, respecting includeInTotal)
 - Quantity badge (if > 1)
 - No description or ID (too cluttered)
 
@@ -414,7 +414,7 @@ inventori/
 │   │   ├── useLocations.ts      # Location data
 │   │   ├── useItems.ts          # Item data
 │   │   ├── useChildren.ts       # Children of parent
-│   │   ├── useChildCounts.ts    # Cached descendant counts
+│   │   ├── useTotalItemCount.ts # Recursive total item count
 │   │   ├── useAncestors.ts      # Breadcrumb path
 │   │   ├── useTags.ts           # All tags with counts
 │   │   ├── useOffline.ts        # Offline status
@@ -470,4 +470,4 @@ Node.js 18+ installed via nvm.
 |---------|--------|--------------|
 | v1.0 | Released | Basic inventory: locations, containers, items |
 | v1.1 | Released | Photos, search, export/import, PWA |
-| v2.0 | In Progress | UI redesign: two-tab home, collapsible sections, tags system, unassigned items, cached counts |
+| v2.0 | In Progress | UI redesign: two-tab home, collapsible sections, tags system, unassigned items, child counts (13.1-13.2 complete)
