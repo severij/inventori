@@ -81,4 +81,6 @@ export interface BreadcrumbItem {
   id: string;
   name: string;
   type: 'location' | 'item';
+  /** For items: true if item can hold other items (container), false if regular item */
+  canHoldItems?: boolean;
 }

@@ -49,7 +49,12 @@ export function useAncestors(
          } else if (currentType === 'item') {
            const item = await getItem(currentId);
            if (item) {
-             path.unshift({ id: item.id, name: item.name, type: 'item' });
+             path.unshift({ 
+               id: item.id, 
+               name: item.name, 
+               type: 'item',
+               canHoldItems: item.canHoldItems,
+             });
              currentId = item.parentId;
              currentType = item.parentType;
            } else {
