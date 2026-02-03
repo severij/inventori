@@ -51,7 +51,7 @@ export function Home() {
           icon="📍"
           title="No locations yet"
           description="Start by adding your first location, like &quot;Garage&quot; or &quot;Living Room&quot;"
-          action={{ label: '+ Add Location', to: '/add/location' }}
+          action={{ label: 'Add Location', to: '/add/location' }}
         />
       );
     }
