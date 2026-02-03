@@ -67,12 +67,13 @@ export const CollapsibleFormSection: React.FC<CollapsibleFormSectionProps> = ({
   return (
     <fieldset className={`border border-border rounded-lg ${className}`}>
       {/* Legend - clickable to toggle */}
-      <legend className="px-0 py-0">
-        <button
-          onClick={handleToggle}
-          className="w-full flex items-center justify-between px-4 py-4 hover:bg-surface-tertiary transition-colors duration-150"
-          aria-expanded={isOpen}
-        >
+       <legend className="px-0 py-0">
+         <button
+           type="button"
+           onClick={handleToggle}
+           className="w-full flex items-center justify-between px-4 py-4 hover:bg-surface-tertiary transition-colors duration-150"
+           aria-expanded={isOpen}
+         >
           <h3 className="text-lg font-semibold text-content">
             {title}
             {fieldCount !== undefined && (
