@@ -887,6 +887,74 @@ Consolidated form design with single "Basic Information" section:
 - Not needed - Locations don't require additional fields
 - LocationForm remains simple with name, description, and photos
 
+### 15.6 Implement LocationPicker Component ✅
+
+**`src/components/LocationPicker.tsx`:** (460+ lines)
+
+Replaced flat `<select>` dropdown with modal/bottom sheet drill-down picker:
+
+**Features:**
+- **Mobile:** Bottom sheet (70% viewport height, rounded top corners)
+- **Desktop:** Centered modal (max-w-[400px])
+- **Drill-down Navigation:** Start at current item's location, navigate up/down hierarchy
+- **Auto-select:** Items without children auto-select and close picker
+- **Unassigned Support:** Clear button (✕) to make items unassigned
+- **Visual Indicators:** Icons (📍 location, 📦 container), arrow (>) for drillable items
+
+**Key Behaviors:**
+- Picker opens at current item's location (built from ancestors)
+- All `<button>` elements have `type="button"` to prevent form submission
+- Click overlay with `stopPropagation()` prevents false outside-click detection
+- Handles optional parentId/parentType for unassigned items
+
+**Bug Fix - Form Submission:**
+- **Issue:** Typing item name, opening LocationPicker, and clicking a location would submit the entire form instead of selecting the location
+- **Root Cause:** All `<button>` elements in LocationPicker defaulted to `type="submit"` (HTML default)
+- **Solution:** Added `type="button"` to all 14 button elements:
+  - Trigger button (2 variations: mobile/desktop)
+  - Clear button (2 variations)
+  - Back button (2 variations)
+  - Close button (2 variations)
+  - "Select current" button (2 variations)
+  - Location item buttons (2 variations)
+  - Container item buttons (2 variations)
+
+**Props:**
+- `value: string` (empty = unassigned)
+- `parentType?: 'location' | 'item'`
+- `onChange: (parentId: string, parentType?: 'location' | 'item') => void`
+- `disabled?: boolean`
+- `hasError?: boolean`
+- `excludeItemId?: string` (for edit mode)
+- `placeholder?: string`
+
+**Integration with ItemForm:**
+- Replaced `<select>` dropdown with `<LocationPicker>`
+- Removed `parentOptions` array computation
+- Removed `handleParentChange` function
+- Made `parentId` and `parentType` optional (unassigned items)
+- Removed required validation for location field
+- Removed required asterisk from label
+- Cleaned up imports (removed unused `useLocations` and `useContainerItems`)
+
+**Unassigned Items Workflow:**
+- Users can now create items without assigning them to a location
+- Items appear in "Unassigned" tab on home page
+- Clear button (✕) provides one-tap unassign for existing items
+- Picker navigation easy for moving items between locations
+
+**Deliverables:**
+- [x] LocationPicker component created (drill-down modal/sheet)
+- [x] ItemForm uses LocationPicker instead of select dropdown
+- [x] Unassigned items fully supported (optional parentId/parentType)
+- [x] Clear button (✕) to remove location (appears only when item has location)
+- [x] Picker opens at current location for easy navigation
+- [x] Auto-select for items without children
+- [x] All buttons have type="button" (prevents form submission)
+- [x] Event propagation handled correctly
+- [x] Form submission bug fixed (type=button on all buttons)
+- [x] Overlay click handling fixed (stopPropagation)
+
 **Deliverables:**
 - [x] CollapsibleFormSection component created
 - [x] TagInput component with autocomplete
@@ -894,6 +962,9 @@ Consolidated form design with single "Basic Information" section:
 - [x] ItemForm has collapsible "Additional Information"
 - [x] ItemForm properly submits all new fields
 - [x] LocationForm update deferred (not needed)
+- [x] LocationPicker component created with drill-down UI
+- [x] Unassigned items fully supported
+- [x] Form submission bug fixed (type="button" on all buttons)
 
 ---
 
@@ -1011,7 +1082,7 @@ Final navigation improvements and consistency.
 - [x] **Phase 12:** Home page redesign (two tabs) ✅ COMPLETE
 - [x] **Phase 13:** Entity card redesign (icon counts) ✅ COMPLETE
 - [x] **Phase 14:** View page improvements (collapsible, overflow menu) ✅ COMPLETE
-- [x] **Phase 15:** Form improvements (collapsible, tag input) ✅ COMPLETE
+- [x] **Phase 15:** Form improvements (collapsible, tag input, LocationPicker, unassigned items) ✅ COMPLETE
 - [ ] **Phase 16:** Tags system (tags page, management)
 - [ ] **Phase 17:** Navigation polish (back button, consistency)
 

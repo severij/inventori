@@ -76,9 +76,7 @@ export function ItemForm({
        newErrors.name = 'Name is required';
      }
 
-     if (!parentId.trim()) {
-       newErrors.parentId = 'Parent location/container is required';
-     }
+     // parentId is now optional (can be unassigned)
 
      // Validate quantity (only for non-containers)
      if (!canHoldItems) {
@@ -107,8 +105,8 @@ export function ItemForm({
      const data: CreateItemInput = {
        name: name.trim(),
        description: description.trim() || undefined,
-       parentId, // Required in new model
-       parentType: parentType || 'location', // Fallback to location type
+       parentId: parentId || undefined, // Can be undefined for unassigned items
+       parentType: parentType, // Can be undefined for unassigned items
        canHoldItems,
        quantity: canHoldItems ? 1 : (quantity === '' ? 1 : quantity), // Containers always have quantity 1, default to 1 if empty
        photos,
@@ -212,26 +210,25 @@ export function ItemForm({
           />
         </div>
 
-        {/* Location field */}
-        <div>
-          <label htmlFor="item-parent" className="block text-sm font-medium text-content-secondary">
-            Location <span className="text-red-500" aria-hidden="true">*</span>
-            <span className="sr-only">(required)</span>
-          </label>
-          <LocationPicker
-            value={parentId}
-            parentType={parentType}
-            onChange={(newParentId, newParentType) => {
-              setParentId(newParentId);
-              setParentType(newParentType);
-            }}
-            disabled={isSubmitting || isLoadingParents}
-            hasError={!!errors.parentId}
-            excludeItemId={initialValues?.id}
-            placeholder="Select a location or container..."
-          />
-          {errors.parentId && <p id="item-parent-error" className="mt-1 text-sm text-red-500" role="alert">{errors.parentId}</p>}
-        </div>
+         {/* Location field */}
+         <div>
+           <label htmlFor="item-parent" className="block text-sm font-medium text-content-secondary">
+             Location
+           </label>
+           <LocationPicker
+             value={parentId}
+             parentType={parentType}
+             onChange={(newParentId, newParentType) => {
+               setParentId(newParentId);
+               setParentType(newParentType);
+             }}
+             disabled={isSubmitting || isLoadingParents}
+             hasError={!!errors.parentId}
+             excludeItemId={initialValues?.id}
+             placeholder="Select a location or container..."
+           />
+           {errors.parentId && <p id="item-parent-error" className="mt-1 text-sm text-red-500" role="alert">{errors.parentId}</p>}
+         </div>
 
         {/* Tags field */}
         <div>

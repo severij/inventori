@@ -1,6 +1,6 @@
 # Inventori UI Design Specification
 
-**Last Updated:** Phase 14 Complete - View Page Improvements ✅
+**Last Updated:** Phase 15 Complete - Form improvements with LocationPicker and unassigned items ✅
 
 This document contains ASCII representations of all UI components, pages, and layouts for the Inventori app redesign.
 
@@ -10,7 +10,8 @@ This document contains ASCII representations of all UI components, pages, and la
 - ✅ **Phase 12 Complete:** Home page redesigned with two tabs (Locations, Unassigned) and context-sensitive FAB
 - ✅ **Phase 13 Complete:** Entity cards show recursive item counts with skeleton loading state
 - ✅ **Phase 14 Complete:** View pages have collapsible sections, overflow menus, breadcrumbs with icons
-- ⏳ **Next:** Phase 15 - Form improvements (collapsible sections, tag input)
+- ✅ **Phase 15 Complete:** Form improvements with collapsible sections, tag input, LocationPicker with drill-down navigation, unassigned items support
+- ⏳ **Next:** Phase 16 - Tags system (tags page, rename/delete)
 
 ## Design Principles
 
@@ -527,7 +528,152 @@ This document contains ASCII representations of all UI components, pages, and la
 
 ---
 
-## Forms
+## LocationPicker Component
+
+### Mobile - Bottom Sheet
+
+```
+Screen:
+┌──────────────────────────────────┐
+│ (scroll content area)            │
+│                                  │
+│                                  │
+│                                  │ ← Original page content scrollable
+│                                  │
+├──────────────────────────────────┤ ← Rounded top corners
+│ ❌ Location Selection          ✕  │
+├──────────────────────────────────┤
+│                                  │
+│ 📍 Kitchen                    ▼  │ ← Current location (drillable)
+│                                  │
+│ ┌────────────────────────────────┐│
+│ │ [← Back]    Select Kitchen    ││ ← Breadcrumb navigation
+│ ├────────────────────────────────┤│
+│ │                                ││
+│ │ [📍 Bedroom]              [▼]  ││ ← Has children - drillable
+│ │ [📍 Garage]               [▼]  ││
+│ │ [📍 Attic]                [▼]  ││
+│ │                                ││
+│ │ [❌] Unassigned            [▼]  ││ ← Always available at top
+│ │                                ││
+│ │                                ││
+│ │                                ││
+│ │                                ││
+│ │                                ││
+│ └────────────────────────────────┘│
+│                                  │
+└──────────────────────────────────┘
+
+Dimensions:
+- Height: 70vh (70% viewport height)
+- Rounded corners on top
+- Draggable area at top (handle)
+```
+
+### Mobile - Drill-down (Inside Location)
+
+```
+┌──────────────────────────────────┐
+│ ❌ Location Selection          ✕  │
+├──────────────────────────────────┤
+│                                  │
+│ 📍 Kitchen > 📦 Refrigerator   ▼  │ ← Current selection
+│                                  │
+│ ┌────────────────────────────────┐│
+│ │ [← Back]    Select Refrig...  ││
+│ ├────────────────────────────────┤│
+│ │                                ││
+│ │ [📄 Milk]                 [✓]  ││ ← No children - auto-select
+│ │ [📄 Eggs]                 [✓]  ││
+│ │ [📄 Leftovers]            [✓]  ││
+│ │ [📦 Freezer]              [▼]  ││ ← Has children - drillable
+│ │                                ││
+│ │ [← Go Back] [Select [name]]    ││ ← Manual selection option
+│ │                                ││
+│ └────────────────────────────────┘│
+│                                  │
+└──────────────────────────────────┘
+```
+
+### Desktop - Modal
+
+```
+┌─────────────────────────────────┐
+│ ❌ Location Selection          ✕  │
+├─────────────────────────────────┤
+│                                 │
+│ 📍 Kitchen                   ▼  │ ← Current
+│                                 │
+│ ┌─────────────────────────────┐ │
+│ │ [← Back]  Select Kitchen    │ │
+│ ├─────────────────────────────┤ │
+│ │                             │ │
+│ │ [📍 Bedroom]           [▼]  │ │
+│ │ [📍 Garage]            [▼]  │ │
+│ │ [📍 Attic]             [▼]  │ │
+│ │                             │ │
+│ │ [❌] Unassigned        [▼]  │ │
+│ │                             │ │
+│ │                             │ │
+│ └─────────────────────────────┘ │
+│                                 │
+└─────────────────────────────────┘
+
+Dimensions:
+- Max width: 400px
+- Centered on screen
+- Fixed position overlay
+```
+
+### Desktop - Modal (Inside Location)
+
+```
+┌─────────────────────────────────┐
+│ ❌ Location Selection          ✕  │
+├─────────────────────────────────┤
+│                                 │
+│ 📍 Kitchen > 📦 Refrig...    ▼  │
+│                                 │
+│ ┌─────────────────────────────┐ │
+│ │ [← Back]  Select Refrig... │ │
+│ ├─────────────────────────────┤ │
+│ │                             │ │
+│ │ [📄 Milk]             [✓]   │ │
+│ │ [📄 Eggs]             [✓]   │ │
+│ │ [📄 Leftovers]        [✓]   │ │
+│ │ [📦 Freezer]          [▼]   │ │
+│ │                             │ │
+│ │ [← Go Back] [Select]        │ │
+│ │                             │ │
+│ └─────────────────────────────┘ │
+│                                 │
+└─────────────────────────────────┘
+```
+
+### Features
+
+**Visual Indicators:**
+- 📍 Location icon
+- 📦 Container/item icon
+- ❌ Unassigned (special icon)
+- ▼ Indicates item has children (drillable)
+- ✓ Indicates no children (auto-select on click)
+- ← Back arrow for navigation
+
+**Behavior:**
+1. Picker opens at current location (built from ancestors)
+2. Click item with children → drill down into that item
+3. Click item without children → auto-select and close
+4. Click "[← Go Back] [Select]" → manually select current location
+5. Click "[← Back]" in breadcrumb → go up one level
+6. Click "❌" clear button in ItemForm → set to unassigned
+7. Click overlay → close picker without selecting
+
+**Button Types:**
+- All interactive buttons use `type="button"` (prevents form submission)
+- Overlay click uses `stopPropagation()` to prevent bubbling
+
+---
 
 ### Add/Edit Item Form
 
@@ -555,10 +701,11 @@ This document contains ASCII representations of all UI components, pages, and la
 │ │ │                             │ │ │
 │ │ └─────────────────────────────┘ │ │
 │ │                                 │ │
-│ │ Location *                      │ │
+│ │ Location (optional)             │ │
 │ │ ┌─────────────────────────────┐ │ │
-│ │ │ 📍 Kitchen              ▼   │ │ │
+│ │ │ 📍 Kitchen              ▼ ✕│ │ │ ← LocationPicker + Clear button
 │ │ └─────────────────────────────┘ │ │
+│ │ (Click to select location)      │ │
 │ │                                 │ │
 │ │ Tags                            │ │
 │ │ [electronics ✕] [kitchen ✕]     │ │
@@ -586,6 +733,14 @@ This document contains ASCII representations of all UI components, pages, and la
 │                                     │
 └─────────────────────────────────────┘
 ```
+
+**Location/Parent Selector (LocationPicker):**
+- Shows current location path with icon: `📍 Kitchen` or `📦 Toolbox`
+- Empty/Unassigned: `(No location selected)`
+- Clear button (✕): Only shows if item has a location assigned
+- Click trigger to open picker
+- Mobile: Opens as 70vh bottom sheet
+- Desktop: Opens as centered modal (400px max-width)
 
 ### Additional Information Section (Expanded)
 ```

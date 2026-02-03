@@ -189,7 +189,18 @@ Show at-a-glance information:
 - Name field (required, flex-1)
 - Quantity field (narrow, w-20, hidden when canHoldItems is true)
 - Description field
-- Location/Parent selector (required)
+- **Location/Parent selector** (LocationPicker component)
+  - Optional (items can be unassigned)
+  - Modal/bottom sheet drill-down interface
+  - Mobile: 70% viewport height bottom sheet, rounded top corners
+  - Desktop: Centered modal (max-w-[400px])
+  - Opens at current location for easy navigation (built from ancestors)
+  - Clear button (✕) to make item unassigned (only shows when item has location)
+  - Auto-select for items without children (closes picker immediately)
+  - Breadcrumb-style display on trigger button showing current path
+  - Visual indicators: Icons (📍 location, 📦 container), arrow (>) for drillable items
+  - Form submission prevention: All buttons have `type="button"`
+  - Event handling: Overlay click handled with `stopPropagation()`
 - Tags with autocomplete from existing tags
 - Photos (camera + upload)
 

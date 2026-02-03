@@ -5,12 +5,12 @@ import { useAncestors } from '../hooks/useAncestors';
 import type { Location, Item } from '../types';
 
 interface LocationPickerProps {
-  /** Currently selected parent ID */
+  /** Currently selected parent ID (empty string = unassigned) */
   value: string;
   /** Currently selected parent type */
   parentType?: 'location' | 'item';
-  /** Called when selection changes */
-  onChange: (parentId: string, parentType: 'location' | 'item') => void;
+  /** Called when selection changes. Use empty string to unassign. */
+  onChange: (parentId: string, parentType?: 'location' | 'item') => void;
   /** Whether the picker is disabled */
   disabled?: boolean;
   /** Whether to show error styling */
@@ -64,6 +64,16 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   const [navigationStack, setNavigationStack] = useState<NavigationLevel[]>([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const pickerRef = useRef<HTMLDivElement>(null);
+
+  // Initialize navigationStack from ancestors when opening picker
+  // This allows the picker to open at the item's current location, not at root
+  useEffect(() => {
+    if (isOpen && navigationStack.length === 0 && ancestors.length > 0) {
+      // Remove the last ancestor (current item) and use the rest as the navigation path
+      const pathToCurrentLocation = ancestors.slice(0, -1);
+      setNavigationStack(pathToCurrentLocation);
+    }
+  }, [isOpen, ancestors]);
 
   // Detect mobile/desktop on resize
   useEffect(() => {
@@ -185,29 +195,53 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     setNavigationStack([]);
   };
 
+  /**
+   * Handle clearing the selection (make unassigned)
+   */
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onChange('', undefined);
+  };
+
   const isLoading = locationsLoading || containerItemsLoading;
   const { locations: children, items: childItems } = getChildren();
   const currentLevel = navigationStack[navigationStack.length - 1];
+  const isUnassigned = !value;
 
   // Build display text for trigger button
-  const displayText =
-    ancestors.length > 0
+  const displayText = isUnassigned
+    ? 'Unassigned'
+    : ancestors.length > 0
       ? ancestors.map((a) => (a.type === 'location' ? '📍' : '📦') + ' ' + a.name).join(' > ')
       : placeholder;
 
   return (
     <div ref={pickerRef} className="relative">
       {/* Trigger Button */}
-      <button
-        onClick={() => setIsOpen(true)}
-        disabled={disabled}
-        className={`w-full text-left mt-1 block rounded-md shadow-sm px-3 py-2 border ${
-          hasError ? 'border-red-500' : 'border-border'
-        } bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between`}
-      >
-        <span className="truncate">{displayText}</span>
-        <span className="flex-shrink-0 ml-2">▼</span>
-      </button>
+      <div className="flex items-center gap-2">
+        <button type="button"
+          onClick={() => setIsOpen(true)}
+          disabled={disabled}
+          className={`flex-1 text-left mt-1 block rounded-md shadow-sm px-3 py-2 border ${
+            hasError ? 'border-red-500' : 'border-border'
+          } bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between`}
+        >
+          <span className={`truncate ${isUnassigned ? 'text-content-secondary italic' : ''}`}>{displayText}</span>
+          <span className="flex-shrink-0 ml-2">▼</span>
+        </button>
+
+        {/* Clear button - only shown when assigned */}
+        {!isUnassigned && !disabled && (
+          <button type="button"
+            onClick={handleClear}
+            className="mt-1 p-2 rounded-md hover:bg-surface-tertiary transition-colors text-content-secondary hover:text-content"
+            aria-label="Clear location"
+            title="Clear location (make unassigned)"
+          >
+            ✕
+          </button>
+        )}
+      </div>
 
       {/* Modal/Sheet Container */}
       {isOpen && (
@@ -226,7 +260,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
               <div className="flex items-center justify-between px-4 py-3 border-b border-border flex-shrink-0">
                 <div className="flex items-center gap-2">
                   {navigationStack.length > 0 && (
-                    <button
+                    <button type="button"
                       onClick={handleBack}
                       className="p-1 hover:bg-surface-tertiary rounded transition-colors"
                       aria-label="Go back"
@@ -238,7 +272,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                     {currentLevel ? currentLevel.name : 'Select Location'}
                   </h2>
                 </div>
-                <button
+                <button type="button"
                   onClick={handleClose}
                   className="p-1 hover:bg-surface-tertiary rounded transition-colors"
                   aria-label="Close"
@@ -260,7 +294,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                   <>
                     {/* Select current button (only when drilled in) */}
                     {navigationStack.length > 0 && (
-                      <button
+                      <button type="button"
                         onClick={handleSelectCurrent}
                         className="w-full mb-3 px-3 py-3 bg-accent-50 dark:bg-surface-tertiary border border-accent-200 dark:border-accent-600/50 rounded-lg hover:bg-accent-100 dark:hover:bg-surface-secondary transition-colors text-content font-medium flex items-center justify-center gap-2"
                       >
@@ -274,6 +308,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                       {/* Child locations */}
                       {children.map((location) => (
                         <button
+                          type="button"
                           key={location.id}
                           onClick={() =>
                             handleSelectItem(location.id, location.name, 'location')
@@ -295,6 +330,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                       {/* Child items */}
                       {childItems.map((item) => (
                         <button
+                          type="button"
                           key={item.id}
                           onClick={() => handleSelectItem(item.id, item.name, 'item')}
                           className="w-full text-left px-3 py-3 rounded-lg hover:bg-surface-tertiary dark:hover:bg-surface-secondary transition-colors flex items-center justify-between group"
@@ -336,7 +372,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
               <div className="flex items-center justify-between px-4 py-4 border-b border-border flex-shrink-0">
                 <div className="flex items-center gap-2">
                   {navigationStack.length > 0 && (
-                    <button
+                    <button type="button"
                       onClick={handleBack}
                       className="p-1 hover:bg-surface-tertiary rounded transition-colors"
                       aria-label="Go back"
@@ -348,7 +384,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                     {currentLevel ? currentLevel.name : 'Select Location'}
                   </h2>
                 </div>
-                <button
+                <button type="button"
                   onClick={handleClose}
                   className="p-1 hover:bg-surface-tertiary rounded transition-colors"
                   aria-label="Close"
@@ -370,7 +406,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                   <>
                     {/* Select current button (only when drilled in) */}
                     {navigationStack.length > 0 && (
-                      <button
+                      <button type="button"
                         onClick={handleSelectCurrent}
                         className="w-full mb-3 px-3 py-3 bg-accent-50 dark:bg-surface-tertiary border border-accent-200 dark:border-accent-600/50 rounded-lg hover:bg-accent-100 dark:hover:bg-surface-secondary transition-colors text-content font-medium flex items-center justify-center gap-2"
                       >
@@ -384,6 +420,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                       {/* Child locations */}
                       {children.map((location) => (
                         <button
+                          type="button"
                           key={location.id}
                           onClick={() =>
                             handleSelectItem(location.id, location.name, 'location')
@@ -405,6 +442,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                       {/* Child items */}
                       {childItems.map((item) => (
                         <button
+                          type="button"
                           key={item.id}
                           onClick={() => handleSelectItem(item.id, item.name, 'item')}
                           className="w-full text-left px-3 py-3 rounded-lg hover:bg-surface-tertiary dark:hover:bg-surface-secondary transition-colors flex items-center justify-between group"
