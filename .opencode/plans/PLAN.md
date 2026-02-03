@@ -846,15 +846,39 @@ Update forms with collapsible sections and tag input.
 
 ### 15.4 Update ItemForm ✅
 
-**`src/components/ItemForm.tsx`:** (410+ lines)
-- Add "Additional Information" collapsible section (collapsed by default):
-  - Tags (with TagInput component)
-  - Purchase Price
-  - Current Value
-  - Date Acquired
-  - Include in inventory totals (checkbox)
-- Integrated CollapsibleFormSection and TagInput
-- All new fields properly managed in state
+**`src/components/ItemForm.tsx`:** (400+ lines)
+
+Consolidated form design with single "Basic Information" section:
+
+**Container Toggle (at top, separate):**
+- "This item can hold other items" checkbox
+- Enable for boxes, shelves, drawers, bags, etc.
+
+**Basic Information Section (fieldset):**
+- Name field (required, flex-1)
+  - Quantity field (narrow w-20, required)
+  - On same row: `<div className="flex gap-3">`
+- Description field (textarea)
+- Location/Parent selector (required)
+- Tags with TagInput component
+  - Autocomplete from existing tags
+  - Show tag usage counts
+- Photos (with PhotoCapture component)
+
+**Additional Information Section (CollapsibleFormSection):**
+- Collapsed by default (`defaultOpen: false`)
+- Shows field count in header (e.g., "Additional Information (4)")
+- Purchase Price (optional, $ prefix)
+- Current Value (optional, $ prefix)
+- Date Acquired (optional, date input)
+- Include in Inventory Totals (checkbox, default: true)
+
+**Implementation Details:**
+- Integrated CollapsibleFormSection and TagInput components
+- Full state management for all fields
+- Date conversion: ISO string ↔ date input format
+- Quantity field hidden when `canHoldItems` is true
+- All new fields properly included in form submission
 - Existing functionality preserved
 
 ### 15.5 Update LocationForm

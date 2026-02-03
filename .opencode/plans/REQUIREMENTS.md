@@ -185,11 +185,22 @@ Show at-a-glance information:
 
 ### Forms
 
-- Name, description, parent selector, quantity
+**ItemForm - Basic Information Section:**
+- Name field (required, flex-1)
+- Quantity field (narrow, w-20, hidden when canHoldItems is true)
+- Description field
+- Location/Parent selector (required)
 - Tags with autocomplete from existing tags
 - Photos (camera + upload)
-- "Additional Info" section (collapsed by default): purchase price, current value, date acquired, include in totals
-- "This item can hold other items" checkbox
+
+**ItemForm - Additional Information Section (collapsed by default):**
+- Purchase price (optional)
+- Current value (optional)
+- Date acquired (optional)
+- Include in totals checkbox (default: true)
+
+**ItemForm - Container Toggle:**
+- "This item can hold other items" checkbox (at top, separate from sections)
 
 ### Search
 
