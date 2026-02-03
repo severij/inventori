@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import type { Location, Item } from '../types';
-import { formatShortId } from '../utils/shortId';
+import { useTotalItemCount } from '../hooks/useTotalItemCount';
 
 interface EntityCardProps {
   entity: Location | Item;
@@ -9,8 +9,9 @@ interface EntityCardProps {
 
 /**
  * Unified card component for displaying location or item.
- * Shows photo thumbnail (if available), name, type icon, and quantity badge for items.
- * Items with canHoldItems show a container icon.
+ * Shows photo thumbnail (if available), name, type icon, and count/quantity.
+ * - Locations & container items: Show total recursive item count as subtitle
+ * - Regular items: Show quantity badge if > 1
  * Click navigates to detail view.
  * Minimum 48px height for touch accessibility.
  */
@@ -31,11 +32,28 @@ export function EntityCard({ entity, entityType }: EntityCardProps) {
   // Get quantity for items (non-container items only)
   const quantity = entityType === 'item' && !(entity as Item).canHoldItems ? (entity as Item).quantity : null;
 
-  // Check if this is a container item (item with canHoldItems=true)
+  // Check if this is a location or container item (needs count display)
+  const isLocation = entityType === 'location';
   const isContainerItem = entityType === 'item' && (entity as Item).canHoldItems;
+  const shouldShowCount = isLocation || isContainerItem;
 
-  // Get formatted ID for display
-  const formattedId = formatShortId(entity.id);
+  // Fetch total item count for locations and container items
+  const { count, loading, error } = useTotalItemCount(entity.id, entityType);
+
+  // Determine what to show in subtitle
+  let subtitleContent = null;
+  if (shouldShowCount) {
+    if (loading) {
+      // Show skeleton text while loading
+      subtitleContent = <span className="text-xs text-content-muted">░░░░░░░░</span>;
+    } else if (error) {
+      // Show nothing on error (count unavailable)
+      subtitleContent = null;
+    } else {
+      // Show actual count
+      subtitleContent = <span className="text-xs text-content-muted">{count} items</span>;
+    }
+  }
 
   return (
     <button
@@ -62,15 +80,8 @@ export function EntityCard({ entity, entityType }: EntityCardProps) {
       {/* Content */}
       <div className="flex-1 min-w-0">
         <h3 className="font-medium text-content truncate">{entity.name}</h3>
-        <p className="text-xs text-content-muted font-mono">{formattedId}</p>
+        {subtitleContent}
       </div>
-
-      {/* Container indicator badge for item-containers */}
-      {isContainerItem && (
-        <span className="flex-shrink-0 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400 text-xs font-medium px-2 py-0.5 rounded">
-          Container
-        </span>
-      )}
 
       {/* Quantity badge for non-container items */}
       {quantity !== null && quantity > 1 && (
