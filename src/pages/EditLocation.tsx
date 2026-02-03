@@ -20,20 +20,21 @@ export function EditLocation() {
   const { location, loading, error, refetch } = useLocation(id);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (data: CreateLocationInput) => {
-    if (!id) return;
+   const handleSubmit = async (data: CreateLocationInput) => {
+     if (!id) return;
 
-    setIsSubmitting(true);
-    try {
-      await updateLocation(id, data);
-      showToast('success', 'Location updated successfully');
-      navigate(`/location/${id}`);
-    } catch (err) {
-      console.error('Failed to update location:', err);
-      showToast('error', 'Failed to update location. Please try again.');
-      setIsSubmitting(false);
-    }
-  };
+     setIsSubmitting(true);
+     try {
+       await updateLocation(id, data);
+       showToast('success', 'Location updated successfully');
+       // Replace history so browser back skips the edit page
+       navigate(`/location/${id}`, { replace: true });
+     } catch (err) {
+       console.error('Failed to update location:', err);
+       showToast('error', 'Failed to update location. Please try again.');
+       setIsSubmitting(false);
+     }
+   };
 
   const handleCancel = () => {
     navigate(`/location/${id}`);

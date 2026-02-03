@@ -20,20 +20,21 @@ export function EditItem() {
   const { item, loading, error, refetch } = useItem(id);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (data: CreateItemInput) => {
-    if (!id) return;
+   const handleSubmit = async (data: CreateItemInput) => {
+     if (!id) return;
 
-    setIsSubmitting(true);
-    try {
-      await updateItem(id, data);
-      showToast('success', 'Item updated successfully');
-      navigate(`/item/${id}`);
-    } catch (err) {
-      console.error('Failed to update item:', err);
-      showToast('error', 'Failed to update item. Please try again.');
-      setIsSubmitting(false);
-    }
-  };
+     setIsSubmitting(true);
+     try {
+       await updateItem(id, data);
+       showToast('success', 'Item updated successfully');
+       // Replace history so browser back skips the edit page
+       navigate(`/item/${id}`, { replace: true });
+     } catch (err) {
+       console.error('Failed to update item:', err);
+       showToast('error', 'Failed to update item. Please try again.');
+       setIsSubmitting(false);
+     }
+   };
 
   const handleCancel = () => {
     navigate(`/item/${id}`);
