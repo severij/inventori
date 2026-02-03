@@ -6,13 +6,14 @@ interface LayoutProps {
   children: React.ReactNode;
   title?: string;
   showBack?: boolean;
+  onBack?: () => void;
 }
 
 /**
  * App shell with header, main content area, and offline indicator.
  * Includes proper ARIA landmarks and focus management.
  */
-export function Layout({ children, title = 'Inventori', showBack = false }: LayoutProps) {
+export function Layout({ children, title = 'Inventori', showBack = false, onBack }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -22,6 +23,14 @@ export function Layout({ children, title = 'Inventori', showBack = false }: Layo
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      navigate(-1);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-surface-secondary">
@@ -40,7 +49,7 @@ export function Layout({ children, title = 'Inventori', showBack = false }: Layo
           <div className="w-11 flex-shrink-0">
             {(showBack || !isHome) && (
               <button
-                onClick={() => navigate(-1)}
+                onClick={handleBack}
                 className="p-2 -ml-2 rounded-full hover:bg-accent-600 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                 aria-label="Go back"
               >

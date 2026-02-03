@@ -81,6 +81,20 @@ export function ItemView() {
     }
   };
 
+  /**
+   * Navigate to parent in hierarchy:
+   * - If has parent item → Go to parent item
+   * - If has parent location → Go to parent location
+   * - If unassigned → Go to Home
+   */
+  const handleBack = () => {
+    if (item?.parentId && item?.parentType) {
+      navigate(`/${item.parentType}/${item.parentId}`);
+    } else {
+      navigate('/');
+    }
+  };
+
   // Format date
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
@@ -91,7 +105,7 @@ export function ItemView() {
   };
 
   return (
-    <Layout title={item?.name ?? 'Item'}>
+    <Layout title={item?.name ?? 'Item'} onBack={handleBack}>
       {/* Loading state */}
       {loading && <DetailSkeleton />}
 

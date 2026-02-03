@@ -75,11 +75,24 @@ export function LocationView() {
     }
   };
 
+  /**
+   * Navigate to parent in hierarchy:
+   * - If has parent location → Go to parent location
+   * - If top-level → Go to Home
+   */
+  const handleBack = () => {
+    if (location?.parentId) {
+      navigate(`/location/${location.parentId}`);
+    } else {
+      navigate('/');
+    }
+  };
+
   // Get first photo for display
   const photoUrl = location?.photos?.[0] ? URL.createObjectURL(location.photos[0]) : null;
 
   return (
-    <Layout title={location?.name ?? 'Location'}>
+    <Layout title={location?.name ?? 'Location'} onBack={handleBack}>
       {/* Loading state */}
       {loading && <DetailSkeleton />}
 
