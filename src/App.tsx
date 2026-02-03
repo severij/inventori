@@ -11,6 +11,7 @@ import { AddItem } from './pages/AddItem';
 import { EditLocation } from './pages/EditLocation';
 import { EditItem } from './pages/EditItem';
 import { Search } from './pages/Search';
+import { Tags } from './pages/Tags';
 
 /**
  * Main application component with HashRouter for routing.
@@ -36,8 +37,11 @@ function App() {
           <Route path="/edit/location/:id" element={<EditLocation />} />
           <Route path="/edit/item/:id" element={<EditItem />} />
 
-          {/* Search */}
-          <Route path="/search" element={<Search />} />
+           {/* Search */}
+           <Route path="/search" element={<Search />} />
+
+           {/* Tags */}
+           <Route path="/tags" element={<Tags />} />
         </Routes>
         <ToastContainer />
       </HashRouter>

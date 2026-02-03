@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { downloadExport } from '../utils/export';
 import { importData, previewImport, type ImportResult } from '../utils/import';
 import { clearAllData } from '../db';
@@ -13,6 +14,7 @@ import { ThemeSettings } from './ThemeSettings';
  * - Install App: Shows when PWA is installable
  */
 export function HamburgerMenu() {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -235,6 +237,31 @@ export function HamburgerMenu() {
             role="menu"
             aria-label="Application menu"
           >
+            {/* Manage Tags */}
+            <button
+              onClick={() => {
+                navigate('/tags');
+                setIsOpen(false);
+              }}
+              className="flex items-center gap-3 w-full px-4 py-3 text-left text-content-secondary hover:bg-surface-tertiary transition-colors"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                className="w-5 h-5 text-content-muted"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M7.5 7.5h-.75A2.25 2.25 0 004.5 9.75v7.5a2.25 2.25 0 002.25 2.25h7.5a2.25 2.25 0 002.25-2.25v-7.5a2.25 2.25 0 00-2.25-2.25h-.75m-6 3.75l2.25 2.25m0 0l2.25 2.25m-2.25-2.25l-2.25 2.25m2.25-2.25l2.25-2.25"
+                />
+              </svg>
+              <span>Manage Tags</span>
+            </button>
+
             {/* Export Data */}
             <button
               onClick={handleExport}
