@@ -746,60 +746,69 @@ Update EntityCard to show total item count (recursive) instead of description/ID
 
 ## Phase 14: View Page Improvements
 
-**Status: NOT STARTED**
+**Status: COMPLETE ✅**
 
 Update LocationView and ItemView with collapsible sections and overflow menu.
 
-### 14.1 Create CollapsibleSection Component
+### 14.1 Create CollapsibleSection Component ✅
 
 **`src/components/CollapsibleSection.tsx`:**
-- Props: title, count, children, defaultCollapsed
-- Chevron icon (▶/▼) for state
-- Animated expand/collapse
-- Accessible (ARIA expanded)
+- ✅ Props: title, children, defaultOpen, className
+- ✅ Unicode chevron (▼) for state indicator
+- ✅ Smooth 300ms height animation expand/collapse
+- ✅ Click anywhere on header to toggle
+- ✅ Accessible (ARIA expanded)
 
-### 14.2 Create OverflowMenu Component
+### 14.2 Create OverflowMenu Component ✅
 
 **`src/components/OverflowMenu.tsx`:**
-- Trigger: Three vertical dots (⋮)
-- Dropdown menu with options
-- Support for danger items (red text)
-- Click outside to close
-- Accessible (ARIA menu)
+- ✅ Trigger: Three dots emoji (⋯)
+- ✅ Desktop: Dropdown menu with shadow
+- ✅ Mobile: Bottom sheet drawer with overlay
+- ✅ Support for destructive items (red text)
+- ✅ Click outside to close
+- ✅ Accessible (ARIA menu, labels)
+- ✅ MenuItem interface with id, label, icon, onClick, destructive
 
-### 14.3 Update LocationView
+### 14.3 Update LocationView ✅
 
 **`src/pages/LocationView.tsx`:**
-- Add overflow menu (⋮) to header with Edit/Delete
-- Replace inline buttons with overflow menu
-- Add collapsible "Locations" section (collapsed by default)
-- Add collapsible "Items" section (collapsed by default)
-- Keep "[+ Add Location]" and "[+ Add Item]" buttons visible
+- ✅ Add overflow menu (⋯) to location details header with Edit/Delete
+- ✅ Remove inline Edit/Delete buttons
+- ✅ Wrap Contents section with CollapsibleSection (defaultOpen: true)
+- ✅ Integrate "[+ Add Item]" button with location details card
+- ✅ getLocationMenuItems() helper function
 
-### 14.4 Update ItemView
+### 14.4 Update ItemView ✅
 
 **`src/pages/ItemView.tsx`:**
-- Add overflow menu (⋮) to header with Edit/Delete
-- Replace inline buttons with overflow menu
-- If `canHoldItems: true`:
-  - Add collapsible "Items" section (collapsed by default)
-  - Keep "[+ Add Item]" button visible
+- ✅ Add overflow menu (⋯) to item details header with Edit/Delete
+- ✅ Remove inline Edit/Delete buttons
+- ✅ If `canHoldItems: true`: Wrap Contents with CollapsibleSection (defaultOpen: true)
+- ✅ Integrate "[+ Add Item]" button with container section
+- ✅ getItemMenuItems() helper function
 
-### 14.5 Update Breadcrumbs
+### 14.5 Update Breadcrumbs ✅
 
 **`src/components/Breadcrumbs.tsx`:**
-- Add icons to each segment:
+- ✅ Add icons to Home link: 🏠
+- ✅ Add icons to each breadcrumb segment:
   - 📍 for locations
   - 📦 for container items (`canHoldItems: true`)
   - 📄 for regular items
+- ✅ getItemIcon() helper function
+- ✅ BreadcrumbItem updated with optional `canHoldItems` field
+- ✅ useAncestors() hook updated to include `canHoldItems`
 
 **Deliverables:**
-- [ ] CollapsibleSection component created
-- [ ] OverflowMenu component created
-- [ ] LocationView has collapsible sections (collapsed by default)
-- [ ] ItemView has collapsible section (collapsed by default)
-- [ ] Edit/Delete moved to overflow menu
-- [ ] Breadcrumbs have icons
+- [x] CollapsibleSection component created
+- [x] OverflowMenu component created
+- [x] LocationView has collapsible Contents section (defaultOpen: true)
+- [x] ItemView has collapsible Contents section (defaultOpen: true)
+- [x] Edit/Delete moved to overflow menu
+- [x] Breadcrumbs have icons
+- [x] Types updated (BreadcrumbItem with canHoldItems)
+- [x] useAncestors hook updated to pass canHoldItems
 
 ---
 
@@ -971,9 +980,9 @@ Final navigation improvements and consistency.
 - [x] **Phase 9:** Data model consolidation
 - [x] **Phase 10:** Post-v1.0 enhancements (10.1 deferred, 10.2 parent picker done)
 - [x] **Phase 11:** Critical fixes (build errors) ✅ COMPLETE
-- [ ] **Phase 12:** Home page redesign (two tabs)
-- [ ] **Phase 13:** Entity card redesign (icon counts)
-- [ ] **Phase 14:** View page improvements (collapsible, overflow menu)
+- [x] **Phase 12:** Home page redesign (two tabs) ✅ COMPLETE
+- [x] **Phase 13:** Entity card redesign (icon counts) ✅ COMPLETE
+- [x] **Phase 14:** View page improvements (collapsible, overflow menu) ✅ COMPLETE
 - [ ] **Phase 15:** Form improvements (collapsible, tag input)
 - [ ] **Phase 16:** Tags system (tags page, management)
 - [ ] **Phase 17:** Navigation polish (back button, consistency)

@@ -470,4 +470,4 @@ Node.js 18+ installed via nvm.
 |---------|--------|--------------|
 | v1.0 | Released | Basic inventory: locations, containers, items |
 | v1.1 | Released | Photos, search, export/import, PWA |
-| v2.0 | In Progress | UI redesign: two-tab home, entity cards with item counts, collapsible sections, tags system, unassigned items (Phase 13 complete)
+| v2.0 | In Progress | UI redesign: two-tab home, entity cards with item counts, collapsible sections, overflow menus, breadcrumb icons, tags system, unassigned items (Phases 12-14 complete)
