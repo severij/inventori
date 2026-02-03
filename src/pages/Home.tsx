@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Tabs } from '../components/Tabs';
+import { FAB } from '../components/FAB';
 import { EntityCard } from '../components/EntityCard';
 import { CardListSkeleton } from '../components/Skeleton';
 import { EmptyState } from '../components/EmptyState';
@@ -29,9 +29,6 @@ export function Home() {
     error: itemsError,
     refetch: refetchItems,
   } = useUnassignedItems();
-
-  const loading = locationsLoading || itemsLoading;
-  const error = locationsError || itemsError;
 
   // Render function for Locations tab
   const renderLocationsTab = () => {
@@ -128,57 +125,21 @@ export function Home() {
         onTabChange={setActiveTab}
       />
 
-      {/* Context-sensitive FAB - will be enhanced in Phase 12.5 */}
-      {!loading && !error && (
-        <>
-          {activeTab === 'locations' && locations.length > 0 && (
-            <Link
-              to="/add/location"
-              className="fixed bottom-6 right-6 bg-accent-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:bg-accent-700 transition-colors min-w-[44px] min-h-[44px]"
-              aria-label="Add location"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className="w-6 h-6"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 4.5v15m7.5-7.5h-15"
-                />
-              </svg>
-            </Link>
-          )}
+      {/* Context-sensitive FAB */}
+      {activeTab === 'locations' && !locationsError && (
+        <FAB
+          label="Location"
+          to="/add/location"
+          iconPath="M12 4.5v15m7.5-7.5h-15"
+        />
+      )}
 
-          {activeTab === 'unassigned' && unassignedItems.length > 0 && (
-            <Link
-              to="/add/item"
-              className="fixed bottom-6 right-6 bg-accent-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:bg-accent-700 transition-colors min-w-[44px] min-h-[44px]"
-              aria-label="Add item"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className="w-6 h-6"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 4.5v15m7.5-7.5h-15"
-                />
-              </svg>
-            </Link>
-          )}
-        </>
+      {activeTab === 'unassigned' && !itemsError && (
+        <FAB
+          label="Item"
+          to="/add/item"
+          iconPath="M12 4.5v15m7.5-7.5h-15"
+        />
       )}
     </Layout>
   );
