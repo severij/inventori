@@ -47,7 +47,7 @@ export function ItemForm({
   // Basic fields
   const [name, setName] = useState(initialValues?.name ?? '');
   const [description, setDescription] = useState(initialValues?.description ?? '');
-  const [quantity, setQuantity] = useState(initialValues?.quantity ?? 1);
+  const [quantity, setQuantity] = useState<number | ''>(initialValues?.quantity ?? 1);
 
   // Parent selection (required in new model)
   const [parentId, setParentId] = useState(initialValues?.parentId ?? defaultParentId ?? '');
@@ -90,26 +90,27 @@ export function ItemForm({
       })),
   ];
 
-  const validate = (): boolean => {
-    const newErrors: { name?: string; parentId?: string; quantity?: string } = {};
+   const validate = (): boolean => {
+     const newErrors: { name?: string; parentId?: string; quantity?: string } = {};
 
-    if (!name.trim()) {
-      newErrors.name = 'Name is required';
-    }
+     if (!name.trim()) {
+       newErrors.name = 'Name is required';
+     }
 
-    if (!parentId.trim()) {
-      newErrors.parentId = 'Parent location/container is required';
-    }
+     if (!parentId.trim()) {
+       newErrors.parentId = 'Parent location/container is required';
+     }
 
-    // Containers must have quantity 1
-    const effectiveQuantity = canHoldItems ? 1 : quantity;
-    if (effectiveQuantity < 1) {
-      newErrors.quantity = 'Quantity must be at least 1';
-    }
+     // Validate quantity (only for non-containers)
+     if (!canHoldItems) {
+       if (quantity === '' || quantity < 1) {
+         newErrors.quantity = 'Quantity is required and must be at least 1';
+       }
+     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+     setErrors(newErrors);
+     return Object.keys(newErrors).length === 0;
+   };
 
   const handleParentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedId = e.target.value;
@@ -133,28 +134,28 @@ export function ItemForm({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+   const handleSubmit = (e: React.FormEvent) => {
+     e.preventDefault();
 
-    if (!validate()) return;
+     if (!validate()) return;
 
-    const data: CreateItemInput = {
-      name: name.trim(),
-      description: description.trim() || undefined,
-      parentId, // Required in new model
-      parentType: parentType || 'location', // Fallback to location type
-      canHoldItems,
-      quantity: canHoldItems ? 1 : quantity, // Containers always have quantity 1
-      photos,
-      includeInTotal,
-      tags,
-      purchasePrice: purchasePrice || undefined,
-      currentValue: currentValue || undefined,
-      dateAcquired: dateAcquired ? new Date(dateAcquired) : undefined,
-    };
+     const data: CreateItemInput = {
+       name: name.trim(),
+       description: description.trim() || undefined,
+       parentId, // Required in new model
+       parentType: parentType || 'location', // Fallback to location type
+       canHoldItems,
+       quantity: canHoldItems ? 1 : (quantity === '' ? 1 : quantity), // Containers always have quantity 1, default to 1 if empty
+       photos,
+       includeInTotal,
+       tags,
+       purchasePrice: purchasePrice || undefined,
+       currentValue: currentValue || undefined,
+       dateAcquired: dateAcquired ? new Date(dateAcquired) : undefined,
+     };
 
-    onSubmit(data);
-  };
+     onSubmit(data);
+   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -212,19 +213,19 @@ export function ItemForm({
                 Quantity <span className="text-red-500" aria-hidden="true">*</span>
                 <span className="sr-only">(required)</span>
               </label>
-              <input
-                type="number"
-                id="item-quantity"
-                value={quantity}
-                onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                min={1}
-                className={`mt-1 block w-full rounded-md shadow-sm px-3 py-2 border ${
-                  errors.quantity ? 'border-red-500' : 'border-border'
-                } bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none`}
-                disabled={isSubmitting}
-                aria-invalid={errors.quantity ? 'true' : undefined}
-                aria-describedby={errors.quantity ? 'item-quantity-error' : undefined}
-              />
+               <input
+                 type="number"
+                 id="item-quantity"
+                 value={quantity}
+                 onChange={(e) => setQuantity(e.target.value === '' ? '' : parseInt(e.target.value) || 1)}
+                 min={1}
+                 className={`mt-1 block w-full rounded-md shadow-sm px-3 py-2 border ${
+                   errors.quantity ? 'border-red-500' : 'border-border'
+                 } bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none`}
+                 disabled={isSubmitting}
+                 aria-invalid={errors.quantity ? 'true' : undefined}
+                 aria-describedby={errors.quantity ? 'item-quantity-error' : undefined}
+               />
               {errors.quantity && <p id="item-quantity-error" className="mt-1 text-sm text-red-500" role="alert">{errors.quantity}</p>}
             </div>
           )}
@@ -292,13 +293,8 @@ export function ItemForm({
           </p>
         </div>
 
-        {/* Photos field */}
-        <div>
-          <label className="block text-sm font-medium text-content-secondary mb-2">
-            Photos
-          </label>
-          <PhotoCapture photos={photos} onChange={setPhotos} maxPhotos={10} label="Item Photos" />
-        </div>
+        {/* Photos */}
+        <PhotoCapture photos={photos} onChange={setPhotos} maxPhotos={10} label="Photos" />
       </fieldset>
 
        {/* Additional Information Section (Collapsible) */}
