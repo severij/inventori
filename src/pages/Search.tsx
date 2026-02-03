@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { SearchBar } from '../components/SearchBar';
@@ -25,8 +25,12 @@ export function Search() {
   const [showTagInput, setShowTagInput] = useState(false);
   const [tagInputValue, setTagInputValue] = useState('');
 
-  // Get tags from URL query params
-  const urlTags = searchParams.getAll('tags');
+  // Get tags from URL query params - memoize to prevent infinite renders
+  const urlTagsString = searchParams.getAll('tags').join(',');
+  const urlTags = useMemo(() => 
+    urlTagsString.split(',').filter(Boolean), 
+    [urlTagsString]
+  );
   const [selectedTags, setSelectedTags] = useState<string[]>(urlTags);
 
   const { tags: availableTags } = useTags();
