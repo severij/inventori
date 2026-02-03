@@ -5,6 +5,8 @@ import type { CreateLocationInput, Location } from '../types';
 interface LocationFormProps {
   /** Initial values for editing, undefined for create mode */
   initialValues?: Location;
+  /** Pre-selected parent ID (from URL query params) */
+  defaultParentId?: string;
   /** Called when form is submitted with valid data */
   onSubmit: (data: CreateLocationInput) => void;
   /** Called when user cancels */
@@ -15,16 +17,18 @@ interface LocationFormProps {
 
 /**
  * Form for creating or editing a Location.
- * Fields: name (required), description (optional), photos (optional)
+ * Fields: name (required), description (optional), parentId (optional), photos (optional)
  */
 export function LocationForm({
   initialValues,
+  defaultParentId,
   onSubmit,
   onCancel,
   isSubmitting = false,
 }: LocationFormProps) {
   const [name, setName] = useState(initialValues?.name ?? '');
   const [description, setDescription] = useState(initialValues?.description ?? '');
+  const parentId = initialValues?.parentId ?? defaultParentId ?? '';
   const [photos, setPhotos] = useState<Blob[]>(initialValues?.photos ?? []);
   const [errors, setErrors] = useState<{ name?: string }>({});
 
@@ -49,6 +53,7 @@ export function LocationForm({
     onSubmit({
       name: name.trim(),
       description: description.trim() || undefined,
+      parentId: parentId || undefined,
       photos,
     });
   };
@@ -77,21 +82,32 @@ export function LocationForm({
         {errors.name && <p id="location-name-error" className="mt-1 text-sm text-red-500" role="alert">{errors.name}</p>}
       </div>
 
-      {/* Description field */}
-      <div>
-        <label htmlFor="location-description" className="block text-sm font-medium text-content-secondary">
-          Description
-        </label>
-        <textarea
-          id="location-description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={3}
-          className="mt-1 block w-full rounded-md shadow-sm px-3 py-2 border border-border bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none resize-none"
-          placeholder="Optional description of this location..."
-          disabled={isSubmitting}
-        />
-      </div>
+       {/* Description field */}
+       <div>
+         <label htmlFor="location-description" className="block text-sm font-medium text-content-secondary">
+           Description
+         </label>
+         <textarea
+           id="location-description"
+           value={description}
+           onChange={(e) => setDescription(e.target.value)}
+           rows={3}
+           className="mt-1 block w-full rounded-md shadow-sm px-3 py-2 border border-border bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none resize-none"
+           placeholder="Optional description of this location..."
+           disabled={isSubmitting}
+         />
+       </div>
+
+       {/* Parent Location field (hidden input, shows as info if set) */}
+       {parentId && (
+         <div className="bg-accent-50 dark:bg-surface-tertiary border border-accent-200 dark:border-accent-600/50 rounded-lg p-4">
+           <p className="text-sm text-content-secondary">Will be created as a sub-location</p>
+           <input
+             type="hidden"
+             value={parentId}
+           />
+         </div>
+       )}
 
       {/* Photos */}
       <PhotoCapture photos={photos} onChange={setPhotos} maxPhotos={5} label="Photos" />

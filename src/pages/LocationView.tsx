@@ -12,6 +12,7 @@ import { ErrorState } from '../components/ErrorState';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useLocation } from '../hooks/useLocations';
 import { useChildren } from '../hooks/useChildren';
+import { useChildLocations } from '../hooks/useChildLocations';
 import { useAncestors } from '../hooks/useAncestors';
 import { deleteLocation } from '../db/locations';
 import { useToast } from '../contexts/ToastContext';
@@ -50,14 +51,17 @@ export function LocationView() {
   const { showToast } = useToast();
 
   const { location, loading: locationLoading, error: locationError, refetch } = useLocation(id);
-  const { children, loading: childrenLoading } = useChildren(id, 'location');
+  const { locations: childLocations, loading: childLocationsLoading } = useChildLocations(id);
+  const { children: childItems, loading: childItemsLoading } = useChildren(id, 'location');
   const { ancestors } = useAncestors(id, 'location');
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const loading = locationLoading || childrenLoading;
-  const hasChildren = children.length > 0;
+  const loading = locationLoading || childLocationsLoading || childItemsLoading;
+  const hasChildLocations = childLocations.length > 0;
+  const hasChildItems = childItems.length > 0;
+  const isEmpty = !hasChildLocations && !hasChildItems;
 
   const handleDelete = async () => {
     if (!location) return;
@@ -136,54 +140,78 @@ export function LocationView() {
                />
              </div>
              <IdDisplay id={location.id} size="sm" />
-             {location.description && (
-               <p className="text-content-secondary mt-2">{location.description}</p>
-             )}
+              {location.description && (
+                <p className="text-content-secondary mt-2">{location.description}</p>
+              )}
 
-             {/* Add button */}
-             <Link
-               to={`/add/item?parentId=${location.id}&parentType=location`}
-               className="block mt-4 text-center px-4 py-2 bg-accent-100 dark:bg-surface-tertiary text-accent-600 dark:text-accent-400 border border-accent-300 dark:border-accent-600/50 rounded-lg hover:bg-accent-200 dark:hover:bg-surface-secondary transition-colors font-medium min-h-[44px] flex items-center justify-center"
-             >
-               + Add Item
-             </Link>
-           </div>
-
-            {/* Contents */}
-            {childrenLoading ? (
-              <CardListSkeleton count={2} />
-            ) : hasChildren ? (
-              <CollapsibleSection title="Contents" defaultOpen={true}>
-                <div className="space-y-3">
-                  {children.map((child) => (
-                    <EntityCard key={child.id} entity={child} entityType="item" />
-                  ))}
-                </div>
-              </CollapsibleSection>
-            ) : (
-              <div className="text-center py-8 text-content-tertiary bg-surface-tertiary/50 rounded-lg">
-                <p className="font-medium">This location is empty</p>
-                <p className="text-sm mt-1">Add an item to get started</p>
+              {/* Add buttons */}
+              <div className="flex gap-3 mt-4">
+                <Link
+                  to={`/add/location?parentId=${location.id}`}
+                  className="flex-1 text-center px-4 py-2 bg-accent-100 dark:bg-surface-tertiary text-accent-600 dark:text-accent-400 border border-accent-300 dark:border-accent-600/50 rounded-lg hover:bg-accent-200 dark:hover:bg-surface-secondary transition-colors font-medium min-h-[44px] flex items-center justify-center"
+                >
+                  + Add Location
+                </Link>
+                <Link
+                  to={`/add/item?parentId=${location.id}&parentType=location`}
+                  className="flex-1 text-center px-4 py-2 bg-accent-100 dark:bg-surface-tertiary text-accent-600 dark:text-accent-400 border border-accent-300 dark:border-accent-600/50 rounded-lg hover:bg-accent-200 dark:hover:bg-surface-secondary transition-colors font-medium min-h-[44px] flex items-center justify-center"
+                >
+                  + Add Item
+                </Link>
               </div>
-            )}
+            </div>
+
+             {/* Child Locations */}
+             {childLocationsLoading ? (
+               <CardListSkeleton count={1} />
+             ) : hasChildLocations ? (
+               <CollapsibleSection title="Locations" defaultOpen={true}>
+                 <div className="space-y-3">
+                   {childLocations.map((childLocation) => (
+                     <EntityCard key={childLocation.id} entity={childLocation} entityType="location" />
+                   ))}
+                 </div>
+               </CollapsibleSection>
+             ) : null}
+
+             {/* Child Items */}
+             {childItemsLoading ? (
+               <CardListSkeleton count={2} />
+             ) : hasChildItems ? (
+               <CollapsibleSection title="Contents" defaultOpen={true}>
+                 <div className="space-y-3">
+                   {childItems.map((item) => (
+                     <EntityCard key={item.id} entity={item} entityType="item" />
+                   ))}
+                 </div>
+               </CollapsibleSection>
+             ) : null}
+
+             {/* Empty state */}
+             {!childLocationsLoading && !childItemsLoading && isEmpty && (
+               <div className="text-center py-8 text-content-tertiary bg-surface-tertiary/50 rounded-lg">
+                 <p className="font-medium">This location is empty</p>
+                 <p className="text-sm mt-1">Add a location or item to get started</p>
+               </div>
+             )}
         </>
       )}
 
-       {/* Delete confirmation dialog */}
-       <ConfirmDialog
-         isOpen={showDeleteDialog}
-         title="Delete Location"
-         message={
-           hasChildren
-             ? `Are you sure you want to delete "${location?.name}" and all its contents (${children.length} items)? This action cannot be undone.`
-             : `Are you sure you want to delete "${location?.name}"? This action cannot be undone.`
-         }
-         confirmLabel={isDeleting ? 'Deleting...' : 'Delete'}
-         onConfirm={handleDelete}
-         onCancel={() => setShowDeleteDialog(false)}
-         isDestructive
-         confirmDisabled={isDeleting}
-       />
+        {/* Delete confirmation dialog */}
+        <ConfirmDialog
+          isOpen={showDeleteDialog}
+          title="Delete Location"
+          message={
+            hasChildLocations || hasChildItems
+              ? `Are you sure you want to delete "${location?.name}" and all its contents (${childLocations.length} locations, ${childItems.length} items)? This action cannot be undone.`
+              : `Are you sure you want to delete "${location?.name}"? This action cannot be undone.`
+          }
+          confirmLabel={isDeleting ? 'Deleting...' : 'Delete'}
+          onConfirm={handleDelete}
+          onCancel={() => setShowDeleteDialog(false)}
+          isDestructive
+          confirmDisabled={isDeleting}
+        />
     </Layout>
   );
 }

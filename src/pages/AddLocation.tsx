@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { LocationForm } from '../components/LocationForm';
 import { createLocation } from '../db/locations';
@@ -12,7 +12,11 @@ import type { CreateLocationInput } from '../types';
 export function AddLocation() {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const [searchParams] = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Get parentId from URL query params
+  const defaultParentId = searchParams.get('parentId') || undefined;
 
   const handleSubmit = async (data: CreateLocationInput) => {
     setIsSubmitting(true);
@@ -34,6 +38,7 @@ export function AddLocation() {
   return (
     <Layout title="Add Location">
       <LocationForm
+        defaultParentId={defaultParentId}
         onSubmit={handleSubmit}
         onCancel={handleCancel}
         isSubmitting={isSubmitting}
