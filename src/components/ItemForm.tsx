@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { PhotoCapture } from './PhotoCapture';
 import { CollapsibleFormSection } from './CollapsibleFormSection';
 import { TagInput } from './TagInput';
-import { useLocations } from '../hooks/useLocations';
-import { useContainerItems } from '../hooks/useItems';
+import { LocationPicker } from './LocationPicker';
 import { useTags } from '../hooks/useTags';
 import type { CreateItemInput, Item } from '../types';
 
@@ -37,8 +36,6 @@ export function ItemForm({
   onCancel,
   isSubmitting = false,
 }: ItemFormProps) {
-  const { locations, loading: locationsLoading } = useLocations();
-  const { items: containerItems, loading: containerItemsLoading } = useContainerItems();
   const { tags: allTags } = useTags();
 
   // Item capability
@@ -70,27 +67,9 @@ export function ItemForm({
   const [errors, setErrors] = useState<{ name?: string; parentId?: string; quantity?: string }>({});
 
   const isEditMode = !!initialValues;
-  const isLoadingParents = locationsLoading || containerItemsLoading;
+  const isLoadingParents = false; // LocationPicker handles loading internally
 
-  // Build parent options (locations + container-items)
-  const parentOptions: { id: string; name: string; type: 'location' | 'item'; label: string }[] = [
-    ...locations.map((loc) => ({
-      id: loc.id,
-      name: loc.name,
-      type: 'location' as const,
-      label: `📍 ${loc.name}`,
-    })),
-    ...containerItems
-      .filter((item) => item.id !== initialValues?.id) // Don't show self as parent option
-      .map((item) => ({
-        id: item.id,
-        name: item.name,
-        type: 'item' as const,
-        label: `📦 ${item.name}`,
-      })),
-  ];
-
-   const validate = (): boolean => {
+  const validate = (): boolean => {
      const newErrors: { name?: string; parentId?: string; quantity?: string } = {};
 
      if (!name.trim()) {
@@ -108,25 +87,11 @@ export function ItemForm({
        }
      }
 
-     setErrors(newErrors);
-     return Object.keys(newErrors).length === 0;
-   };
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    };
 
-  const handleParentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedId = e.target.value;
-    setParentId(selectedId);
-
-    if (!selectedId) {
-      setParentType(undefined);
-    } else {
-      const selected = parentOptions.find((opt) => opt.id === selectedId);
-      if (selected) {
-        setParentType(selected.type);
-      }
-    }
-  };
-
-  const handleCanHoldItemsChange = (checked: boolean) => {
+   const handleCanHoldItemsChange = (checked: boolean) => {
     setCanHoldItems(checked);
     // Force quantity to 1 when becoming a container
     if (checked) {
@@ -253,26 +218,18 @@ export function ItemForm({
             Location <span className="text-red-500" aria-hidden="true">*</span>
             <span className="sr-only">(required)</span>
           </label>
-          <select
-            id="item-parent"
+          <LocationPicker
             value={parentId}
-            onChange={handleParentChange}
+            parentType={parentType}
+            onChange={(newParentId, newParentType) => {
+              setParentId(newParentId);
+              setParentType(newParentType);
+            }}
             disabled={isSubmitting || isLoadingParents}
-            className={`mt-1 block w-full rounded-md shadow-sm px-3 py-2 border ${
-              errors.parentId ? 'border-red-500' : 'border-border'
-            } bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none`}
-            aria-invalid={errors.parentId ? 'true' : undefined}
-            aria-describedby={errors.parentId ? 'item-parent-error' : undefined}
-          >
-            <option value="">
-              {isLoadingParents ? 'Loading...' : 'Select a location or container...'}
-            </option>
-            {parentOptions.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            hasError={!!errors.parentId}
+            excludeItemId={initialValues?.id}
+            placeholder="Select a location or container..."
+          />
           {errors.parentId && <p id="item-parent-error" className="mt-1 text-sm text-red-500" role="alert">{errors.parentId}</p>}
         </div>
 
