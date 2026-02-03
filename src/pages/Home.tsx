@@ -10,10 +10,10 @@ import { useTopLevelLocations } from '../hooks/useLocations';
 import { useUnassignedItems } from '../hooks/useItems';
 
 /**
- * Home page - Two-tab layout for Locations and Unassigned items
+ * Home page - Two-tab layout for Inbox and Locations
  */
 export function Home() {
-  const [activeTab, setActiveTab] = useState('locations');
+  const [activeTab, setActiveTab] = useState('inbox');
 
   // Fetch both tabs in parallel
   const {
@@ -24,7 +24,7 @@ export function Home() {
   } = useTopLevelLocations();
 
   const {
-    items: unassignedItems,
+    items: inboxItems,
     loading: itemsLoading,
     error: itemsError,
     refetch: refetchItems,
@@ -69,8 +69,8 @@ export function Home() {
     );
   };
 
-  // Render function for Unassigned tab
-  const renderUnassignedTab = () => {
+  // Render function for Inbox tab
+  const renderInboxTab = () => {
     if (itemsLoading) {
       return <CardListSkeleton count={4} />;
     }
@@ -84,19 +84,19 @@ export function Home() {
       );
     }
 
-    if (unassignedItems.length === 0) {
+    if (inboxItems.length === 0) {
       return (
         <EmptyState
-          icon="✓"
-          title="No unassigned items"
-          description="All items are organized in locations. Nice work!"
+          icon="📥"
+          title="Inbox is empty"
+          description="Add items here to organize them later"
         />
       );
     }
 
     return (
       <div className="space-y-3 pb-20">
-        {unassignedItems.map((item) => (
+        {inboxItems.map((item) => (
           <EntityCard key={item.id} entity={item} entityType="item" />
         ))}
       </div>
@@ -109,16 +109,16 @@ export function Home() {
       <Tabs
         tabs={[
           {
+            id: 'inbox',
+            label: 'Inbox',
+            badge: inboxItems.length,
+            render: renderInboxTab,
+          },
+          {
             id: 'locations',
             label: 'Locations',
             badge: locations.length,
             render: renderLocationsTab,
-          },
-          {
-            id: 'unassigned',
-            label: 'Unassigned',
-            badge: unassignedItems.length,
-            render: renderUnassignedTab,
           },
         ]}
         activeTabId={activeTab}
@@ -126,18 +126,18 @@ export function Home() {
       />
 
       {/* Context-sensitive FAB */}
-      {activeTab === 'locations' && !locationsError && (
+      {activeTab === 'inbox' && !itemsError && (
         <FAB
-          label="Location"
-          to="/add/location"
+          label="Item"
+          to="/add/item"
           iconPath="M12 4.5v15m7.5-7.5h-15"
         />
       )}
 
-      {activeTab === 'unassigned' && !itemsError && (
+      {activeTab === 'locations' && !locationsError && (
         <FAB
-          label="Item"
-          to="/add/item"
+          label="Location"
+          to="/add/location"
           iconPath="M12 4.5v15m7.5-7.5h-15"
         />
       )}

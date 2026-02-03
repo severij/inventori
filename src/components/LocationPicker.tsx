@@ -210,7 +210,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
 
   // Build display text for trigger button
   const displayText = isUnassigned
-    ? 'Unassigned'
+    ? 'No location'
     : ancestors.length > 0
       ? ancestors.map((a) => (a.type === 'location' ? '📍' : '📦') + ' ' + a.name).join(' > ')
       : placeholder;
@@ -231,16 +231,16 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
         </button>
 
         {/* Clear button - only shown when assigned */}
-        {!isUnassigned && !disabled && (
-          <button type="button"
-            onClick={handleClear}
-            className="mt-1 p-2 rounded-md hover:bg-surface-tertiary transition-colors text-content-secondary hover:text-content"
-            aria-label="Clear location"
-            title="Clear location (make unassigned)"
-          >
-            ✕
-          </button>
-        )}
+         {!isUnassigned && !disabled && (
+           <button type="button"
+             onClick={handleClear}
+             className="mt-1 p-2 rounded-md hover:bg-surface-tertiary transition-colors text-content-secondary hover:text-content"
+             aria-label="Clear location"
+             title="Clear location"
+           >
+             ✕
+           </button>
+         )}
       </div>
 
       {/* Modal/Sheet Container */}

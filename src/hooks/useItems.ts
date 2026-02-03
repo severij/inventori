@@ -153,7 +153,8 @@ export function useContainerItems(): UseItemsResult {
 
 /**
  * Hook to fetch all unassigned items (items without a parent)
- * Used on Home page to show the Unassigned tab
+ * Used on Home page to show the Inbox tab
+ * Items are sorted by createdAt (newest first)
  */
 export function useUnassignedItems(): UseItemsResult {
   const [items, setItems] = useState<Item[]>([]);
@@ -165,9 +166,11 @@ export function useUnassignedItems(): UseItemsResult {
     setError(null);
     try {
       const data = await getUnassignedItems();
-      setItems(data);
+      // Sort by createdAt descending (newest first)
+      const sorted = data.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      setItems(sorted);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch unassigned items'));
+      setError(err instanceof Error ? err : new Error('Failed to fetch inbox items'));
     } finally {
       setLoading(false);
     }
