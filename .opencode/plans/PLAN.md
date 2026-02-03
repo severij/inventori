@@ -694,11 +694,11 @@ Redesigned the home page with two-tab layout per UI_DESIGN.md. All components cr
 
 ## Phase 13: Entity Card Redesign
 
-**Status: IN PROGRESS (13.1-13.2 COMPLETE)**
+**Status: COMPLETE ✅**
 
 Update EntityCard to show total item count (recursive) instead of description/ID.
 
-### 13.1 Create Count Calculation Utility ✅ (UPDATED)
+### 13.1 Create Count Calculation Utility ✅
 
 **`src/utils/counts.ts`:**
 - ✅ `getTotalItemCount(parentId, parentType): Promise<number>`
@@ -706,8 +706,9 @@ Update EntityCard to show total item count (recursive) instead of description/ID
 - ✅ Factors in quantity (e.g., Eggs×12 = 12 items)
 - ✅ Respects `includeInTotal` flag (excludes items with false)
 - ✅ No caching (direct database queries)
+- ✅ Counts through location nesting AND container items
 
-### 13.2 Create useTotalItemCount Hook ✅ (UPDATED)
+### 13.2 Create useTotalItemCount Hook ✅
 
 **`src/hooks/useTotalItemCount.ts` (renamed from useChildCounts):**
 - ✅ Wrapper around count utility with React state management
@@ -715,30 +716,31 @@ Update EntityCard to show total item count (recursive) instead of description/ID
 - ✅ Re-fetches when parentId or parentType changes
 - ✅ No caching (direct database queries)
 
-**Build Verification:**
-- ✅ TypeScript compilation: 0 errors
-- ✅ Vite build: PASS (85 modules, 412.06 KB)
-- ✅ PWA manifest: PASS
-
-### 13.3 Update EntityCard
+### 13.3 Update EntityCard ✅
 
 **`src/components/EntityCard.tsx`:**
-- Display total item count as subtitle: `{N} items`
-- Locations: Show recursive item count (all descendants, respecting includeInTotal)
-- Container items: Show recursive item count (items inside)
-- Regular items: No subtitle (only quantity badge if > 1)
-- Remove ID display
-- Remove "Container" badge (icon already indicates it)
-- Keep quantity badge for items > 1
-- Show skeleton text while counts load
+- ✅ Display total item count as subtitle: `{N} items`
+- ✅ Locations: Show recursive item count (all descendants, respecting includeInTotal)
+- ✅ Container items: Show recursive item count (items inside)
+- ✅ Regular items: No subtitle (only quantity badge if > 1)
+- ✅ Remove ID display
+- ✅ Remove "Container" badge (icon already indicates it)
+- ✅ Keep quantity badge for items > 1
+- ✅ Show skeleton text (░░░░░░░░) while counts load
+
+**Build Verification:**
+- ✅ TypeScript compilation: 0 errors
+- ✅ Vite build: PASS (87 modules, 412.82 KB)
+- ✅ PWA manifest: PASS
 
 **Deliverables:**
-- [ ] Count utility updated with recursive counting ✅
-- [ ] useTotalItemCount hook working ✅
-- [ ] EntityCard shows `{N} items` subtitle
-- [ ] No ID display
-- [ ] No Container badge
-- [ ] Quantity badge still works
+- ✅ Count utility with recursive counting
+- ✅ useTotalItemCount hook working
+- ✅ EntityCard shows `{N} items` subtitle
+- ✅ No ID display
+- ✅ No Container badge
+- ✅ Quantity badge working
+- ✅ Skeleton loading state
 
 ---
 

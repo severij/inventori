@@ -1,6 +1,6 @@
 # Inventori UI Design Specification
 
-**Last Updated:** Phase 13.2 Complete - Count Utility & Hook ✅
+**Last Updated:** Phase 13 Complete - Entity Card Redesign ✅
 
 This document contains ASCII representations of all UI components, pages, and layouts for the Inventori app redesign.
 
@@ -8,8 +8,8 @@ This document contains ASCII representations of all UI components, pages, and la
 
 - ✅ **Phase 11 Complete:** Core data model consolidated, build passing with zero TypeScript errors
 - ✅ **Phase 12 Complete:** Home page redesigned with two tabs (Locations, Unassigned) and context-sensitive FAB
-- ✅ **Phase 13.1-13.2 Complete:** Count utility and useChildCounts hook implemented
-- ⏳ **Next:** Phase 13.3 - Update EntityCard to show child counts instead of description
+- ✅ **Phase 13 Complete:** Entity cards show recursive item counts with skeleton loading state
+- ⏳ **Next:** Phase 14 - View page improvements (collapsible sections, overflow menu)
 
 ## Design Principles
 
