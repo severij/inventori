@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { PhotoCapture } from './PhotoCapture';
+import { CollapsibleFormSection } from './CollapsibleFormSection';
+import { TagInput } from './TagInput';
 import { useLocations } from '../hooks/useLocations';
 import { useContainerItems } from '../hooks/useItems';
+import { useTags } from '../hooks/useTags';
 import type { CreateItemInput, Item } from '../types';
 
 interface ItemFormProps {
@@ -36,6 +39,7 @@ export function ItemForm({
 }: ItemFormProps) {
   const { locations, loading: locationsLoading } = useLocations();
   const { items: containerItems, loading: containerItemsLoading } = useContainerItems();
+  const { tags: allTags } = useTags();
 
   // Item capability
   const [canHoldItems, setCanHoldItems] = useState(initialValues?.canHoldItems ?? defaultCanHoldItems);
@@ -53,6 +57,15 @@ export function ItemForm({
 
   // Photos
   const [photos, setPhotos] = useState<Blob[]>(initialValues?.photos ?? []);
+
+  // Additional Information fields
+  const [tags, setTags] = useState<string[]>(initialValues?.tags ?? []);
+  const [purchasePrice, setPurchasePrice] = useState<number | undefined>(initialValues?.purchasePrice);
+  const [currentValue, setCurrentValue] = useState<number | undefined>(initialValues?.currentValue);
+  const [dateAcquired, setDateAcquired] = useState<string>(
+    initialValues?.dateAcquired ? new Date(initialValues.dateAcquired).toISOString().split('T')[0] : ''
+  );
+  const [includeInTotal, setIncludeInTotal] = useState(initialValues?.includeInTotal ?? true);
 
   const [errors, setErrors] = useState<{ name?: string; parentId?: string; quantity?: string }>({});
 
@@ -133,8 +146,11 @@ export function ItemForm({
       canHoldItems,
       quantity: canHoldItems ? 1 : quantity, // Containers always have quantity 1
       photos,
-      includeInTotal: true,
-      tags: [],
+      includeInTotal,
+      tags,
+      purchasePrice: purchasePrice || undefined,
+      currentValue: currentValue || undefined,
+      dateAcquired: dateAcquired ? new Date(dateAcquired) : undefined,
     };
 
     onSubmit(data);
@@ -263,13 +279,118 @@ export function ItemForm({
         </div>
       </fieldset>
 
-      {/* Photos Section */}
-      <fieldset className="space-y-4">
-        <legend className="text-lg font-medium text-content">Photos</legend>
-        <PhotoCapture photos={photos} onChange={setPhotos} maxPhotos={10} label="Item Photos" />
-      </fieldset>
+       {/* Photos Section */}
+       <fieldset className="space-y-4">
+         <legend className="text-lg font-medium text-content">Photos</legend>
+         <PhotoCapture photos={photos} onChange={setPhotos} maxPhotos={10} label="Item Photos" />
+       </fieldset>
 
-      {/* Action buttons */}
+       {/* Additional Information Section (Collapsible) */}
+       <CollapsibleFormSection title="Additional Information" defaultOpen={false}>
+         {/* Tags */}
+         <div className="mb-4">
+           <label htmlFor="item-tags" className="block text-sm font-medium text-content-secondary mb-2">
+             Tags
+           </label>
+           <TagInput
+             tags={tags}
+             onChange={setTags}
+             availableTags={allTags}
+             maxTags={10}
+             placeholder="Add tags to organize this item..."
+           />
+           <p className="text-xs text-content-muted mt-1">
+             Use tags to categorize and filter items (e.g., "urgent", "gift", "fragile")
+           </p>
+         </div>
+
+         {/* Purchase Price */}
+         <div className="mb-4">
+           <label htmlFor="item-purchase-price" className="block text-sm font-medium text-content-secondary">
+             Purchase Price
+           </label>
+           <div className="relative mt-1 flex items-center">
+             <span className="absolute left-3 text-content-secondary">$</span>
+             <input
+               type="number"
+               id="item-purchase-price"
+               value={purchasePrice ?? ''}
+               onChange={(e) => setPurchasePrice(e.target.value ? parseFloat(e.target.value) : undefined)}
+               min={0}
+               step={0.01}
+               className="block w-full rounded-md shadow-sm px-3 py-2 pl-7 border border-border bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none"
+               placeholder="0.00"
+               disabled={isSubmitting}
+               aria-label="Purchase price in dollars"
+             />
+           </div>
+           <p className="text-xs text-content-muted mt-1">
+             Original price paid for this item
+           </p>
+         </div>
+
+         {/* Current Value */}
+         <div className="mb-4">
+           <label htmlFor="item-current-value" className="block text-sm font-medium text-content-secondary">
+             Current Value
+           </label>
+           <div className="relative mt-1 flex items-center">
+             <span className="absolute left-3 text-content-secondary">$</span>
+             <input
+               type="number"
+               id="item-current-value"
+               value={currentValue ?? ''}
+               onChange={(e) => setCurrentValue(e.target.value ? parseFloat(e.target.value) : undefined)}
+               min={0}
+               step={0.01}
+               className="block w-full rounded-md shadow-sm px-3 py-2 pl-7 border border-border bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none"
+               placeholder="0.00"
+               disabled={isSubmitting}
+               aria-label="Current value in dollars"
+             />
+           </div>
+           <p className="text-xs text-content-muted mt-1">
+             Estimated current resale or replacement value
+           </p>
+         </div>
+
+         {/* Date Acquired */}
+         <div className="mb-4">
+           <label htmlFor="item-date-acquired" className="block text-sm font-medium text-content-secondary">
+             Date Acquired
+           </label>
+           <input
+             type="date"
+             id="item-date-acquired"
+             value={dateAcquired}
+             onChange={(e) => setDateAcquired(e.target.value)}
+             className="mt-1 block w-full rounded-md shadow-sm px-3 py-2 border border-border bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none"
+             disabled={isSubmitting}
+           />
+           <p className="text-xs text-content-muted mt-1">
+             When you acquired this item
+           </p>
+         </div>
+
+         {/* Include in Inventory Totals */}
+         <div>
+           <label className="flex items-center gap-3 cursor-pointer">
+             <input
+               type="checkbox"
+               checked={includeInTotal}
+               onChange={(e) => setIncludeInTotal(e.target.checked)}
+               disabled={isSubmitting}
+               className="w-4 h-4 rounded border-border text-accent-500 focus:ring-accent-500"
+             />
+             <span className="text-sm font-medium text-content">Include in inventory totals</span>
+           </label>
+           <p className="text-xs text-content-muted mt-1 ml-7">
+             Include this item in total value and quantity calculations
+           </p>
+         </div>
+       </CollapsibleFormSection>
+
+       {/* Action buttons */}
       <div className="flex gap-3 pt-4">
         <button
           type="submit"
