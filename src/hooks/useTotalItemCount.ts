@@ -1,12 +1,11 @@
 /**
  * Hook for fetching total item counts with loading and error states
- * TEMPORARY: Will be renamed to useTotalItemCount in Phase 13.2
  */
 
 import { useState, useEffect } from 'react';
 import { getTotalItemCount } from '../utils/counts';
 
-interface UseChildCountsResult {
+interface UseTotalItemCountResult {
   count: number;
   loading: boolean;
   error: Error | null;
@@ -21,11 +20,12 @@ interface UseChildCountsResult {
  * @returns Object with count, loading state, error, and refetch function
  *
  * The hook re-fetches when parentId or parentType changes.
+ * Counts all descendant items recursively (through location nesting and container items).
  */
-export function useChildCounts(
+export function useTotalItemCount(
   parentId: string,
   parentType: 'location' | 'item'
-): UseChildCountsResult {
+): UseTotalItemCountResult {
   const [count, setCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
