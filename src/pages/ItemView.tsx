@@ -4,6 +4,8 @@ import { Layout } from '../components/Layout';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { EntityCard } from '../components/EntityCard';
 import { IdDisplay } from '../components/IdDisplay';
+import { CollapsibleSection } from '../components/CollapsibleSection';
+import { OverflowMenu, type MenuItem } from '../components/OverflowMenu';
 import { DetailSkeleton, CardListSkeleton } from '../components/Skeleton';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
@@ -13,6 +15,31 @@ import { useChildren } from '../hooks/useChildren';
 import { useAncestors } from '../hooks/useAncestors';
 import { deleteItem } from '../db/items';
 import { useToast } from '../contexts/ToastContext';
+
+/**
+ * Get menu items for item overflow menu
+ */
+function getItemMenuItems(
+  itemId: string,
+  navigate: ReturnType<typeof useNavigate>,
+  setShowDeleteDialog: (show: boolean) => void
+): MenuItem[] {
+  return [
+    {
+      id: 'edit',
+      label: 'Edit',
+      icon: '✏️',
+      onClick: () => navigate(`/edit/item/${itemId}`),
+    },
+    {
+      id: 'delete',
+      label: 'Delete',
+      icon: '🗑️',
+      onClick: () => setShowDeleteDialog(true),
+      destructive: true,
+    },
+  ];
+}
 
 /**
  * Item view - View item details
@@ -108,74 +135,58 @@ export function ItemView() {
             </div>
           )}
 
-          {/* Item details */}
-          <div className="bg-surface rounded-lg shadow-sm border border-border p-4 mb-6">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-semibold text-content">{item.name}</h2>
-                {item.quantity > 1 && (
-                  <span className="bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300 text-sm font-medium px-2 py-1 rounded">
-                    x{item.quantity}
-                  </span>
-                )}
-              </div>
-              <IdDisplay id={item.id} size="sm" />
-            </div>
-
-            {item.description && (
-              <p className="text-content-secondary mt-2">{item.description}</p>
-            )}
-
-            {/* Actions */}
-            <div className="flex gap-2 mt-4">
-              <Link
-                to={`/edit/item/${item.id}`}
-                className="flex-1 text-center px-4 py-2 bg-surface-tertiary text-content-secondary rounded-lg hover:bg-surface-secondary transition-colors min-h-[44px] flex items-center justify-center"
-              >
-                Edit
-              </Link>
-              <button
-                onClick={() => setShowDeleteDialog(true)}
-                className="flex-1 px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors min-h-[44px]"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-
-           {/* Container Contents - only shown for items with canHoldItems */}
-           {item.canHoldItems && (
-             <>
-               {/* Add button */}
-               <div className="flex gap-2 mb-4">
-                 <Link
-                   to={`/add/item?parentId=${item.id}&parentType=item`}
-                   className="flex-1 text-center px-4 py-2 bg-accent-100 dark:bg-surface-tertiary text-accent-600 dark:text-accent-400 border border-accent-300 dark:border-accent-600/50 rounded-lg hover:bg-accent-200 dark:hover:bg-surface-secondary transition-colors font-medium min-h-[44px] flex items-center justify-center"
-                 >
-                   + Add Item
-                 </Link>
+           {/* Item details */}
+           <div className="bg-surface rounded-lg shadow-sm border border-border p-4 mb-6">
+             <div className="flex items-start justify-between gap-2 mb-2">
+               <div className="flex items-center gap-2 flex-1">
+                 <h2 className="text-xl font-semibold text-content">{item.name}</h2>
+                 {item.quantity > 1 && (
+                   <span className="bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300 text-sm font-medium px-2 py-1 rounded">
+                     x{item.quantity}
+                   </span>
+                 )}
                </div>
+               <OverflowMenu
+                 items={getItemMenuItems(item.id, navigate, setShowDeleteDialog)}
+               />
+             </div>
+             <IdDisplay id={item.id} size="sm" />
 
-               {/* Contents list */}
-               {childrenLoading ? (
-                 <CardListSkeleton count={2} />
-               ) : hasChildren ? (
-                 <div className="space-y-3 mb-6">
-                   <h3 className="text-sm font-medium text-content-tertiary uppercase tracking-wide">
-                     Contents ({children.length})
-                   </h3>
-                   {children.map((child) => (
-                     <EntityCard key={child.id} entity={child} entityType="item" />
-                   ))}
-                 </div>
-               ) : (
-                 <div className="text-center py-6 text-content-tertiary mb-6 bg-surface-tertiary/50 rounded-lg">
-                   <p className="font-medium">This container is empty</p>
-                   <p className="text-sm mt-1">Add an item to get started</p>
-                 </div>
-               )}
-             </>
-           )}
+             {item.description && (
+               <p className="text-content-secondary mt-2">{item.description}</p>
+             )}
+           </div>
+
+            {/* Container Contents - only shown for items with canHoldItems */}
+            {item.canHoldItems && (
+              <>
+                {/* Add button */}
+                <Link
+                  to={`/add/item?parentId=${item.id}&parentType=item`}
+                  className="block mb-4 text-center px-4 py-2 bg-accent-100 dark:bg-surface-tertiary text-accent-600 dark:text-accent-400 border border-accent-300 dark:border-accent-600/50 rounded-lg hover:bg-accent-200 dark:hover:bg-surface-secondary transition-colors font-medium min-h-[44px] flex items-center justify-center"
+                >
+                  + Add Item
+                </Link>
+
+                {/* Contents list */}
+                {childrenLoading ? (
+                  <CardListSkeleton count={2} />
+                ) : hasChildren ? (
+                  <CollapsibleSection title="Contents" defaultOpen={true}>
+                    <div className="space-y-3">
+                      {children.map((child) => (
+                        <EntityCard key={child.id} entity={child} entityType="item" />
+                      ))}
+                    </div>
+                  </CollapsibleSection>
+                ) : (
+                  <div className="text-center py-6 text-content-tertiary mb-6 bg-surface-tertiary/50 rounded-lg">
+                    <p className="font-medium">This container is empty</p>
+                    <p className="text-sm mt-1">Add an item to get started</p>
+                  </div>
+                )}
+              </>
+            )}
 
           {/* Metadata */}
           <div className="text-xs text-content-muted space-y-1">

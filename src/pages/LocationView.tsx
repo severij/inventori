@@ -4,6 +4,8 @@ import { Layout } from '../components/Layout';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { EntityCard } from '../components/EntityCard';
 import { IdDisplay } from '../components/IdDisplay';
+import { CollapsibleSection } from '../components/CollapsibleSection';
+import { OverflowMenu, type MenuItem } from '../components/OverflowMenu';
 import { DetailSkeleton, CardListSkeleton } from '../components/Skeleton';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
@@ -13,6 +15,31 @@ import { useChildren } from '../hooks/useChildren';
 import { useAncestors } from '../hooks/useAncestors';
 import { deleteLocation } from '../db/locations';
 import { useToast } from '../contexts/ToastContext';
+
+/**
+ * Get menu items for location overflow menu
+ */
+function getLocationMenuItems(
+  locationId: string,
+  navigate: ReturnType<typeof useNavigate>,
+  setShowDeleteDialog: (show: boolean) => void
+): MenuItem[] {
+  return [
+    {
+      id: 'edit',
+      label: 'Edit',
+      icon: '✏️',
+      onClick: () => navigate(`/edit/location/${locationId}`),
+    },
+    {
+      id: 'delete',
+      label: 'Delete',
+      icon: '🗑️',
+      onClick: () => setShowDeleteDialog(true),
+      destructive: true,
+    },
+  ];
+}
 
 /**
  * Location view - View location contents
@@ -80,68 +107,52 @@ export function LocationView() {
           {/* Breadcrumbs */}
           <Breadcrumbs ancestors={ancestors} />
 
-          {/* Location details */}
-          <div className="bg-surface rounded-lg shadow-sm border border-border p-4 mb-6">
-            {photoUrl && (
-              <img
-                src={photoUrl}
-                alt={location.name}
-                className="w-full h-48 object-cover rounded-lg mb-4"
-              />
-            )}
-            <div className="flex items-start justify-between gap-2">
-              <h2 className="text-xl font-semibold text-content">{location.name}</h2>
-              <IdDisplay id={location.id} size="sm" />
-            </div>
-            {location.description && (
-              <p className="text-content-secondary mt-2">{location.description}</p>
-            )}
+           {/* Location details */}
+           <div className="bg-surface rounded-lg shadow-sm border border-border p-4 mb-6">
+             {photoUrl && (
+               <img
+                 src={photoUrl}
+                 alt={location.name}
+                 className="w-full h-48 object-cover rounded-lg mb-4"
+               />
+             )}
+             <div className="flex items-start justify-between gap-2 mb-2">
+               <h2 className="text-xl font-semibold text-content flex-1">{location.name}</h2>
+               <OverflowMenu
+                 items={getLocationMenuItems(location.id, navigate, setShowDeleteDialog)}
+               />
+             </div>
+             <IdDisplay id={location.id} size="sm" />
+             {location.description && (
+               <p className="text-content-secondary mt-2">{location.description}</p>
+             )}
 
-            {/* Actions */}
-            <div className="flex gap-2 mt-4">
-              <Link
-                to={`/edit/location/${location.id}`}
-                className="flex-1 text-center px-4 py-2 bg-surface-tertiary text-content-secondary rounded-lg hover:bg-surface-secondary transition-colors min-h-[44px] flex items-center justify-center"
-              >
-                Edit
-              </Link>
-              <button
-                onClick={() => setShowDeleteDialog(true)}
-                className="flex-1 px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors min-h-[44px]"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-
-           {/* Add button */}
-           <div className="flex gap-2 mb-4">
+             {/* Add button */}
              <Link
                to={`/add/item?parentId=${location.id}&parentType=location`}
-               className="flex-1 text-center px-4 py-2 bg-accent-100 dark:bg-surface-tertiary text-accent-600 dark:text-accent-400 border border-accent-300 dark:border-accent-600/50 rounded-lg hover:bg-accent-200 dark:hover:bg-surface-secondary transition-colors font-medium min-h-[44px] flex items-center justify-center"
+               className="block mt-4 text-center px-4 py-2 bg-accent-100 dark:bg-surface-tertiary text-accent-600 dark:text-accent-400 border border-accent-300 dark:border-accent-600/50 rounded-lg hover:bg-accent-200 dark:hover:bg-surface-secondary transition-colors font-medium min-h-[44px] flex items-center justify-center"
              >
                + Add Item
              </Link>
            </div>
 
-           {/* Contents */}
-           {childrenLoading ? (
-             <CardListSkeleton count={2} />
-           ) : hasChildren ? (
-             <div className="space-y-3">
-               <h3 className="text-sm font-medium text-content-tertiary uppercase tracking-wide">
-                 Contents ({children.length})
-               </h3>
-               {children.map((child) => (
-                 <EntityCard key={child.id} entity={child} entityType="item" />
-               ))}
-             </div>
-           ) : (
-             <div className="text-center py-8 text-content-tertiary bg-surface-tertiary/50 rounded-lg">
-               <p className="font-medium">This location is empty</p>
-               <p className="text-sm mt-1">Add an item to get started</p>
-             </div>
-           )}
+            {/* Contents */}
+            {childrenLoading ? (
+              <CardListSkeleton count={2} />
+            ) : hasChildren ? (
+              <CollapsibleSection title="Contents" defaultOpen={true}>
+                <div className="space-y-3">
+                  {children.map((child) => (
+                    <EntityCard key={child.id} entity={child} entityType="item" />
+                  ))}
+                </div>
+              </CollapsibleSection>
+            ) : (
+              <div className="text-center py-8 text-content-tertiary bg-surface-tertiary/50 rounded-lg">
+                <p className="font-medium">This location is empty</p>
+                <p className="text-sm mt-1">Add an item to get started</p>
+              </div>
+            )}
         </>
       )}
 
