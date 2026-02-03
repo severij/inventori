@@ -1,9 +1,8 @@
-import { getAllItems } from './items';
-import { getDB } from './index';
+import { getAllItems, updateItem } from './items';
 
 /**
  * Get all unique tags across all items with their item counts
- * Returns tags sorted alphabetically by name
+ * Returns tags sorted by count (descending), then alphabetically
  */
 export async function getAllTags(): Promise<{ tag: string; count: number }[]> {
   const allItems = await getAllItems();
@@ -17,10 +16,15 @@ export async function getAllTags(): Promise<{ tag: string; count: number }[]> {
     }
   }
 
-  // Convert to array and sort alphabetically
+  // Convert to array and sort by count (descending), then alphabetically
   const tags = Array.from(tagCounts.entries())
     .map(([tag, count]) => ({ tag, count }))
-    .sort((a, b) => a.tag.localeCompare(b.tag));
+    .sort((a, b) => {
+      if (b.count !== a.count) {
+        return b.count - a.count;
+      }
+      return a.tag.localeCompare(b.tag);
+    });
 
   return tags;
 }
@@ -29,20 +33,18 @@ export async function getAllTags(): Promise<{ tag: string; count: number }[]> {
  * Rename a tag across all items that have it
  * Updates all items that contain oldName to have newName instead
  * Case-sensitive
+ * Properly handles timestamps through updateItem()
  */
 export async function renameTag(oldName: string, newName: string): Promise<void> {
-  const db = await getDB();
   const allItems = await getAllItems();
 
   // Find all items with the old tag
   const itemsToUpdate = allItems.filter((item) => item.tags.includes(oldName));
 
-  // Update each item
+  // Update each item using updateItem() to properly handle timestamps
   for (const item of itemsToUpdate) {
     const updatedTags = item.tags.map((tag) => (tag === oldName ? newName : tag));
-    item.tags = updatedTags;
-    item.updatedAt = new Date();
-    await db.put('items', item);
+    await updateItem(item.id, { tags: updatedTags });
   }
 }
 
@@ -50,18 +52,17 @@ export async function renameTag(oldName: string, newName: string): Promise<void>
  * Delete a tag from all items that have it
  * Removes the tag from every item in the database
  * Case-sensitive
+ * Properly handles timestamps through updateItem()
  */
 export async function deleteTag(tagName: string): Promise<void> {
-  const db = await getDB();
   const allItems = await getAllItems();
 
   // Find all items with the tag
   const itemsToUpdate = allItems.filter((item) => item.tags.includes(tagName));
 
-  // Update each item to remove the tag
+  // Update each item using updateItem() to properly handle timestamps
   for (const item of itemsToUpdate) {
-    item.tags = item.tags.filter((tag) => tag !== tagName);
-    item.updatedAt = new Date();
-    await db.put('items', item);
+    const updatedTags = item.tags.filter((tag) => tag !== tagName);
+    await updateItem(item.id, { tags: updatedTags });
   }
 }
