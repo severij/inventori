@@ -20,6 +20,15 @@ export async function getLocation(id: string): Promise<Location | undefined> {
 }
 
 /**
+ * Get top-level locations (locations without a parent)
+ */
+export async function getTopLevelLocations(): Promise<Location[]> {
+  const db = await getDB();
+  const allLocations = await db.getAll('locations');
+  return allLocations.filter((loc) => !loc.parentId);
+}
+
+/**
  * Get locations by parent location
  * Locations can parent other locations
  */

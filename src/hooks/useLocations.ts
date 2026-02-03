@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Location } from '../types';
-import { getAllLocations, getLocation } from '../db/locations';
+import { getAllLocations, getLocation, getTopLevelLocations } from '../db/locations';
 
 interface UseLocationsResult {
   locations: Location[];
@@ -76,4 +76,40 @@ export function useLocation(id: string | undefined): UseLocationResult {
   }, [refetch]);
 
   return { location, loading, error, refetch };
+}
+
+interface UseTopLevelLocationsResult {
+  locations: Location[];
+  loading: boolean;
+  error: Error | null;
+  refetch: () => Promise<void>;
+}
+
+/**
+ * Hook to fetch top-level locations (locations without a parent)
+ * Used on Home page to show the Locations tab
+ */
+export function useTopLevelLocations(): UseTopLevelLocationsResult {
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const refetch = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getTopLevelLocations();
+      setLocations(data);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch top-level locations'));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  return { locations, loading, error, refetch };
 }
