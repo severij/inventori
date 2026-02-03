@@ -4,6 +4,7 @@ import {
   getAllItems,
   getItem,
   getItemsByParent,
+  getUnassignedItems,
 } from '../db/items';
 
 interface UseItemsResult {
@@ -138,6 +139,35 @@ export function useContainerItems(): UseItemsResult {
       setItems(containerItems);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch container items'));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  return { items, loading, error, refetch };
+}
+
+/**
+ * Hook to fetch all unassigned items (items without a parent)
+ * Used on Home page to show the Unassigned tab
+ */
+export function useUnassignedItems(): UseItemsResult {
+  const [items, setItems] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const refetch = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getUnassignedItems();
+      setItems(data);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch unassigned items'));
     } finally {
       setLoading(false);
     }
