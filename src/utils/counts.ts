@@ -1,53 +1,93 @@
 /**
- * Utility functions for calculating child counts
- * Used to display counts of direct children (locations and items)
+ * Utility functions for calculating total item counts
+ * Counts all descendant items recursively (through location nesting and container items)
  */
 
 import { getLocationsByParent } from '../db/locations';
 import { getItemsByParent } from '../db/items';
 
 /**
- * Counts of direct children for a parent entity
- */
-export interface ChildCounts {
-  locations: number;
-  items: number;
-}
-
-/**
- * Get counts of direct children for a parent entity.
+ * Get total count of all descendant items for a parent entity.
  *
  * @param parentId - The ID of the parent entity
  * @param parentType - Whether the parent is a 'location' or 'item'
- * @returns Promise<ChildCounts> with counts of direct children
+ * @returns Promise<number> - Total count of all descendant items (recursive)
  *
- * Notes:
- * - Counts ALL direct children (both locations and items)
- * - The `includeInTotal` flag is for inventory value calculations, not for counting children
- * - For items as parents, locations count will always be 0
- *   (locations can only parent other locations, not be children of items)
- * - Direct children only (not recursive)
+ * Counting Rules:
+ * - Recursive through location nesting (location → child location → items)
+ * - Recursive through container items (item with canHoldItems → child items)
+ * - Factors in quantity (e.g., Eggs with quantity 12 = 12 items)
+ * - Respects includeInTotal flag (items with false are excluded)
+ * - For items as parents, counts items inside container items only
+ *
+ * Example:
+ * Kitchen (location) with:
+ *   - 2 direct items (Blender, Toaster)
+ *   - Pantry (child location) with 3 items
+ *   - Refrigerator (container item) with 8 items inside
+ * Total: 2 + 3 + 8 = 13 items
  */
-export async function getChildCounts(
+export async function getTotalItemCount(
   parentId: string,
   parentType: 'location' | 'item'
-): Promise<ChildCounts> {
+): Promise<number> {
   if (parentType === 'location') {
-    // Location parent can have child locations and items
-    const childLocations = await getLocationsByParent(parentId);
-    const childItems = await getItemsByParent(parentId, 'location');
-
-    return {
-      locations: childLocations.length,
-      items: childItems.length,
-    };
+    return countItemsInLocation(parentId);
   } else {
-    // Item parent can only have child items (not locations)
-    const childItems = await getItemsByParent(parentId, 'item');
-
-    return {
-      locations: 0,
-      items: childItems.length,
-    };
+    return countItemsInItem(parentId);
   }
+}
+
+/**
+ * Count all items in a location recursively.
+ * Includes:
+ * - Direct items in this location
+ * - Items in child locations (recursive)
+ * - Items inside container items (recursive)
+ */
+async function countItemsInLocation(locationId: string): Promise<number> {
+  let total = 0;
+
+  // Count direct items in this location
+  const directItems = await getItemsByParent(locationId, 'location');
+  for (const item of directItems) {
+    if (item.includeInTotal) {
+      total += item.quantity;
+
+      // If this item is a container, count items inside it
+      if (item.canHoldItems) {
+        total += await countItemsInItem(item.id);
+      }
+    }
+  }
+
+  // Count items in child locations recursively
+  const childLocations = await getLocationsByParent(locationId);
+  for (const location of childLocations) {
+    total += await countItemsInLocation(location.id);
+  }
+
+  return total;
+}
+
+/**
+ * Count all items inside a container item recursively.
+ * Only counts direct child items and their containers.
+ */
+async function countItemsInItem(itemId: string): Promise<number> {
+  let total = 0;
+
+  const childItems = await getItemsByParent(itemId, 'item');
+  for (const item of childItems) {
+    if (item.includeInTotal) {
+      total += item.quantity;
+
+      // If this item is also a container, count items inside it
+      if (item.canHoldItems) {
+        total += await countItemsInItem(item.id);
+      }
+    }
+  }
+
+  return total;
 }
