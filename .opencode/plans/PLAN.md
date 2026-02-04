@@ -294,23 +294,25 @@ Add ability to select and change parent locations when creating or editing locat
 - [x] **Phase 17:** Navigation polish
 - [x] **Phase 18:** Sub-locations and item details
 - [x] **Phase 19:** Parent location picker for locations
-- [ ] **Phase 20:** Show unassigned containers in LocationPicker
+- [x] **Phase 20:** Show unassigned containers in LocationPicker
+- [ ] **Phase 21:** Accessibility & UI consistency
 
 ---
 
 ## Phase 20: Show Unassigned Containers in LocationPicker
 
-**Status: IN PROGRESS 🚀**
+**Status: COMPLETED ✅**
 
 Allow users to assign items to unassigned container items in the Inbox. Display unassigned containers at the root level of LocationPicker with visual separation from locations.
 
-### 20.1 Fix LocationPicker Root Level
+### 20.1 Fix LocationPicker Root Level ✅
 
 **`src/components/LocationPicker.tsx`:**
-- Update `getChildren()` function to return unassigned container items at root level
-- Add section headers ("Locations" and "Unassigned") to separate the groups
-- Headers only show when both sections have items
-- Update both mobile (bottom sheet) and desktop (modal) rendering
+- ✅ Updated `getChildren()` function to return unassigned container items at root level
+- ✅ Added `shouldShowSectionHeaders()` helper function
+- ✅ Added section headers ("Locations" and "Unassigned") to separate groups
+- ✅ Headers only show when both sections have items at root level
+- ✅ Updated both mobile (bottom sheet) and desktop (modal) rendering
 
 **Expected Behavior:**
 | Locations | Unassigned | Display |
@@ -322,9 +324,117 @@ Allow users to assign items to unassigned container items in the Inbox. Display 
 
 ---
 
-## Next Steps (Phase 21+)
+## Phase 21: Accessibility & UI Consistency
 
-### Phase 21: Complete i18n Migration (Optional)
+**Status: IN PROGRESS 🚀**
+
+Comprehensive audit and fix of accessibility issues and visual inconsistencies across the app. Organized by component for systematic improvements.
+
+### 21.1 Foundation & Design Tokens
+
+**`src/index.css`:**
+- [ ] Add `--color-surface-hover` semantic token for consistent hover states
+- [ ] Improve contrast of `--color-text-muted` (currently ~2.85:1, need 4.5:1 for WCAG AA)
+- [ ] Map hover tokens in `@theme` block
+
+### 21.2 LocationPicker Component
+
+**`src/components/LocationPicker.tsx`:**
+- [ ] Add `role="dialog"` and `aria-modal="true"` to modal containers
+- [ ] Add `aria-labelledby` connecting modal to header
+- [ ] Add Escape key handler to close modal
+- [ ] Add `aria-label` to trigger button
+- [ ] Add `id` prop to match label's `htmlFor` in forms
+- [ ] Change `rounded-md` to `rounded-lg` on trigger button
+- [ ] Ensure all hover states use theme colors
+
+### 21.3 OverflowMenu Component
+
+**`src/components/OverflowMenu.tsx`:**
+- [ ] Add `role="menuitem"` to menu items
+- [ ] Add `aria-haspopup="menu"` to trigger button
+- [ ] Add Escape key handler to close menu
+- [ ] Add arrow key navigation for menu items
+- [ ] Replace hardcoded `gray-*` colors with theme tokens (`surface-tertiary`, `content-secondary`)
+- [ ] Add `role="dialog"` and `aria-modal="true"` to mobile bottom sheet
+
+### 21.4 HamburgerMenu Component
+
+**`src/components/HamburgerMenu.tsx`:**
+- [ ] Add `role="menuitem"` to menu items
+- [ ] Add Escape key handler to close menu
+- [ ] Add arrow key navigation for menu items
+
+### 21.5 TagInput Component
+
+**`src/components/TagInput.tsx`:**
+- [ ] Add `id` prop to input for proper label association
+- [ ] Ensure suggestions dropdown follows ARIA listbox pattern
+- [ ] Change `rounded-md` to `rounded-lg` on suggestions dropdown
+
+### 21.6 Form Components
+
+**`src/components/LocationForm.tsx`:**
+- [ ] Add `id` to LocationPicker for label association
+
+**`src/components/ItemForm.tsx`:**
+- [ ] Add `id` to LocationPicker for label association
+- [ ] Add `id` to TagInput for label association
+
+**`src/components/CollapsibleFormSection.tsx`:**
+- [ ] Add `aria-hidden="true"` to chevron indicator
+
+**`src/components/CollapsibleSection.tsx`:**
+- [ ] Add `aria-hidden="true"` to chevron indicator
+- [ ] Replace hardcoded `gray-*` colors with theme tokens
+
+### 21.7 Dialog Components
+
+**`src/components/ConfirmDialog.tsx`:**
+- [ ] Verify Escape key handling exists
+- [ ] Standardize shadow to `shadow-lg` (currently uses `shadow-xl`)
+
+**`src/components/ThemeSettings.tsx`:**
+- [ ] Add proper radio group semantics for theme mode buttons
+- [ ] Add proper radio group semantics for accent color buttons
+- [ ] Add keyboard navigation (arrow keys) for button groups
+- [ ] Standardize shadow to `shadow-lg`
+- [ ] Add `min-h-[44px]` to Done button for touch target
+
+### 21.8 Page Components
+
+**`src/pages/Tags.tsx`:**
+- [ ] Change tag list items from `div` with `onClick` to proper `button` elements
+- [ ] Add accessible label to rename dialog input
+- [ ] Replace `hover:bg-surface-hover` with `hover:bg-surface-tertiary`
+
+**`src/pages/Search.tsx`:**
+- [ ] Add label to tag input field (currently only has placeholder)
+- [ ] Replace `surface-variant` with standard theme class
+- [ ] Replace `surface-hover` with `surface-tertiary`
+
+### 21.9 Utility Components
+
+**`src/components/ExportButton.tsx`:**
+- [ ] Replace hardcoded `gray-*` colors with theme tokens
+- [ ] Standardize button padding
+
+**`src/components/InstallButton.tsx`:**
+- [ ] Replace hardcoded colors (`bg-white`, `text-blue-600`) with theme tokens
+- [ ] Use accent color instead of hardcoded blue
+
+### 21.10 Build and Verification
+
+- [ ] Build passes with zero TypeScript errors
+- [ ] All components use consistent theme tokens
+- [ ] All interactive elements are keyboard accessible
+- [ ] All modals/dialogs have proper ARIA attributes
+
+---
+
+## Next Steps (Phase 22+)
+
+### Phase 22: Complete i18n Migration (Optional)
 
 Migrate all remaining UI strings to i18n:
 - Home.tsx, LocationView.tsx, ItemView.tsx
@@ -333,11 +443,11 @@ Migrate all remaining UI strings to i18n:
 - Search.tsx, Tags.tsx
 - All other UI components
 
-### Phase 22: Finnish Translation Completion (Optional)
+### Phase 23: Finnish Translation Completion (Optional)
 
 Complete and review Finnish translations for all UI strings.
 
-### Phase 23: Additional Features (Optional)
+### Phase 24: Additional Features (Optional)
 
 Potential future enhancements:
 - Bulk operations (select multiple items/locations)

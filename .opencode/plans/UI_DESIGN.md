@@ -1,6 +1,6 @@
 # Inventori UI Design Specification
 
-**Last Updated:** Phase 18 - Sub-locations and Item Details Display (COMPLETED)
+**Last Updated:** Phase 21 - Accessibility & UI Consistency (IN PROGRESS)
 
 This document contains ASCII representations of all UI components, pages, and layouts for the Inventori app redesign.
 
@@ -15,7 +15,8 @@ This document contains ASCII representations of all UI components, pages, and la
 - ✅ **Phase 17 Complete:** Navigation polish (back button, consistency)
 - ✅ **Phase 18 Complete:** Sub-locations, Item details display (tags + additional info), Settings page, i18n infrastructure
 - ✅ **Phase 19 Complete:** Parent location picker for locations, circular reference prevention, location hierarchy management
-- 🚀 **Phase 20 In Progress:** Show unassigned containers in LocationPicker with section headers
+- ✅ **Phase 20 Complete:** Show unassigned containers in LocationPicker with section headers
+- 🚀 **Phase 21 In Progress:** Accessibility & UI consistency improvements
 
 ## Design Principles
 
@@ -41,6 +42,52 @@ This document contains ASCII representations of all UI components, pages, and la
 - `8px` - compact (related elements)
 - `16px` - comfortable (sections)
 - `24px` - spacious (major breaks)
+
+### Accessibility Standards
+
+**Keyboard Navigation:**
+- Tab: Move between interactive elements
+- Escape: Close modals, menus, pickers
+- Arrow keys: Navigate within menus, radio groups
+- Enter/Space: Activate buttons, select options
+
+**ARIA Requirements:**
+- Modals: `role="dialog"`, `aria-modal="true"`, `aria-labelledby`
+- Menus: `role="menu"` on container, `role="menuitem"` on items
+- Buttons: `aria-label` when text is not descriptive (icon-only buttons)
+- Form inputs: Associated with labels via `id` and `htmlFor`
+
+**Focus Management:**
+- Visible focus indicators on all interactive elements
+- Focus trapped within modals when open
+- Focus returned to trigger element when modal closes
+
+**Color Contrast:**
+- Normal text: 4.5:1 minimum (WCAG AA)
+- Large text (18px+ or 14px bold): 3:1 minimum
+- Interactive elements: 3:1 minimum against background
+
+### Visual Consistency Standards
+
+**Border Radius:**
+- `rounded-lg` - Cards, modals, dropdowns, buttons
+- `rounded-md` - Input fields, tags
+- `rounded-t-2xl` - Mobile bottom sheets
+
+**Shadows:**
+- `shadow-sm` - Subtle elevation (cards)
+- `shadow-lg` - Menus, dropdowns, dialogs
+- `shadow-2xl` - Mobile bottom sheets (high emphasis)
+
+**Button Padding:**
+- Standard buttons: `px-4 py-2 min-h-[44px]`
+- Compact buttons: `px-3 py-2`
+- Icon buttons: `p-2` (44x44 touch target)
+
+**Hover States:**
+- Use `hover:bg-surface-tertiary` (light mode)
+- Use `dark:hover:bg-surface-secondary` (dark mode)
+- Never use hardcoded gray-* colors
 
 ---
 

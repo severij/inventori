@@ -405,15 +405,25 @@ interface ExportedItem {
    - Touch-friendly (44px min targets)
 
 3. **Accessibility**
-   - Semantic HTML
-   - Keyboard navigation
-   - Screen reader support
-   - Focus management
+   - Semantic HTML (proper heading hierarchy, landmarks)
+   - Keyboard navigation (Tab, Escape, Arrow keys where appropriate)
+   - Screen reader support (ARIA labels, roles, states)
+   - Focus management (focus trapping in modals, visible focus indicators)
+   - Color contrast (WCAG AA 4.5:1 for normal text, 3:1 for large text)
+   - All interactive elements accessible via keyboard
+   - Proper form label associations
 
 4. **Data Integrity**
    - High-entropy IDs
    - Timestamps for conflict resolution
    - Cascade delete handling
+
+5. **Visual Consistency**
+   - Consistent use of theme tokens (no hardcoded colors)
+   - Standardized button sizes and padding
+   - Unified border-radius scale (rounded-lg for cards/modals, rounded-md for inputs)
+   - Consistent shadow levels for similar UI elements
+   - Unified hover/active states using theme colors
 
 ---
 
