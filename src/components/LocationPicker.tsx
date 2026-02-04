@@ -23,6 +23,8 @@ interface LocationPickerProps {
   locationsOnly?: boolean;
   /** Exclude this location and its descendants from the list (for edit mode) */
   excludeLocationId?: string;
+  /** Optional id for the trigger button */
+  id?: string;
 }
 
 interface NavigationLevel {
@@ -61,6 +63,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   placeholder = 'Select a location or container...',
   locationsOnly = false,
   excludeLocationId,
+  id,
 }) => {
   const { locations, loading: locationsLoading } = useLocations();
   const { items: containerItems, loading: containerItemsLoading } = useContainerItems();
@@ -99,9 +102,21 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
       }
     };
 
+    // Close picker on Escape key
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+        setNavigationStack([]);
+      }
+    };
+
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscapeKey);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleEscapeKey);
+      };
     }
   }, [isOpen]);
 
@@ -295,20 +310,22 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
       ? ancestors.map((a) => (a.type === 'location' ? '📍' : '📦') + ' ' + a.name).join(' > ')
       : placeholder;
 
-  return (
-    <div ref={pickerRef} className="relative">
-      {/* Trigger Button */}
-      <div className="flex items-center gap-2">
-        <button type="button"
-          onClick={() => setIsOpen(true)}
-          disabled={disabled}
-          className={`flex-1 text-left mt-1 block rounded-md shadow-sm px-3 py-2 border ${
-            hasError ? 'border-red-500' : 'border-border'
-          } bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between`}
-        >
-          <span className={`truncate ${isUnassigned ? 'text-content-secondary italic' : ''}`}>{displayText}</span>
-          <span className="flex-shrink-0 ml-2">▼</span>
-        </button>
+   return (
+     <div ref={pickerRef} className="relative">
+        {/* Trigger Button */}
+        <div className="flex items-center gap-2">
+          <button type="button"
+            id={id || "location-picker-button"}
+            onClick={() => setIsOpen(true)}
+            disabled={disabled}
+            aria-label={`Select location: ${displayText}`}
+            className={`flex-1 text-left mt-1 block rounded-lg shadow-sm px-3 py-2 border ${
+              hasError ? 'border-red-500' : 'border-border'
+            } bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between`}
+          >
+           <span className={`truncate ${isUnassigned ? 'text-content-secondary italic' : ''}`}>{displayText}</span>
+           <span className="flex-shrink-0 ml-2" aria-hidden="true">▼</span>
+         </button>
 
         {/* Clear button - only shown when assigned */}
          {!isUnassigned && !disabled && (
@@ -332,34 +349,38 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
             onClick={handleClose}
           />
 
-          {/* Mobile bottom sheet or desktop modal */}
-          {isMobile ? (
-            // Mobile bottom sheet
-            <div className="fixed bottom-0 left-0 right-0 bg-surface rounded-t-2xl shadow-2xl z-50 animate-in slide-in-from-bottom-5 max-h-[70vh] flex flex-col">
-              {/* Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-border flex-shrink-0">
-                <div className="flex items-center gap-2">
-                  {navigationStack.length > 0 && (
-                    <button type="button"
-                      onClick={handleBack}
-                      className="p-1 hover:bg-surface-tertiary rounded transition-colors"
-                      aria-label="Go back"
-                    >
-                      ←
-                    </button>
-                  )}
-                  <h2 className="text-lg font-medium text-content">
-                    {currentLevel ? currentLevel.name : 'Select Location'}
-                  </h2>
-                </div>
-                <button type="button"
-                  onClick={handleClose}
-                  className="p-1 hover:bg-surface-tertiary rounded transition-colors"
-                  aria-label="Close"
-                >
-                  ✕
-                </button>
-              </div>
+           {/* Mobile bottom sheet or desktop modal */}
+           {isMobile ? (
+             // Mobile bottom sheet
+             <div 
+               role="dialog"
+               aria-modal="true"
+               aria-labelledby="location-picker-header"
+               className="fixed bottom-0 left-0 right-0 bg-surface rounded-t-2xl shadow-2xl z-50 animate-in slide-in-from-bottom-5 max-h-[70vh] flex flex-col">
+               {/* Header */}
+               <div className="flex items-center justify-between px-4 py-3 border-b border-border flex-shrink-0">
+                 <div className="flex items-center gap-2">
+                   {navigationStack.length > 0 && (
+                     <button type="button"
+                       onClick={handleBack}
+                       className="p-1 hover:bg-surface-tertiary rounded transition-colors"
+                       aria-label="Go back"
+                     >
+                       ←
+                     </button>
+                   )}
+                   <h2 id="location-picker-header" className="text-lg font-medium text-content">
+                     {currentLevel ? currentLevel.name : 'Select Location'}
+                   </h2>
+                 </div>
+                 <button type="button"
+                   onClick={handleClose}
+                   className="p-1 hover:bg-surface-tertiary rounded transition-colors"
+                   aria-label="Close"
+                 >
+                   ✕
+                 </button>
+               </div>
 
                {/* Content */}
                <div className="flex-1 overflow-y-auto px-4 py-3">
@@ -459,33 +480,37 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
               {/* Bottom padding for notch/safe area */}
               <div className="h-4 flex-shrink-0" />
             </div>
-          ) : (
-            // Desktop modal
-            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface rounded-lg shadow-xl z-50 w-full max-w-[400px] max-h-[600px] flex flex-col">
-              {/* Header */}
-              <div className="flex items-center justify-between px-4 py-4 border-b border-border flex-shrink-0">
-                <div className="flex items-center gap-2">
-                  {navigationStack.length > 0 && (
-                    <button type="button"
-                      onClick={handleBack}
-                      className="p-1 hover:bg-surface-tertiary rounded transition-colors"
-                      aria-label="Go back"
-                    >
-                      ←
-                    </button>
-                  )}
-                  <h2 className="text-lg font-medium text-content">
-                    {currentLevel ? currentLevel.name : 'Select Location'}
-                  </h2>
-                </div>
-                <button type="button"
-                  onClick={handleClose}
-                  className="p-1 hover:bg-surface-tertiary rounded transition-colors"
-                  aria-label="Close"
-                >
-                  ✕
-                </button>
-              </div>
+           ) : (
+             // Desktop modal
+             <div 
+               role="dialog"
+               aria-modal="true"
+               aria-labelledby="location-picker-header-desktop"
+               className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface rounded-lg shadow-lg z-50 w-full max-w-[400px] max-h-[600px] flex flex-col">
+               {/* Header */}
+               <div className="flex items-center justify-between px-4 py-4 border-b border-border flex-shrink-0">
+                 <div className="flex items-center gap-2">
+                   {navigationStack.length > 0 && (
+                     <button type="button"
+                       onClick={handleBack}
+                       className="p-1 hover:bg-surface-tertiary rounded transition-colors"
+                       aria-label="Go back"
+                     >
+                       ←
+                     </button>
+                   )}
+                   <h2 id="location-picker-header-desktop" className="text-lg font-medium text-content">
+                     {currentLevel ? currentLevel.name : 'Select Location'}
+                   </h2>
+                 </div>
+                 <button type="button"
+                   onClick={handleClose}
+                   className="p-1 hover:bg-surface-tertiary rounded transition-colors"
+                   aria-label="Close"
+                 >
+                   ✕
+                 </button>
+               </div>
 
                {/* Content */}
                <div className="flex-1 overflow-y-auto px-4 py-4">

@@ -16,6 +16,8 @@ interface TagInputProps {
   className?: string;
   /** Max tags allowed (optional, no limit if undefined) */
   maxTags?: number;
+  /** Optional id for the input element */
+  id?: string;
 }
 
 /**
@@ -52,6 +54,7 @@ export const TagInput: React.FC<TagInputProps> = ({
   placeholder = 'Add tags...',
   className = '',
   maxTags,
+  id,
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -158,47 +161,51 @@ export const TagInput: React.FC<TagInputProps> = ({
         ))}
       </div>
 
-      {/* Input Field */}
-      <div className="relative">
-        <input
-          ref={inputRef}
-          type="text"
-          value={inputValue}
-          onChange={handleInputChange}
-          onKeyDown={handleInputKeyDown}
-          onFocus={() => setShowSuggestions(true)}
-          placeholder={placeholder}
-          disabled={!!(maxTags && tags.length >= maxTags)}
-          className="w-full px-3 py-2 border border-border rounded-md bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none disabled:bg-surface-tertiary disabled:text-content-muted"
-          aria-label="Tag input"
-          aria-autocomplete="list"
-          aria-expanded={showSuggestions}
-          aria-controls="tag-suggestions"
-        />
+       {/* Input Field */}
+       <div className="relative">
+         <input
+           ref={inputRef}
+           id={id}
+           type="text"
+           value={inputValue}
+           onChange={handleInputChange}
+           onKeyDown={handleInputKeyDown}
+           onFocus={() => setShowSuggestions(true)}
+           placeholder={placeholder}
+           disabled={!!(maxTags && tags.length >= maxTags)}
+           className="w-full px-3 py-2 border border-border rounded-lg bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none disabled:bg-surface-tertiary disabled:text-content-muted"
+           aria-label="Tag input"
+           aria-autocomplete="list"
+           aria-expanded={showSuggestions}
+           aria-controls="tag-suggestions"
+         />
 
-        {/* Autocomplete Suggestions Dropdown */}
-        {showSuggestions && filteredSuggestions.length > 0 && (
-          <div
-            id="tag-suggestions"
-            className="absolute top-full left-0 right-0 mt-1 bg-surface border border-border rounded-md shadow-lg z-10 max-h-48 overflow-y-auto"
-          >
+         {/* Autocomplete Suggestions Dropdown */}
+         {showSuggestions && filteredSuggestions.length > 0 && (
+           <div
+             id="tag-suggestions"
+             role="listbox"
+             className="absolute top-full left-0 right-0 mt-1 bg-surface border border-border rounded-md shadow-lg z-10 max-h-48 overflow-y-auto"
+           >
             {suggestionsLoading ? (
               <div className="px-3 py-2 text-sm text-content-secondary">
                 Loading...
               </div>
             ) : (
-              filteredSuggestions.map((suggestion, index) => (
-                <button
-                  key={suggestion.tag}
-                  type="button"
-                  onClick={() => handleSuggestionClick(suggestion.tag)}
-                  className={`w-full text-left px-3 py-2 text-sm transition-colors ${
-                    index === highlightedIndex
-                      ? 'bg-accent-100 dark:bg-accent-900/30'
-                      : 'hover:bg-surface-tertiary'
-                  }`}
-                  onMouseEnter={() => setHighlightedIndex(index)}
-                >
+               filteredSuggestions.map((suggestion, index) => (
+                 <button
+                   key={suggestion.tag}
+                   type="button"
+                   onClick={() => handleSuggestionClick(suggestion.tag)}
+                   className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                     index === highlightedIndex
+                       ? 'bg-accent-100 dark:bg-accent-900/30'
+                       : 'hover:bg-surface-tertiary'
+                   }`}
+                   onMouseEnter={() => setHighlightedIndex(index)}
+                   role="option"
+                   aria-selected={index === highlightedIndex}
+                 >
                   <div className="flex items-center justify-between">
                     <span className="text-content">{suggestion.tag}</span>
                     <span className="text-xs text-content-secondary">

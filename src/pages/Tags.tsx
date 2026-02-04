@@ -138,64 +138,65 @@ export function Tags() {
           />
         )}
 
-        {/* Tags list */}
-        {!loading && !error && filteredTags.length > 0 && (
-          <div className="space-y-2">
-            {filteredTags.map((tag) => (
-              <div
-                key={tag.tag}
-                className="flex items-center justify-between p-4 bg-surface rounded-lg border border-surface-variant hover:bg-surface-hover transition-colors cursor-pointer"
-                onClick={() => navigate(`/search?tags=${encodeURIComponent(tag.tag)}`)}
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-content truncate">{tag.tag}</div>
-                  <div className="text-sm text-content-secondary">{tag.count} item{tag.count !== 1 ? 's' : ''}</div>
-                </div>
+         {/* Tags list */}
+         {!loading && !error && filteredTags.length > 0 && (
+           <div className="space-y-2">
+             {filteredTags.map((tag) => (
+               <button
+                 key={tag.tag}
+                 className="flex items-center justify-between p-4 bg-surface rounded-lg border border-border hover:bg-surface-tertiary transition-colors w-full text-left"
+                 onClick={() => navigate(`/search?tags=${encodeURIComponent(tag.tag)}`)}
+                 type="button"
+               >
+                 <div className="flex-1 min-w-0">
+                   <div className="font-medium text-content truncate">{tag.tag}</div>
+                   <div className="text-sm text-content-secondary">{tag.count} item{tag.count !== 1 ? 's' : ''}</div>
+                 </div>
 
-                {/* Overflow menu */}
-                <div
-                  className="ml-4 flex-shrink-0"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <OverflowMenu items={getTagMenuItems(tag)} ariaLabel={`Actions for tag ${tag.tag}`} />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+                 {/* Overflow menu */}
+                 <div
+                   className="ml-4 flex-shrink-0"
+                   onClick={(e) => e.stopPropagation()}
+                 >
+                   <OverflowMenu items={getTagMenuItems(tag)} ariaLabel={`Actions for tag ${tag.tag}`} />
+                 </div>
+               </button>
+             ))}
+           </div>
+         )}
       </div>
 
-      {/* Rename Dialog */}
-      <ConfirmDialog
-        isOpen={renameDialogOpen}
-        title="Rename Tag"
-        message={
-          <div className="space-y-4">
-            <input
-              type="text"
-              value={newTagName}
-              onChange={(e) => setNewTagName(e.target.value)}
-              placeholder="New tag name"
-              className="w-full px-3 py-2 border border-surface-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-600"
-              autoFocus
-            />
-            {selectedTag && (
-              <p className="text-sm text-content-secondary">
-                This will update {selectedTag.count} item{selectedTag.count !== 1 ? 's' : ''}.
-              </p>
-            )}
-          </div>
-        }
-        confirmLabel="Rename"
-        cancelLabel="Cancel"
-        onConfirm={handleRenameTag}
-        onCancel={() => {
-          setRenameDialogOpen(false);
-          setSelectedTag(null);
-          setNewTagName('');
-        }}
-        confirmDisabled={isProcessing || !newTagName.trim() || newTagName === selectedTag?.tag}
-      />
+       {/* Rename Dialog */}
+       <ConfirmDialog
+         isOpen={renameDialogOpen}
+         title="Rename Tag"
+         message={
+           <div className="space-y-4">
+             <input
+               type="text"
+               value={newTagName}
+               onChange={(e) => setNewTagName(e.target.value)}
+               placeholder="New tag name"
+               className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-600"
+               autoFocus
+             />
+             {selectedTag && (
+               <p className="text-sm text-content-secondary">
+                 This will update {selectedTag.count} item{selectedTag.count !== 1 ? 's' : ''}.
+               </p>
+             )}
+           </div>
+         }
+         confirmLabel="Rename"
+         cancelLabel="Cancel"
+         onConfirm={handleRenameTag}
+         onCancel={() => {
+           setRenameDialogOpen(false);
+           setSelectedTag(null);
+           setNewTagName('');
+         }}
+         confirmDisabled={isProcessing || !newTagName.trim() || newTagName === selectedTag?.tag}
+       />
 
       {/* Delete Dialog */}
       <ConfirmDialog

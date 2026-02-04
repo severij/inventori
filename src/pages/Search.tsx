@@ -189,45 +189,45 @@ export function Search() {
               + Add Tag Filter
             </button>
           ) : (
-            <div className="flex gap-2 flex-1">
-              <input
-                type="text"
-                value={tagInputValue}
-                onChange={(e) => setTagInputValue(e.target.value.toLowerCase())}
-                placeholder="Type tag name..."
-                className="flex-1 px-3 py-2 border border-surface-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-600"
-                autoFocus
-              />
-              <button
-                onClick={() => {
-                  if (tagInputValue.trim() && !selectedTags.includes(tagInputValue)) {
-                    const newTags = [...selectedTags, tagInputValue];
-                    setSelectedTags(newTags);
-                    navigate(`/search?${newTags.map((t) => `tags=${encodeURIComponent(t)}`).join('&')}`);
-                    setTagInputValue('');
-                    setShowTagInput(false);
-                  }
-                }}
-                className="px-3 py-2 bg-accent-600 text-white rounded-lg hover:bg-accent-700 transition-colors min-h-[44px]"
-              >
-                Add
-              </button>
-              <button
-                onClick={() => {
-                  setShowTagInput(false);
-                  setTagInputValue('');
-                }}
-                className="px-3 py-2 border border-surface-variant rounded-lg hover:bg-surface-hover transition-colors min-h-[44px]"
-              >
-                Cancel
-              </button>
-            </div>
+             <div className="flex gap-2 flex-1">
+               <input
+                 type="text"
+                 value={tagInputValue}
+                 onChange={(e) => setTagInputValue(e.target.value.toLowerCase())}
+                 placeholder="Type tag name..."
+                 className="flex-1 px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-600"
+                 autoFocus
+               />
+               <button
+                 onClick={() => {
+                   if (tagInputValue.trim() && !selectedTags.includes(tagInputValue)) {
+                     const newTags = [...selectedTags, tagInputValue];
+                     setSelectedTags(newTags);
+                     navigate(`/search?${newTags.map((t) => `tags=${encodeURIComponent(t)}`).join('&')}`);
+                     setTagInputValue('');
+                     setShowTagInput(false);
+                   }
+                 }}
+                 className="px-3 py-2 bg-accent-600 text-white rounded-lg hover:bg-accent-700 transition-colors min-h-[44px]"
+               >
+                 Add
+               </button>
+               <button
+                 onClick={() => {
+                   setShowTagInput(false);
+                   setTagInputValue('');
+                 }}
+                 className="px-3 py-2 border border-border rounded-lg hover:bg-surface-tertiary transition-colors min-h-[44px]"
+               >
+                 Cancel
+               </button>
+             </div>
           )}
 
-          {/* Autocomplete suggestions */}
-          {showTagInput && tagInputValue.trim() && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-surface rounded-lg border border-surface-variant shadow-lg z-10 max-w-xs">
-              <div className="py-1">
+           {/* Autocomplete suggestions */}
+           {showTagInput && tagInputValue.trim() && (
+             <div className="absolute top-full left-0 right-0 mt-1 bg-surface rounded-lg border border-border shadow-lg z-10 max-w-xs">
+               <div className="py-1">
                 {availableTags
                   .filter(
                     (t) =>

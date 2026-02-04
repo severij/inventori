@@ -99,21 +99,22 @@ export function LocationForm({
          />
        </div>
 
-       {/* Parent Location field */}
-       <div>
-         <label htmlFor="location-parent" className="block text-sm font-medium text-content-secondary">
-           Parent Location
-         </label>
-         <LocationPicker
-           value={parentId}
-           parentType="location"
-           onChange={(id) => setParentId(id)}
-           disabled={isSubmitting}
-           locationsOnly={true}
-           excludeLocationId={initialValues?.id}
-           placeholder="Select parent location..."
-         />
-       </div>
+        {/* Parent Location field */}
+        <div>
+          <label htmlFor="location-parent" className="block text-sm font-medium text-content-secondary">
+            Parent Location
+          </label>
+          <LocationPicker
+            id="location-parent"
+            value={parentId}
+            parentType="location"
+            onChange={(id) => setParentId(id)}
+            disabled={isSubmitting}
+            locationsOnly={true}
+            excludeLocationId={initialValues?.id}
+            placeholder="Select parent location..."
+          />
+        </div>
 
       {/* Photos */}
       <PhotoCapture photos={photos} onChange={setPhotos} maxPhotos={5} label="Photos" />

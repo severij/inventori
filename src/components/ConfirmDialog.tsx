@@ -99,15 +99,15 @@ export function ConfirmDialog({
         aria-hidden="true"
       />
 
-      {/* Dialog */}
-      <div
-        ref={dialogRef}
-        role="alertdialog"
-        aria-modal="true"
-        aria-labelledby="dialog-title"
-        aria-describedby="dialog-description"
-        className="relative bg-surface rounded-lg shadow-xl max-w-md w-full p-6"
-      >
+       {/* Dialog */}
+       <div
+         ref={dialogRef}
+         role="alertdialog"
+         aria-modal="true"
+         aria-labelledby="dialog-title"
+         aria-describedby="dialog-description"
+         className="relative bg-surface rounded-lg shadow-lg max-w-md w-full p-6"
+       >
         <h2
           id="dialog-title"
           className="text-lg font-semibold text-content mb-2"

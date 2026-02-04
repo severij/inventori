@@ -86,13 +86,14 @@ export function HamburgerMenu() {
             aria-label="Application menu"
           >
             {/* Manage Tags */}
-            <button
-              onClick={() => {
-                navigate('/tags');
-                setIsOpen(false);
-              }}
-              className="flex items-center gap-3 w-full px-4 py-3 text-left text-content-secondary hover:bg-surface-tertiary transition-colors"
-            >
+             <button
+               onClick={() => {
+                 navigate('/tags');
+                 setIsOpen(false);
+               }}
+               className="flex items-center gap-3 w-full px-4 py-3 text-left text-content-secondary hover:bg-surface-tertiary transition-colors"
+               role="menuitem"
+             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -111,13 +112,14 @@ export function HamburgerMenu() {
             </button>
 
             {/* Settings */}
-            <button
-              onClick={() => {
-                navigate('/settings');
-                setIsOpen(false);
-              }}
-              className="flex items-center gap-3 w-full px-4 py-3 text-left text-content-secondary hover:bg-surface-tertiary transition-colors"
-            >
+             <button
+               onClick={() => {
+                 navigate('/settings');
+                 setIsOpen(false);
+               }}
+               className="flex items-center gap-3 w-full px-4 py-3 text-left text-content-secondary hover:bg-surface-tertiary transition-colors"
+               role="menuitem"
+             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -136,11 +138,12 @@ export function HamburgerMenu() {
             </button>
 
             {/* Install App - only shows when installable */}
-            {isInstallable && (
-              <button
-                onClick={handleInstall}
-                className="flex items-center gap-3 w-full px-4 py-3 text-left text-content-secondary hover:bg-surface-tertiary transition-colors"
-              >
+             {isInstallable && (
+               <button
+                 onClick={handleInstall}
+                 className="flex items-center gap-3 w-full px-4 py-3 text-left text-content-secondary hover:bg-surface-tertiary transition-colors"
+                 role="menuitem"
+               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"

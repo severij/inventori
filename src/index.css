@@ -16,11 +16,14 @@
   --color-text-primary: #111827;
   --color-text-secondary: #4b5563;
   --color-text-tertiary: #6b7280;
-  --color-text-muted: #9ca3af;
+  --color-text-muted: #6b7280;
   
   /* Border colors */
   --color-border: #e5e7eb;
   --color-border-focus: #d1d5db;
+  
+  /* Hover state colors */
+  --color-surface-hover: #e5e7eb;
   
   /* Accent color - default blue (overridden by data-accent) */
   --color-accent-50: #eff6ff;
@@ -68,11 +71,14 @@
   --color-text-primary: #fafafa;  /* zinc-50 */
   --color-text-secondary: #d4d4d8; /* zinc-300 */
   --color-text-tertiary: #a1a1aa;  /* zinc-400 */
-  --color-text-muted: #71717a;     /* zinc-500 */
+  --color-text-muted: #a1a1aa;     /* zinc-400 (improved contrast from zinc-500) */
   
   /* Border colors */
   --color-border: #3f3f46;   /* zinc-700 */
   --color-border-focus: #52525b; /* zinc-600 */
+  
+  /* Hover state colors */
+  --color-surface-hover: #3f3f46;
   
   /* Status colors - slightly adjusted for dark mode */
   --color-success-50: #052e16;
@@ -178,6 +184,7 @@
   --color-surface: var(--color-bg-primary);
   --color-surface-secondary: var(--color-bg-secondary);
   --color-surface-tertiary: var(--color-bg-tertiary);
+  --color-surface-hover: var(--color-surface-hover);
   
   --color-content: var(--color-text-primary);
   --color-content-secondary: var(--color-text-secondary);

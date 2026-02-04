@@ -117,15 +117,15 @@ export function ThemeSettings({ isOpen, onClose }: ThemeSettingsProps) {
           </div>
         </div>
 
-        {/* Close button */}
-        <div className="flex justify-end">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-surface bg-accent-500 rounded-lg hover:bg-accent-600 transition-colors"
-          >
-            Done
-          </button>
-        </div>
+         {/* Close button */}
+         <div className="flex justify-end">
+           <button
+             onClick={onClose}
+             className="min-h-[44px] px-4 py-2 text-surface bg-accent-500 rounded-lg hover:bg-accent-600 transition-colors"
+           >
+             Done
+           </button>
+         </div>
       </div>
     </div>
   );

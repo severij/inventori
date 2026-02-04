@@ -18,12 +18,12 @@ export function InstallButton() {
     }
   };
 
-  return (
-    <button
-      onClick={handleClick}
-      className="flex items-center gap-2 px-3 py-2 text-sm bg-white text-blue-600 rounded-lg shadow-sm hover:bg-blue-50 transition-colors font-medium"
-      aria-label="Install app"
-    >
+   return (
+     <button
+       onClick={handleClick}
+       className="flex items-center gap-2 px-3 py-2 text-sm bg-surface text-accent-600 rounded-lg border border-border shadow-sm hover:bg-surface-tertiary transition-colors font-medium"
+       aria-label="Install app"
+     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="none"

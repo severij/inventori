@@ -34,35 +34,36 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
     setIsOpen(!isOpen);
   };
 
-  return (
-    <div className={`border-t border-gray-200 ${className}`}>
-      {/* Header - clickable anywhere */}
-      <button
-        onClick={handleToggle}
-        className="w-full flex items-center justify-between py-4 px-0 hover:bg-gray-50 transition-colors duration-150"
-        aria-expanded={isOpen}
-      >
-        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-        <span
-          className={`text-xl text-gray-600 transition-transform duration-300 flex-shrink-0 inline-block ${
-            isOpen ? 'transform rotate-180' : ''
-          }`}
-        >
-          ▼
-        </span>
-      </button>
+   return (
+     <div className={`border-t border-border ${className}`}>
+       {/* Header - clickable anywhere */}
+       <button
+         onClick={handleToggle}
+         className="w-full flex items-center justify-between py-4 px-0 hover:bg-surface-tertiary dark:hover:bg-surface-secondary transition-colors duration-150"
+         aria-expanded={isOpen}
+       >
+         <h3 className="text-lg font-semibold text-content">{title}</h3>
+         <span
+           className={`text-xl text-content-secondary transition-transform duration-300 flex-shrink-0 inline-block ${
+             isOpen ? 'transform rotate-180' : ''
+           }`}
+           aria-hidden="true"
+         >
+           ▼
+         </span>
+       </button>
 
-      {/* Content - with smooth height animation */}
-      <div
-        ref={contentRef}
-        style={{
-          height: height,
-          overflow: 'hidden',
-          transition: 'height 300ms ease-in-out',
-        }}
-      >
-        <div className="pb-4">{children}</div>
-      </div>
-    </div>
-  );
+       {/* Content - with smooth height animation */}
+       <div
+         ref={contentRef}
+         style={{
+           height: height,
+           overflow: 'hidden',
+           transition: 'height 300ms ease-in-out',
+         }}
+       >
+         <div className="pb-4">{children}</div>
+       </div>
+     </div>
+   );
 };

@@ -74,21 +74,22 @@ export const CollapsibleFormSection: React.FC<CollapsibleFormSectionProps> = ({
            className="w-full flex items-center justify-between px-4 py-4 hover:bg-surface-tertiary transition-colors duration-150"
            aria-expanded={isOpen}
          >
-          <h3 className="text-lg font-semibold text-content">
-            {title}
-            {fieldCount !== undefined && (
-              <span className="text-sm font-normal text-content-secondary ml-2">
-                ({fieldCount})
-              </span>
-            )}
-          </h3>
-          <span
-            className={`text-xl text-gray-600 transition-transform duration-300 flex-shrink-0 inline-block ${
-              isOpen ? 'transform rotate-180' : ''
-            }`}
-          >
-            ▼
-          </span>
+           <h3 className="text-lg font-semibold text-content">
+             {title}
+             {fieldCount !== undefined && (
+               <span className="text-sm font-normal text-content-secondary ml-2">
+                 ({fieldCount})
+               </span>
+             )}
+           </h3>
+           <span
+             className={`text-xl text-gray-600 transition-transform duration-300 flex-shrink-0 inline-block ${
+               isOpen ? 'transform rotate-180' : ''
+             }`}
+             aria-hidden="true"
+           >
+             ▼
+           </span>
         </button>
       </legend>
 

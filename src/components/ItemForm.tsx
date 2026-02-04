@@ -210,42 +210,44 @@ export function ItemForm({
           />
         </div>
 
-         {/* Location field */}
-         <div>
-           <label htmlFor="item-parent" className="block text-sm font-medium text-content-secondary">
-             Location
-           </label>
-           <LocationPicker
-             value={parentId}
-             parentType={parentType}
-             onChange={(newParentId, newParentType) => {
-               setParentId(newParentId);
-               setParentType(newParentType);
-             }}
-             disabled={isSubmitting || isLoadingParents}
-             hasError={!!errors.parentId}
-             excludeItemId={initialValues?.id}
-             placeholder="Select a location or container..."
-           />
-           {errors.parentId && <p id="item-parent-error" className="mt-1 text-sm text-red-500" role="alert">{errors.parentId}</p>}
-         </div>
+          {/* Location field */}
+          <div>
+            <label htmlFor="item-parent" className="block text-sm font-medium text-content-secondary">
+              Location
+            </label>
+            <LocationPicker
+              id="item-parent"
+              value={parentId}
+              parentType={parentType}
+              onChange={(newParentId, newParentType) => {
+                setParentId(newParentId);
+                setParentType(newParentType);
+              }}
+              disabled={isSubmitting || isLoadingParents}
+              hasError={!!errors.parentId}
+              excludeItemId={initialValues?.id}
+              placeholder="Select a location or container..."
+            />
+            {errors.parentId && <p id="item-parent-error" className="mt-1 text-sm text-red-500" role="alert">{errors.parentId}</p>}
+          </div>
 
-        {/* Tags field */}
-        <div>
-          <label htmlFor="item-tags" className="block text-sm font-medium text-content-secondary mb-2">
-            Tags
-          </label>
-          <TagInput
-            tags={tags}
-            onChange={setTags}
-            availableTags={allTags}
-            maxTags={10}
-            placeholder="Add tags to organize this item..."
-          />
-          <p className="text-xs text-content-muted mt-1">
-            Use tags to categorize and filter items (e.g., "urgent", "gift", "fragile")
-          </p>
-        </div>
+         {/* Tags field */}
+         <div>
+           <label htmlFor="item-tags" className="block text-sm font-medium text-content-secondary mb-2">
+             Tags
+           </label>
+           <TagInput
+             id="item-tags"
+             tags={tags}
+             onChange={setTags}
+             availableTags={allTags}
+             maxTags={10}
+             placeholder="Add tags to organize this item..."
+           />
+           <p className="text-xs text-content-muted mt-1">
+             Use tags to categorize and filter items (e.g., "urgent", "gift", "fragile")
+           </p>
+         </div>
 
         {/* Photos */}
         <PhotoCapture photos={photos} onChange={setPhotos} maxPhotos={10} label="Photos" />
