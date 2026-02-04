@@ -2,13 +2,14 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Layout } from '../components/Layout';
 import { useSettings } from '../contexts/SettingsContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { downloadExport } from '../utils/export';
 import { useToast } from '../contexts/ToastContext';
 import { useState, useRef } from 'react';
 import { importData, previewImport } from '../utils/import';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { clearAllData } from '../db';
-import type { Theme, Language, Currency, DateFormat } from '../types/settings';
+import type { Language, Currency, DateFormat } from '../types/settings';
 
 /**
  * Settings page - Appearance, Regional, and Data Management
@@ -17,6 +18,7 @@ export function Settings() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { settings, updateSettings } = useSettings();
+  const { mode: themeMode, setMode: setThemeMode } = useTheme();
   const { showToast } = useToast();
 
   // Export/Import state
@@ -34,8 +36,8 @@ export function Settings() {
   const [clearConfirmText, setClearConfirmText] = useState('');
   const [isClearing, setIsClearing] = useState(false);
 
-  const handleThemeChange = (theme: Theme) => {
-    updateSettings({ theme });
+  const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
+    setThemeMode(theme);
     showToast('success', t('common.settingsSaved'));
   };
 
@@ -167,8 +169,8 @@ export function Settings() {
                       type="radio"
                       name="theme"
                       value={theme}
-                      checked={settings.theme === theme}
-                      onChange={() => handleThemeChange(theme as Theme)}
+                      checked={themeMode === theme}
+                      onChange={() => handleThemeChange(theme as 'light' | 'dark' | 'system')}
                       className="w-4 h-4 accent-accent-600 dark:accent-accent-400"
                     />
                     <span className="text-content-secondary">
