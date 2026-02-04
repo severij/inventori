@@ -19,6 +19,10 @@ interface LocationPickerProps {
   excludeItemId?: string;
   /** Placeholder text for trigger button */
   placeholder?: string;
+  /** When true, only show locations (no container items) */
+  locationsOnly?: boolean;
+  /** Exclude this location and its descendants from the list (for edit mode) */
+  excludeLocationId?: string;
 }
 
 interface NavigationLevel {
@@ -55,6 +59,8 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   hasError = false,
   excludeItemId,
   placeholder = 'Select a location or container...',
+  locationsOnly = false,
+  excludeLocationId,
 }) => {
   const { locations, loading: locationsLoading } = useLocations();
   const { items: containerItems, loading: containerItemsLoading } = useContainerItems();
@@ -100,20 +106,53 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   }, [isOpen]);
 
   /**
+   * Get all descendant location IDs (recursive)
+   * Used to prevent circular references when excludeLocationId is set
+   */
+  const getDescendantLocationIds = (locationId: string): string[] => {
+    const descendants = [locationId];
+    const queue = [locationId];
+
+    while (queue.length > 0) {
+      const currentId = queue.shift()!;
+      const children = locations.filter((loc) => loc.parentId === currentId);
+      for (const child of children) {
+        descendants.push(child.id);
+        queue.push(child.id);
+      }
+    }
+
+    return descendants;
+  };
+
+  /**
    * Get children (locations and/or items) for the current navigation level
    */
   const getChildren = (): { locations: Location[]; items: Item[] } => {
     const currentLevel = navigationStack[navigationStack.length - 1];
+    const excludedLocationIds = excludeLocationId ? getDescendantLocationIds(excludeLocationId) : [];
 
     if (!currentLevel) {
       // Root level: show top-level locations only
-      const topLevelLocs = locations.filter((loc) => !loc.parentId);
+      const topLevelLocs = locations.filter((loc) => !loc.parentId && !excludedLocationIds.includes(loc.id));
+      
+      if (locationsOnly) {
+        return { locations: topLevelLocs, items: [] };
+      }
+      
       return { locations: topLevelLocs, items: [] };
     }
 
     if (currentLevel.type === 'location') {
       // Location level: show child locations and items in this location
-      const childLocs = locations.filter((loc) => loc.parentId === currentLevel.id);
+      const childLocs = locations.filter(
+        (loc) => loc.parentId === currentLevel.id && !excludedLocationIds.includes(loc.id)
+      );
+      
+      if (locationsOnly) {
+        return { locations: childLocs, items: [] };
+      }
+      
       const childItems = containerItems.filter(
         (item) =>
           item.parentId === currentLevel.id &&
@@ -123,6 +162,10 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
       return { locations: childLocs, items: childItems };
     } else {
       // Item (container) level: show items in this container
+      if (locationsOnly) {
+        return { locations: [], items: [] };
+      }
+      
       const childItems = containerItems.filter(
         (item) =>
           item.parentId === currentLevel.id &&
@@ -137,13 +180,26 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
    * Check if an entity has children
    */
   const hasChildren = (id: string, type: 'location' | 'item'): boolean => {
+    const excludedLocationIds = excludeLocationId ? getDescendantLocationIds(excludeLocationId) : [];
+    
     if (type === 'location') {
-      const hasChildLocs = locations.some((loc) => loc.parentId === id);
+      const hasChildLocs = locations.some(
+        (loc) => loc.parentId === id && !excludedLocationIds.includes(loc.id)
+      );
+      
+      if (locationsOnly) {
+        return hasChildLocs;
+      }
+      
       const hasChildItems = containerItems.some(
         (item) => item.parentId === id && item.parentType === 'location'
       );
       return hasChildLocs || hasChildItems;
     } else {
+      if (locationsOnly) {
+        return false; // Items can't have children when locationsOnly is true
+      }
+      
       const hasChildItems = containerItems.some(
         (item) => item.parentId === id && item.parentType === 'item'
       );
@@ -210,7 +266,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
 
   // Build display text for trigger button
   const displayText = isUnassigned
-    ? 'No location'
+    ? locationsOnly ? 'No parent (top-level)' : 'No location'
     : ancestors.length > 0
       ? ancestors.map((a) => (a.type === 'location' ? '📍' : '📦') + ' ' + a.name).join(' > ')
       : placeholder;

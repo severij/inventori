@@ -14,6 +14,7 @@ This document contains ASCII representations of all UI components, pages, and la
 - ✅ **Phase 16 Complete:** Tags system (tags page, rename/delete)
 - ✅ **Phase 17 Complete:** Navigation polish (back button, consistency)
 - ✅ **Phase 18 Complete:** Sub-locations, Item details display (tags + additional info), Settings page, i18n infrastructure
+- ✅ **Phase 19 Complete:** Parent location picker for locations, circular reference prevention, location hierarchy management
 
 ## Design Principles
 

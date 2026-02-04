@@ -37,33 +37,40 @@ export function useAncestors(
        let currentId: string | undefined = id;
        let currentType: 'location' | 'item' | undefined = type;
 
-       // Traverse up the hierarchy
-       while (currentId && currentType) {
-         if (currentType === 'location') {
-           const location = await getLocation(currentId);
-           if (location) {
-             path.unshift({ id: location.id, name: location.name, type: 'location' });
-           }
-           // Locations are top-level, stop here
-           break;
-         } else if (currentType === 'item') {
-           const item = await getItem(currentId);
-           if (item) {
-             path.unshift({ 
-               id: item.id, 
-               name: item.name, 
-               type: 'item',
-               canHoldItems: item.canHoldItems,
-             });
-             currentId = item.parentId;
-             currentType = item.parentType;
-           } else {
-             break;
-           }
-         } else {
-           break;
-         }
-       }
+        // Traverse up the hierarchy
+        while (currentId && currentType) {
+          if (currentType === 'location') {
+            const location = await getLocation(currentId);
+            if (location) {
+              path.unshift({ id: location.id, name: location.name, type: 'location' });
+              // Continue up the hierarchy if this location has a parent
+              if (location.parentId) {
+                currentId = location.parentId;
+                currentType = 'location';
+              } else {
+                break; // Top-level location reached
+              }
+            } else {
+              break;
+            }
+          } else if (currentType === 'item') {
+            const item = await getItem(currentId);
+            if (item) {
+              path.unshift({ 
+                id: item.id, 
+                name: item.name, 
+                type: 'item',
+                canHoldItems: item.canHoldItems,
+              });
+              currentId = item.parentId;
+              currentType = item.parentType;
+            } else {
+              break;
+            }
+          } else {
+            break;
+          }
+        }
 
       setAncestors(path);
     } catch (err) {

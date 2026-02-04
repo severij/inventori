@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { PhotoCapture } from './PhotoCapture';
+import { LocationPicker } from './LocationPicker';
 import type { CreateLocationInput, Location } from '../types';
 
 interface LocationFormProps {
@@ -28,7 +29,7 @@ export function LocationForm({
 }: LocationFormProps) {
   const [name, setName] = useState(initialValues?.name ?? '');
   const [description, setDescription] = useState(initialValues?.description ?? '');
-  const parentId = initialValues?.parentId ?? defaultParentId ?? '';
+  const [parentId, setParentId] = useState(initialValues?.parentId ?? defaultParentId ?? '');
   const [photos, setPhotos] = useState<Blob[]>(initialValues?.photos ?? []);
   const [errors, setErrors] = useState<{ name?: string }>({});
 
@@ -98,16 +99,21 @@ export function LocationForm({
          />
        </div>
 
-       {/* Parent Location field (hidden input, shows as info if set) */}
-       {parentId && (
-         <div className="bg-accent-50 dark:bg-surface-tertiary border border-accent-200 dark:border-accent-600/50 rounded-lg p-4">
-           <p className="text-sm text-content-secondary">Will be created as a sub-location</p>
-           <input
-             type="hidden"
-             value={parentId}
-           />
-         </div>
-       )}
+       {/* Parent Location field */}
+       <div>
+         <label htmlFor="location-parent" className="block text-sm font-medium text-content-secondary">
+           Parent Location
+         </label>
+         <LocationPicker
+           value={parentId}
+           parentType="location"
+           onChange={(id) => setParentId(id)}
+           disabled={isSubmitting}
+           locationsOnly={true}
+           excludeLocationId={initialValues?.id}
+           placeholder="Select parent location..."
+         />
+       </div>
 
       {/* Photos */}
       <PhotoCapture photos={photos} onChange={setPhotos} maxPhotos={5} label="Photos" />

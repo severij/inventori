@@ -211,6 +211,68 @@ Add support for nested locations and display complete item details in ItemView w
 
 ---
 
+## Phase 19: Parent Location Picker for Locations
+
+**Status: COMPLETED ✅**
+
+Add ability to select and change parent locations when creating or editing locations. Users can now create sub-locations and reorganize their location hierarchy.
+
+### 19.1 Enhanced LocationPicker Component ✅
+
+**`src/components/LocationPicker.tsx`:**
+- ✅ Added `locationsOnly?: boolean` prop - When true, only show locations (no container items)
+- ✅ Added `excludeLocationId?: string` prop - Exclude this location and its descendants from the list
+- ✅ Added `getDescendantLocationIds()` helper function:
+  - Uses BFS (breadth-first search) to recursively find all descendant location IDs
+  - Prevents circular references when editing locations
+  - Returns array of IDs to exclude from picker
+- ✅ Updated `getChildren()` function:
+  - Filters out excluded locations and their descendants
+  - When `locationsOnly=true`, always returns empty items array
+  - Properly handles both root level and nested locations
+- ✅ Updated `hasChildren()` function:
+  - Accounts for excluded locations
+  - When `locationsOnly=true`, only checks for child locations (ignores items)
+  - Returns false for items when `locationsOnly=true`
+- ✅ Updated display text:
+  - When `locationsOnly=true` and unassigned: shows "No parent (top-level)" instead of "No location"
+  - Maintains backward compatibility with existing "No location" text
+
+### 19.2 Enhanced LocationForm with Parent Selection ✅
+
+**`src/components/LocationForm.tsx`:**
+- ✅ Imported `LocationPicker` component
+- ✅ Made `parentId` stateful using `useState` hook:
+  - Initial value: `initialValues?.parentId ?? defaultParentId ?? ''`
+  - Allows changing parent location in both create and edit modes
+- ✅ Removed the info box that showed "Will be created as a sub-location"
+- ✅ Added "Parent Location" field with `LocationPicker` component:
+  - Always visible (both create and edit modes)
+  - Pre-filled with current parent location in edit mode
+  - `locationsOnly={true}` ensures only locations are selectable
+  - `excludeLocationId={initialValues?.id}` prevents circular references in edit mode
+  - Custom placeholder: "Select parent location..."
+  - Label: "Parent Location"
+
+### 19.3 Build and Verification ✅
+
+**Status:**
+- ✅ Build completed successfully with zero TypeScript errors
+- ✅ All 134 modules transformed correctly
+- ✅ CSS and JS chunking optimized
+- ✅ PWA manifest generated successfully
+
+**Expected Behavior:**
+
+| Scenario | Parent Picker Display |
+|----------|----------------------|
+| **Create** (no defaultParentId) | Shown, defaults to "No parent (top-level)" |
+| **Create** (with defaultParentId from URL) | Shown, pre-selects the parent location |
+| **Edit** | Shown, displays current parent, can change or make top-level |
+| **Exclude logic** | Prevents selecting the location being edited or any of its descendants |
+
+---
+
 ## Summary Checklist
 
 - [x] **Phase 1:** Project setup
@@ -231,12 +293,13 @@ Add support for nested locations and display complete item details in ItemView w
 - [x] **Phase 16:** Tags system
 - [x] **Phase 17:** Navigation polish
 - [x] **Phase 18:** Sub-locations and item details
+- [x] **Phase 19:** Parent location picker for locations
 
 ---
 
-## Next Steps (Phase 19+)
+## Next Steps (Phase 20+)
 
-### Phase 19: Complete i18n Migration (Optional)
+### Phase 20: Complete i18n Migration (Optional)
 
 Migrate all remaining UI strings to i18n:
 - Home.tsx, LocationView.tsx, ItemView.tsx
@@ -245,11 +308,11 @@ Migrate all remaining UI strings to i18n:
 - Search.tsx, Tags.tsx
 - All other UI components
 
-### Phase 20: Finnish Translation Completion (Optional)
+### Phase 21: Finnish Translation Completion (Optional)
 
 Complete and review Finnish translations for all UI strings.
 
-### Phase 21: Additional Features (Optional)
+### Phase 22: Additional Features (Optional)
 
 Potential future enhancements:
 - Bulk operations (select multiple items/locations)
