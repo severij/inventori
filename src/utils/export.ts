@@ -4,7 +4,7 @@ import { getAllItems } from '../db/items';
 import type { Location, Item } from '../types';
 
 /** Current export format version */
-export const EXPORT_VERSION = '2.0';
+export const EXPORT_VERSION = '2.1';
 
 /**
  * Exported location with photos as filenames
@@ -13,6 +13,7 @@ export interface ExportedLocation {
   id: string; // 8-char Crockford Base32 ID (used for physical labels)
   name: string;
   description?: string;
+  parentId?: string; // Parent location ID for nested locations
   photos: string[]; // filenames in images/ folder
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
@@ -29,6 +30,11 @@ export interface ExportedItem {
   parentType?: 'location' | 'item';
   canHoldItems: boolean; // Can this item hold other items?
   quantity: number;
+  includeInTotal: boolean; // Include in inventory totals?
+  tags: string[]; // Categorization tags
+  purchasePrice?: number;
+  currentValue?: number;
+  dateAcquired?: string; // ISO date string
   photos: string[]; // filenames in images/ folder
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
@@ -116,6 +122,7 @@ function exportLocation(location: Location): {
       id: location.id,
       name: location.name,
       description: location.description,
+      parentId: location.parentId,
       photos: filenames,
       createdAt: location.createdAt.toISOString(),
       updatedAt: location.updatedAt.toISOString(),
@@ -142,6 +149,11 @@ function exportItem(item: Item): {
       parentType: item.parentType,
       canHoldItems: item.canHoldItems,
       quantity: item.quantity,
+      includeInTotal: item.includeInTotal,
+      tags: item.tags,
+      purchasePrice: item.purchasePrice,
+      currentValue: item.currentValue,
+      dateAcquired: item.dateAcquired?.toISOString(),
       photos: filenames,
       createdAt: item.createdAt.toISOString(),
       updatedAt: item.updatedAt.toISOString(),

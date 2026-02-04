@@ -6,7 +6,7 @@ import type { Location, Item } from '../types';
 import type { ExportData, ExportedLocation, ExportedItem } from './export';
 
 /** Supported export format versions */
-const SUPPORTED_VERSIONS = ['1.1', '2.0'];
+const SUPPORTED_VERSIONS = ['1.1', '2.0', '2.1'];
 
 /**
  * Result of an import operation
@@ -78,6 +78,7 @@ async function importLocation(
     id: exported.id,
     name: exported.name,
     description: exported.description,
+    parentId: exported.parentId,
     photos: getImagesFromMap(exported.photos, imagesMap, warnings),
     createdAt: new Date(exported.createdAt),
     updatedAt: new Date(exported.updatedAt),
@@ -107,8 +108,11 @@ async function importItem(
     parentType: (exported.parentType as any) === 'container' ? 'item' : exported.parentType,
     canHoldItems: exported.canHoldItems ?? (exported as any).isContainer ?? false,
     quantity: exported.quantity ?? 1,
-    includeInTotal: true,
-    tags: [],
+    includeInTotal: exported.includeInTotal ?? true,
+    tags: exported.tags ?? [],
+    purchasePrice: exported.purchasePrice,
+    currentValue: exported.currentValue,
+    dateAcquired: exported.dateAcquired ? new Date(exported.dateAcquired) : undefined,
     photos: getImagesFromMap(exported.photos, imagesMap, warnings),
     createdAt: new Date(exported.createdAt),
     updatedAt: new Date(exported.updatedAt),
@@ -279,42 +283,45 @@ export async function importData(file: File): Promise<ImportResult> {
     }
   }
 
-  // For v1.1 files, convert containers to items with canHoldItems=true
-  if (data.version === '1.1' && 'containers' in data && Array.isArray((data as any).containers)) {
-    for (const container of (data as any).containers) {
-      try {
-        // Convert old container to new item format with canHoldItems
-        const item: Item = {
-          id: container.id,
-          name: container.name,
-          description: container.description,
-          parentId: container.parentId,
-          parentType: container.parentType === 'container' ? 'item' : container.parentType,
-          canHoldItems: true,
-          quantity: 1,
-          includeInTotal: true,
-          tags: [],
-          photos: getImagesFromMap(container.photos || [], imagesMap, result.warnings),
-          createdAt: new Date(container.createdAt),
-          updatedAt: new Date(container.updatedAt),
-        };
+   // For v1.1 files, convert containers to items with canHoldItems=true
+   if (data.version === '1.1' && 'containers' in data && Array.isArray((data as any).containers)) {
+     for (const container of (data as any).containers) {
+       try {
+         // Convert old container to new item format with canHoldItems
+         const item: Item = {
+           id: container.id,
+           name: container.name,
+           description: container.description,
+           parentId: container.parentId,
+           parentType: container.parentType === 'container' ? 'item' : container.parentType,
+           canHoldItems: true,
+           quantity: container.quantity ?? 1,
+           includeInTotal: container.includeInTotal ?? true,
+           tags: container.tags ?? [],
+           purchasePrice: container.purchasePrice,
+           currentValue: container.currentValue,
+           dateAcquired: container.dateAcquired ? new Date(container.dateAcquired) : undefined,
+           photos: getImagesFromMap(container.photos || [], imagesMap, result.warnings),
+           createdAt: new Date(container.createdAt),
+           updatedAt: new Date(container.updatedAt),
+         };
 
-        const existing = await db.get('items', item.id);
+         const existing = await db.get('items', item.id);
 
-        if (existing) {
-          await db.put('items', item);
-          result.items.updated++;
-        } else {
-          await db.add('items', item);
-          result.items.added++;
-        }
-      } catch (err) {
-        result.errors.push(
-          `Failed to import container "${container.name}": ${err instanceof Error ? err.message : 'Unknown error'}`
-        );
-      }
-    }
-  }
+         if (existing) {
+           await db.put('items', item);
+           result.items.updated++;
+         } else {
+           await db.add('items', item);
+           result.items.added++;
+         }
+       } catch (err) {
+         result.errors.push(
+           `Failed to import container "${container.name}": ${err instanceof Error ? err.message : 'Unknown error'}`
+         );
+       }
+     }
+   }
 
   result.success = result.errors.length === 0;
   return result;
