@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Layout } from '../components/Layout';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { EntityCard } from '../components/EntityCard';
@@ -24,18 +25,19 @@ import { formatCurrency, formatDate as formatDateUtil } from '../utils/format';
 function getItemMenuItems(
   itemId: string,
   navigate: ReturnType<typeof useNavigate>,
-  setShowDeleteDialog: (show: boolean) => void
+  setShowDeleteDialog: (show: boolean) => void,
+  t: (key: string) => string
 ): MenuItem[] {
   return [
     {
       id: 'edit',
-      label: 'Edit',
+      label: t('common.edit'),
       icon: '✏️',
       onClick: () => navigate(`/edit/item/${itemId}`),
     },
     {
       id: 'delete',
-      label: 'Delete',
+      label: t('common.delete'),
       icon: '🗑️',
       onClick: () => setShowDeleteDialog(true),
       destructive: true,
@@ -52,6 +54,7 @@ export function ItemView() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { settings } = useSettings();
+  const { t } = useTranslation();
 
   const { item, loading: itemLoading, error, refetch } = useItem(id);
   const { children, loading: childrenLoading } = useChildren(id, 'item');
@@ -116,23 +119,23 @@ export function ItemView() {
       {/* Loading state */}
       {loading && <DetailSkeleton />}
 
-      {/* Error state */}
-      {error && (
-        <ErrorState
-          message={error.message || 'Failed to load item'}
-          onRetry={refetch}
-        />
-      )}
+       {/* Error state */}
+       {error && (
+         <ErrorState
+           message={error.message || t('item.failedToLoad')}
+           onRetry={refetch}
+         />
+       )}
 
-      {/* Not found state */}
-      {!loading && !error && !item && (
-        <EmptyState
-          icon="🔍"
-          title="Item not found"
-          description="This item may have been deleted or the link is invalid."
-          action={{ label: 'Go Home', to: '/' }}
-        />
-      )}
+       {/* Not found state */}
+       {!loading && !error && !item && (
+         <EmptyState
+           icon="🔍"
+           title={t('item.notFound')}
+           description="This item may have been deleted or the link is invalid."
+           action={{ label: t('errors.goHome'), to: '/' }}
+         />
+       )}
 
       {/* Item content */}
       {!loading && item && (
@@ -158,19 +161,19 @@ export function ItemView() {
 
            {/* Item details */}
            <div className="bg-surface rounded-lg shadow-sm border border-border p-4 mb-6">
-             <div className="flex items-start justify-between gap-2 mb-2">
-               <div className="flex items-center gap-2 flex-1">
-                 <h2 className="text-xl font-semibold text-content">{item.name}</h2>
-                 {item.quantity > 1 && (
-                   <span className="bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300 text-sm font-medium px-2 py-1 rounded">
-                     x{item.quantity}
-                   </span>
-                 )}
-               </div>
-               <OverflowMenu
-                 items={getItemMenuItems(item.id, navigate, setShowDeleteDialog)}
-               />
-             </div>
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2 flex-1">
+                  <h2 className="text-xl font-semibold text-content">{item.name}</h2>
+                  {item.quantity > 1 && (
+                    <span className="bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300 text-sm font-medium px-2 py-1 rounded">
+                      x{item.quantity}
+                    </span>
+                  )}
+                </div>
+                <OverflowMenu
+                  items={getItemMenuItems(item.id, navigate, setShowDeleteDialog, t)}
+                />
+              </div>
              <IdDisplay id={item.id} size="sm" />
 
              {item.description && (
@@ -195,96 +198,101 @@ export function ItemView() {
              </div>
            )}
 
-           {/* Additional Information */}
-           {hasAdditionalInfo && (
-             <CollapsibleSection title="Additional Information" defaultOpen={false}>
-               <div className="space-y-3">
-                 {item.purchasePrice !== null && item.purchasePrice !== undefined && item.purchasePrice > 0 && (
-                   <div className="flex justify-between">
-                     <span className="text-content-secondary">Purchase Price</span>
-                     <span className="text-content font-medium">
-                       {formatCurrency(item.purchasePrice, settings.currency, settings.language)}
-                     </span>
-                   </div>
-                 )}
-                 {item.currentValue !== null && item.currentValue !== undefined && item.currentValue > 0 && (
-                   <div className="flex justify-between">
-                     <span className="text-content-secondary">Current Value</span>
-                     <span className="text-content font-medium">
-                       {formatCurrency(item.currentValue, settings.currency, settings.language)}
-                     </span>
-                   </div>
-                 )}
-                 {item.dateAcquired && new Date(item.dateAcquired).getTime() !== 0 && (
-                   <div className="flex justify-between">
-                     <span className="text-content-secondary">Date Acquired</span>
-                     <span className="text-content font-medium">{formatDate(item.dateAcquired)}</span>
-                   </div>
-                 )}
-                 {!item.includeInTotal && (
-                   <div className="flex justify-between">
-                     <span className="text-content-secondary">Include in Totals</span>
-                     <span className="text-content font-medium">No</span>
-                   </div>
-                 )}
-               </div>
-             </CollapsibleSection>
-           )}
+            {/* Additional Information */}
+            {hasAdditionalInfo && (
+              <CollapsibleSection title={t('item.additionalInformation')} defaultOpen={false}>
+                <div className="space-y-3">
+                  {item.purchasePrice !== null && item.purchasePrice !== undefined && item.purchasePrice > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-content-secondary">{t('item.purchasePrice')}</span>
+                      <span className="text-content font-medium">
+                        {formatCurrency(item.purchasePrice, settings.currency, settings.language)}
+                      </span>
+                    </div>
+                  )}
+                  {item.currentValue !== null && item.currentValue !== undefined && item.currentValue > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-content-secondary">{t('item.currentValue')}</span>
+                      <span className="text-content font-medium">
+                        {formatCurrency(item.currentValue, settings.currency, settings.language)}
+                      </span>
+                    </div>
+                  )}
+                  {item.dateAcquired && new Date(item.dateAcquired).getTime() !== 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-content-secondary">{t('item.dateAcquired')}</span>
+                      <span className="text-content font-medium">{formatDate(item.dateAcquired)}</span>
+                    </div>
+                  )}
+                  {!item.includeInTotal && (
+                    <div className="flex justify-between">
+                      <span className="text-content-secondary">{t('item.includeInTotals')}</span>
+                      <span className="text-content font-medium">No</span>
+                    </div>
+                  )}
+                </div>
+              </CollapsibleSection>
+            )}
 
             {/* Container Contents - only shown for items with canHoldItems */}
             {item.canHoldItems && (
               <>
-                {/* Add button */}
-                <Link
-                  to={`/add/item?parentId=${item.id}&parentType=item`}
-                  className="block mb-4 text-center px-4 py-2 bg-accent-100 dark:bg-surface-tertiary text-accent-600 dark:text-accent-400 border border-accent-300 dark:border-accent-600/50 rounded-lg hover:bg-accent-200 dark:hover:bg-surface-secondary transition-colors font-medium min-h-[44px] flex items-center justify-center"
-                >
-                  + Add Item
-                </Link>
+                 {/* Add button */}
+                 <Link
+                   to={`/add/item?parentId=${item.id}&parentType=item`}
+                   className="block mb-4 text-center px-4 py-2 bg-accent-100 dark:bg-surface-tertiary text-accent-600 dark:text-accent-400 border border-accent-300 dark:border-accent-600/50 rounded-lg hover:bg-accent-200 dark:hover:bg-surface-secondary transition-colors font-medium min-h-[44px] flex items-center justify-center"
+                 >
+                   + {t('item.addItem')}
+                 </Link>
 
-                {/* Contents list */}
-                {childrenLoading ? (
-                  <CardListSkeleton count={2} />
-                ) : hasChildren ? (
-                  <CollapsibleSection title="Contents" defaultOpen={true}>
-                    <div className="space-y-3">
-                      {children.map((child) => (
-                        <EntityCard key={child.id} entity={child} entityType="item" />
-                      ))}
-                    </div>
-                  </CollapsibleSection>
-                ) : (
-                  <div className="text-center py-6 text-content-tertiary mb-6 bg-surface-tertiary/50 rounded-lg">
-                    <p className="font-medium">This container is empty</p>
-                    <p className="text-sm mt-1">Add an item to get started</p>
-                  </div>
-                )}
+                 {/* Contents list */}
+                 {childrenLoading ? (
+                   <CardListSkeleton count={2} />
+                 ) : hasChildren ? (
+                   <CollapsibleSection title={t('item.contents')} defaultOpen={true}>
+                     <div className="space-y-3">
+                       {children.map((child) => (
+                         <EntityCard key={child.id} entity={child} entityType="item" />
+                       ))}
+                     </div>
+                   </CollapsibleSection>
+                 ) : (
+                   <div className="text-center py-6 text-content-tertiary mb-6 bg-surface-tertiary/50 rounded-lg">
+                     <p className="font-medium">{t('item.containerEmpty')}</p>
+                     <p className="text-sm mt-1">{t('item.containerEmptyDesc')}</p>
+                   </div>
+                 )}
               </>
             )}
 
-          {/* Metadata */}
-          <div className="text-xs text-content-muted space-y-1">
-            <p>Created: {formatDate(item.createdAt)}</p>
-            <p>Updated: {formatDate(item.updatedAt)}</p>
-          </div>
+           {/* Metadata */}
+           <div className="text-xs text-content-muted space-y-1">
+             <p>{t('common.created')}: {formatDate(item.createdAt)}</p>
+             <p>{t('common.updated')}: {formatDate(item.updatedAt)}</p>
+           </div>
         </>
       )}
 
-       {/* Delete confirmation dialog */}
-       <ConfirmDialog
-         isOpen={showDeleteDialog}
-         title="Delete Item"
-         message={
-           item?.canHoldItems && hasChildren
-             ? `Are you sure you want to delete "${item?.name}" and all its contents (${children.length} items)? This action cannot be undone.`
-             : `Are you sure you want to delete "${item?.name}"? This action cannot be undone.`
-         }
-         confirmLabel={isDeleting ? 'Deleting...' : 'Delete'}
-         onConfirm={handleDelete}
-         onCancel={() => setShowDeleteDialog(false)}
-         isDestructive
-         confirmDisabled={isDeleting}
-       />
+        {/* Delete confirmation dialog */}
+        <ConfirmDialog
+          isOpen={showDeleteDialog}
+          title={t('item.deleteConfirm')}
+          message={
+            item?.canHoldItems && hasChildren
+              ? t('item.deleteConfirmWithContents', {
+                  name: item?.name,
+                  count: children.length,
+                })
+              : t('item.deleteConfirmMsg', {
+                  name: item?.name,
+                })
+          }
+          confirmLabel={isDeleting ? t('common.deleting') : t('common.delete')}
+          onConfirm={handleDelete}
+          onCancel={() => setShowDeleteDialog(false)}
+          isDestructive
+          confirmDisabled={isDeleting}
+        />
     </Layout>
   );
 }

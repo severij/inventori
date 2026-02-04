@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Layout } from '../components/Layout';
 import { ItemForm } from '../components/ItemForm';
 import { createItem } from '../db/items';
@@ -13,6 +14,7 @@ export function AddItem() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { showToast } = useToast();
+  const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Get parent from URL params if provided
@@ -28,11 +30,11 @@ export function AddItem() {
     setIsSubmitting(true);
     try {
       const item = await createItem(data);
-      showToast('success', `"${item.name}" has been created`);
+      showToast('success', t('item.itemCreated', { name: item.name }));
       navigate(`/item/${item.id}`);
     } catch (error) {
       console.error('Failed to create item:', error);
-      showToast('error', 'Failed to create item. Please try again.');
+      showToast('error', t('errors.failedToCreate', { entity: 'item' }));
       setIsSubmitting(false);
     }
   };
@@ -47,7 +49,7 @@ export function AddItem() {
   };
 
   return (
-    <Layout title="Add Item">
+    <Layout title={t('item.addItem')}>
       <ItemForm
         defaultParentId={defaultParentId}
         defaultParentType={defaultParentType}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Layout } from '../components/Layout';
 import { Tabs } from '../components/Tabs';
 import { FAB } from '../components/FAB';
@@ -13,6 +14,7 @@ import { useUnassignedItems } from '../hooks/useItems';
  * Home page - Two-tab layout for Inbox and Locations
  */
 export function Home() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('inbox');
 
   // Fetch both tabs in parallel
@@ -39,7 +41,7 @@ export function Home() {
     if (locationsError) {
       return (
         <ErrorState
-          message={locationsError.message || 'Failed to load locations'}
+          message={locationsError.message || t('errors.failedToLoad')}
           onRetry={refetchLocations}
         />
       );
@@ -49,8 +51,8 @@ export function Home() {
       return (
         <EmptyState
           icon="📍"
-          title="No locations yet"
-          description="Start by adding your first location, like &quot;Garage&quot; or &quot;Living Room&quot;"
+          title={t('home.locationsEmpty')}
+          description={t('home.locationsEmptyDesc')}
         />
       );
     }
@@ -77,7 +79,7 @@ export function Home() {
     if (itemsError) {
       return (
         <ErrorState
-          message={itemsError.message || 'Failed to load items'}
+          message={itemsError.message || t('errors.failedToLoad')}
           onRetry={refetchItems}
         />
       );
@@ -87,8 +89,8 @@ export function Home() {
       return (
         <EmptyState
           icon="📥"
-          title="Inbox is empty"
-          description="Add items here to organize them later"
+          title={t('home.inboxEmpty')}
+          description={t('home.inboxEmptyDesc')}
         />
       );
     }
@@ -109,13 +111,13 @@ export function Home() {
         tabs={[
           {
             id: 'inbox',
-            label: 'Inbox',
+            label: t('home.inbox'),
             badge: inboxItems.length,
             render: renderInboxTab,
           },
           {
             id: 'locations',
-            label: 'Locations',
+            label: t('home.locations'),
             badge: locations.length,
             render: renderLocationsTab,
           },
@@ -127,7 +129,7 @@ export function Home() {
       {/* Context-sensitive FAB */}
       {activeTab === 'inbox' && !itemsError && (
         <FAB
-          label="Item"
+          label={t('common.add')}
           to="/add/item"
           iconPath="M12 4.5v15m7.5-7.5h-15"
         />
@@ -135,7 +137,7 @@ export function Home() {
 
       {activeTab === 'locations' && !locationsError && (
         <FAB
-          label="Location"
+          label={t('common.add')}
           to="/add/location"
           iconPath="M12 4.5v15m7.5-7.5h-15"
         />

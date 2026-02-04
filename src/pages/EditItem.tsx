@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Layout } from '../components/Layout';
 import { ItemForm } from '../components/ItemForm';
 import { DetailSkeleton } from '../components/Skeleton';
@@ -17,6 +18,7 @@ export function EditItem() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { t } = useTranslation();
   const { item, loading, error, refetch } = useItem(id);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -26,12 +28,12 @@ export function EditItem() {
      setIsSubmitting(true);
      try {
        await updateItem(id, data);
-       showToast('success', 'Item updated successfully');
+       showToast('success', t('item.itemUpdated', { name: item?.name }));
        // Replace history so browser back skips the edit page
        navigate(`/item/${id}`, { replace: true });
      } catch (err) {
        console.error('Failed to update item:', err);
-       showToast('error', 'Failed to update item. Please try again.');
+       showToast('error', t('errors.failedToUpdate', { entity: 'item' }));
        setIsSubmitting(false);
      }
    };
@@ -41,14 +43,14 @@ export function EditItem() {
   };
 
   return (
-    <Layout title="Edit Item">
+    <Layout title={t('item.editItem')}>
       {/* Loading state */}
       {loading && <DetailSkeleton />}
 
       {/* Error state */}
       {error && (
         <ErrorState
-          message={error.message || 'Failed to load item'}
+          message={error.message || t('item.failedToLoad')}
           onRetry={refetch}
         />
       )}
@@ -57,9 +59,9 @@ export function EditItem() {
       {!loading && !error && !item && (
         <EmptyState
           icon="🔍"
-          title="Item not found"
+          title={t('item.notFound')}
           description="This item may have been deleted or the link is invalid."
-          action={{ label: 'Go Home', to: '/' }}
+          action={{ label: t('errors.goHome'), to: '/' }}
         />
       )}
 

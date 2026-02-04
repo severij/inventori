@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Layout } from '../components/Layout';
 import { LocationForm } from '../components/LocationForm';
 import { DetailSkeleton } from '../components/Skeleton';
@@ -17,6 +18,7 @@ export function EditLocation() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { t } = useTranslation();
   const { location, loading, error, refetch } = useLocation(id);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -26,12 +28,12 @@ export function EditLocation() {
      setIsSubmitting(true);
      try {
        await updateLocation(id, data);
-       showToast('success', 'Location updated successfully');
+       showToast('success', t('location.locationUpdated', { name: location?.name }));
        // Replace history so browser back skips the edit page
        navigate(`/location/${id}`, { replace: true });
      } catch (err) {
        console.error('Failed to update location:', err);
-       showToast('error', 'Failed to update location. Please try again.');
+       showToast('error', t('errors.failedToUpdate', { entity: 'location' }));
        setIsSubmitting(false);
      }
    };
@@ -41,14 +43,14 @@ export function EditLocation() {
   };
 
   return (
-    <Layout title="Edit Location">
+    <Layout title={t('location.editLocation')}>
       {/* Loading state */}
       {loading && <DetailSkeleton />}
 
       {/* Error state */}
       {error && (
         <ErrorState
-          message={error.message || 'Failed to load location'}
+          message={error.message || t('location.failedToLoad')}
           onRetry={refetch}
         />
       )}
@@ -57,9 +59,9 @@ export function EditLocation() {
       {!loading && !error && !location && (
         <EmptyState
           icon="🔍"
-          title="Location not found"
+          title={t('location.notFound')}
           description="This location may have been deleted or the link is invalid."
-          action={{ label: 'Go Home', to: '/' }}
+          action={{ label: t('errors.goHome'), to: '/' }}
         />
       )}
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Layout } from '../components/Layout';
 import { LocationForm } from '../components/LocationForm';
 import { createLocation } from '../db/locations';
@@ -12,6 +13,7 @@ import type { CreateLocationInput } from '../types';
 export function AddLocation() {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -22,11 +24,11 @@ export function AddLocation() {
     setIsSubmitting(true);
     try {
       const location = await createLocation(data);
-      showToast('success', `"${location.name}" has been created`);
+      showToast('success', t('location.locationCreated', { name: location.name }));
       navigate(`/location/${location.id}`);
     } catch (error) {
       console.error('Failed to create location:', error);
-      showToast('error', 'Failed to create location. Please try again.');
+      showToast('error', t('errors.failedToCreate', { entity: 'location' }));
       setIsSubmitting(false);
     }
   };
@@ -36,7 +38,7 @@ export function AddLocation() {
   };
 
   return (
-    <Layout title="Add Location">
+    <Layout title={t('location.addLocation')}>
       <LocationForm
         defaultParentId={defaultParentId}
         onSubmit={handleSubmit}

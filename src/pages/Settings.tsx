@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 import { Layout } from '../components/Layout';
 import { useSettings } from '../contexts/SettingsContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -41,10 +42,11 @@ export function Settings() {
     showToast('success', t('common.settingsSaved'));
   };
 
-  const handleLanguageChange = (language: Language) => {
-    updateSettings({ language });
-    showToast('success', t('common.settingsSaved'));
-  };
+   const handleLanguageChange = (language: Language) => {
+     updateSettings({ language });
+     i18n.changeLanguage(language);
+     showToast('success', t('common.settingsSaved'));
+   };
 
   const handleCurrencyChange = (currency: Currency) => {
     updateSettings({ currency });
