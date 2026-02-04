@@ -133,14 +133,19 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     const excludedLocationIds = excludeLocationId ? getDescendantLocationIds(excludeLocationId) : [];
 
     if (!currentLevel) {
-      // Root level: show top-level locations only
+      // Root level: show top-level locations and unassigned containers
       const topLevelLocs = locations.filter((loc) => !loc.parentId && !excludedLocationIds.includes(loc.id));
       
       if (locationsOnly) {
         return { locations: topLevelLocs, items: [] };
       }
       
-      return { locations: topLevelLocs, items: [] };
+      // Include unassigned container items at root level
+      const unassignedContainers = containerItems.filter(
+        (item) => !item.parentId && item.id !== excludeItemId
+      );
+      
+      return { locations: topLevelLocs, items: unassignedContainers };
     }
 
     if (currentLevel.type === 'location') {
@@ -251,18 +256,37 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     setNavigationStack([]);
   };
 
-  /**
-   * Handle clearing the selection (make unassigned)
-   */
-  const handleClear = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onChange('', undefined);
-  };
+   /**
+    * Handle clearing the selection (make unassigned)
+    */
+   const handleClear = (e: React.MouseEvent) => {
+     e.stopPropagation();
+     onChange('', undefined);
+   };
 
-  const isLoading = locationsLoading || containerItemsLoading;
-  const { locations: children, items: childItems } = getChildren();
-  const currentLevel = navigationStack[navigationStack.length - 1];
-  const isUnassigned = !value;
+   /**
+    * Determine if section headers should be shown
+    * Only show when at root level and both locations and unassigned containers exist
+    */
+   const shouldShowSectionHeaders = (): boolean => {
+     // Only show headers at root level
+     if (navigationStack.length > 0) return false;
+     
+     // Never show headers in locationsOnly mode
+     if (locationsOnly) return false;
+     
+     // Check if we have both locations and unassigned containers
+     const topLevelLocs = locations.filter((loc) => !loc.parentId);
+     const unassignedContainers = containerItems.filter((item) => !item.parentId);
+     
+     return topLevelLocs.length > 0 && unassignedContainers.length > 0;
+   };
+
+   const isLoading = locationsLoading || containerItemsLoading;
+   const { locations: children, items: childItems } = getChildren();
+   const currentLevel = navigationStack[navigationStack.length - 1];
+   const isUnassigned = !value;
+   const showHeaders = shouldShowSectionHeaders();
 
   // Build display text for trigger button
   const displayText = isUnassigned
@@ -337,86 +361,100 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                 </button>
               </div>
 
-              {/* Content */}
-              <div className="flex-1 overflow-y-auto px-4 py-3">
-                {isLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="text-center">
-                      <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-accent-500 mb-2" />
-                      <p className="text-sm text-content-secondary">Loading...</p>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    {/* Select current button (only when drilled in) */}
-                    {navigationStack.length > 0 && (
-                      <button type="button"
-                        onClick={handleSelectCurrent}
-                        className="w-full mb-3 px-3 py-3 bg-accent-50 dark:bg-surface-tertiary border border-accent-200 dark:border-accent-600/50 rounded-lg hover:bg-accent-100 dark:hover:bg-surface-secondary transition-colors text-content font-medium flex items-center justify-center gap-2"
-                      >
-                        <span>✓</span>
-                        <span>Select "{currentLevel?.name}"</span>
-                      </button>
-                    )}
+               {/* Content */}
+               <div className="flex-1 overflow-y-auto px-4 py-3">
+                 {isLoading ? (
+                   <div className="flex items-center justify-center py-8">
+                     <div className="text-center">
+                       <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-accent-500 mb-2" />
+                       <p className="text-sm text-content-secondary">Loading...</p>
+                     </div>
+                   </div>
+                 ) : (
+                   <>
+                     {/* Select current button (only when drilled in) */}
+                     {navigationStack.length > 0 && (
+                       <button type="button"
+                         onClick={handleSelectCurrent}
+                         className="w-full mb-3 px-3 py-3 bg-accent-50 dark:bg-surface-tertiary border border-accent-200 dark:border-accent-600/50 rounded-lg hover:bg-accent-100 dark:hover:bg-surface-secondary transition-colors text-content font-medium flex items-center justify-center gap-2"
+                       >
+                         <span>✓</span>
+                         <span>Select "{currentLevel?.name}"</span>
+                       </button>
+                     )}
 
-                    {/* List of children */}
-                    <div className="space-y-1">
-                      {/* Child locations */}
-                      {children.map((location) => (
-                        <button
-                          type="button"
-                          key={location.id}
-                          onClick={() =>
-                            handleSelectItem(location.id, location.name, 'location')
-                          }
-                          className="w-full text-left px-3 py-3 rounded-lg hover:bg-surface-tertiary dark:hover:bg-surface-secondary transition-colors flex items-center justify-between group"
-                        >
-                          <span className="flex items-center gap-3">
-                            <span className="text-lg">📍</span>
-                            <span className="text-content">{location.name}</span>
-                          </span>
-                          {hasChildren(location.id, 'location') && (
-                            <span className="text-content-secondary group-hover:text-content transition-colors">
-                              {'>'}
-                            </span>
-                          )}
-                        </button>
-                      ))}
+                     {/* List of children */}
+                     <div className="space-y-1">
+                       {/* "Locations" section header - mobile */}
+                       {showHeaders && children.length > 0 && (
+                         <p className="text-xs font-medium text-content-secondary uppercase tracking-wide px-3 py-2">
+                           Locations
+                         </p>
+                       )}
 
-                      {/* Child items */}
-                      {childItems.map((item) => (
-                        <button
-                          type="button"
-                          key={item.id}
-                          onClick={() => handleSelectItem(item.id, item.name, 'item')}
-                          className="w-full text-left px-3 py-3 rounded-lg hover:bg-surface-tertiary dark:hover:bg-surface-secondary transition-colors flex items-center justify-between group"
-                        >
-                          <span className="flex items-center gap-3">
-                            <span className="text-lg">📦</span>
-                            <span className="text-content">{item.name}</span>
-                          </span>
-                          {hasChildren(item.id, 'item') && (
-                            <span className="text-content-secondary group-hover:text-content transition-colors">
-                              {'>'}
-                            </span>
-                          )}
-                        </button>
-                      ))}
+                       {/* Child locations */}
+                       {children.map((location) => (
+                         <button
+                           type="button"
+                           key={location.id}
+                           onClick={() =>
+                             handleSelectItem(location.id, location.name, 'location')
+                           }
+                           className="w-full text-left px-3 py-3 rounded-lg hover:bg-surface-tertiary dark:hover:bg-surface-secondary transition-colors flex items-center justify-between group"
+                         >
+                           <span className="flex items-center gap-3">
+                             <span className="text-lg">📍</span>
+                             <span className="text-content">{location.name}</span>
+                           </span>
+                           {hasChildren(location.id, 'location') && (
+                             <span className="text-content-secondary group-hover:text-content transition-colors">
+                               {'>'}
+                             </span>
+                           )}
+                         </button>
+                       ))}
 
-                      {/* Empty state */}
-                      {children.length === 0 && childItems.length === 0 && (
-                        <div className="text-center py-8">
-                          <p className="text-sm text-content-secondary">
-                            {currentLevel
-                              ? `"${currentLevel.name}" has no items`
-                              : 'No locations available'}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
+                       {/* "Unassigned" section header - mobile */}
+                       {showHeaders && childItems.length > 0 && (
+                         <p className="text-xs font-medium text-content-secondary uppercase tracking-wide px-3 py-2 mt-2">
+                           Unassigned
+                         </p>
+                       )}
+
+                       {/* Child items */}
+                       {childItems.map((item) => (
+                         <button
+                           type="button"
+                           key={item.id}
+                           onClick={() => handleSelectItem(item.id, item.name, 'item')}
+                           className="w-full text-left px-3 py-3 rounded-lg hover:bg-surface-tertiary dark:hover:bg-surface-secondary transition-colors flex items-center justify-between group"
+                         >
+                           <span className="flex items-center gap-3">
+                             <span className="text-lg">📦</span>
+                             <span className="text-content">{item.name}</span>
+                           </span>
+                           {hasChildren(item.id, 'item') && (
+                             <span className="text-content-secondary group-hover:text-content transition-colors">
+                               {'>'}
+                             </span>
+                           )}
+                         </button>
+                       ))}
+
+                       {/* Empty state */}
+                       {children.length === 0 && childItems.length === 0 && (
+                         <div className="text-center py-8">
+                           <p className="text-sm text-content-secondary">
+                             {currentLevel
+                               ? `"${currentLevel.name}" has no items`
+                               : 'No locations available'}
+                           </p>
+                         </div>
+                       )}
+                     </div>
+                   </>
+                 )}
+               </div>
 
               {/* Bottom padding for notch/safe area */}
               <div className="h-4 flex-shrink-0" />
@@ -449,86 +487,100 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                 </button>
               </div>
 
-              {/* Content */}
-              <div className="flex-1 overflow-y-auto px-4 py-4">
-                {isLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="text-center">
-                      <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-accent-500 mb-2" />
-                      <p className="text-sm text-content-secondary">Loading...</p>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    {/* Select current button (only when drilled in) */}
-                    {navigationStack.length > 0 && (
-                      <button type="button"
-                        onClick={handleSelectCurrent}
-                        className="w-full mb-3 px-3 py-3 bg-accent-50 dark:bg-surface-tertiary border border-accent-200 dark:border-accent-600/50 rounded-lg hover:bg-accent-100 dark:hover:bg-surface-secondary transition-colors text-content font-medium flex items-center justify-center gap-2"
-                      >
-                        <span>✓</span>
-                        <span>Select "{currentLevel?.name}"</span>
-                      </button>
-                    )}
+               {/* Content */}
+               <div className="flex-1 overflow-y-auto px-4 py-4">
+                 {isLoading ? (
+                   <div className="flex items-center justify-center py-8">
+                     <div className="text-center">
+                       <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-accent-500 mb-2" />
+                       <p className="text-sm text-content-secondary">Loading...</p>
+                     </div>
+                   </div>
+                 ) : (
+                   <>
+                     {/* Select current button (only when drilled in) */}
+                     {navigationStack.length > 0 && (
+                       <button type="button"
+                         onClick={handleSelectCurrent}
+                         className="w-full mb-3 px-3 py-3 bg-accent-50 dark:bg-surface-tertiary border border-accent-200 dark:border-accent-600/50 rounded-lg hover:bg-accent-100 dark:hover:bg-surface-secondary transition-colors text-content font-medium flex items-center justify-center gap-2"
+                       >
+                         <span>✓</span>
+                         <span>Select "{currentLevel?.name}"</span>
+                       </button>
+                     )}
 
-                    {/* List of children */}
-                    <div className="space-y-1">
-                      {/* Child locations */}
-                      {children.map((location) => (
-                        <button
-                          type="button"
-                          key={location.id}
-                          onClick={() =>
-                            handleSelectItem(location.id, location.name, 'location')
-                          }
-                          className="w-full text-left px-3 py-3 rounded-lg hover:bg-surface-tertiary dark:hover:bg-surface-secondary transition-colors flex items-center justify-between group"
-                        >
-                          <span className="flex items-center gap-3">
-                            <span className="text-lg">📍</span>
-                            <span className="text-content">{location.name}</span>
-                          </span>
-                          {hasChildren(location.id, 'location') && (
-                            <span className="text-content-secondary group-hover:text-content transition-colors">
-                              {'>'}
-                            </span>
-                          )}
-                        </button>
-                      ))}
+                     {/* List of children */}
+                     <div className="space-y-1">
+                       {/* "Locations" section header - desktop */}
+                       {showHeaders && children.length > 0 && (
+                         <p className="text-xs font-medium text-content-secondary uppercase tracking-wide px-3 py-2">
+                           Locations
+                         </p>
+                       )}
 
-                      {/* Child items */}
-                      {childItems.map((item) => (
-                        <button
-                          type="button"
-                          key={item.id}
-                          onClick={() => handleSelectItem(item.id, item.name, 'item')}
-                          className="w-full text-left px-3 py-3 rounded-lg hover:bg-surface-tertiary dark:hover:bg-surface-secondary transition-colors flex items-center justify-between group"
-                        >
-                          <span className="flex items-center gap-3">
-                            <span className="text-lg">📦</span>
-                            <span className="text-content">{item.name}</span>
-                          </span>
-                          {hasChildren(item.id, 'item') && (
-                            <span className="text-content-secondary group-hover:text-content transition-colors">
-                              {'>'}
-                            </span>
-                          )}
-                        </button>
-                      ))}
+                       {/* Child locations */}
+                       {children.map((location) => (
+                         <button
+                           type="button"
+                           key={location.id}
+                           onClick={() =>
+                             handleSelectItem(location.id, location.name, 'location')
+                           }
+                           className="w-full text-left px-3 py-3 rounded-lg hover:bg-surface-tertiary dark:hover:bg-surface-secondary transition-colors flex items-center justify-between group"
+                         >
+                           <span className="flex items-center gap-3">
+                             <span className="text-lg">📍</span>
+                             <span className="text-content">{location.name}</span>
+                           </span>
+                           {hasChildren(location.id, 'location') && (
+                             <span className="text-content-secondary group-hover:text-content transition-colors">
+                               {'>'}
+                             </span>
+                           )}
+                         </button>
+                       ))}
 
-                      {/* Empty state */}
-                      {children.length === 0 && childItems.length === 0 && (
-                        <div className="text-center py-8">
-                          <p className="text-sm text-content-secondary">
-                            {currentLevel
-                              ? `"${currentLevel.name}" has no items`
-                              : 'No locations available'}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
+                       {/* "Unassigned" section header - desktop */}
+                       {showHeaders && childItems.length > 0 && (
+                         <p className="text-xs font-medium text-content-secondary uppercase tracking-wide px-3 py-2 mt-2">
+                           Unassigned
+                         </p>
+                       )}
+
+                       {/* Child items */}
+                       {childItems.map((item) => (
+                         <button
+                           type="button"
+                           key={item.id}
+                           onClick={() => handleSelectItem(item.id, item.name, 'item')}
+                           className="w-full text-left px-3 py-3 rounded-lg hover:bg-surface-tertiary dark:hover:bg-surface-secondary transition-colors flex items-center justify-between group"
+                         >
+                           <span className="flex items-center gap-3">
+                             <span className="text-lg">📦</span>
+                             <span className="text-content">{item.name}</span>
+                           </span>
+                           {hasChildren(item.id, 'item') && (
+                             <span className="text-content-secondary group-hover:text-content transition-colors">
+                               {'>'}
+                             </span>
+                           )}
+                         </button>
+                       ))}
+
+                       {/* Empty state */}
+                       {children.length === 0 && childItems.length === 0 && (
+                         <div className="text-center py-8">
+                           <p className="text-sm text-content-secondary">
+                             {currentLevel
+                               ? `"${currentLevel.name}" has no items`
+                               : 'No locations available'}
+                           </p>
+                         </div>
+                       )}
+                     </div>
+                   </>
+                 )}
+               </div>
             </div>
           )}
         </>

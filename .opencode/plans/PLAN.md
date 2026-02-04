@@ -294,12 +294,37 @@ Add ability to select and change parent locations when creating or editing locat
 - [x] **Phase 17:** Navigation polish
 - [x] **Phase 18:** Sub-locations and item details
 - [x] **Phase 19:** Parent location picker for locations
+- [ ] **Phase 20:** Show unassigned containers in LocationPicker
 
 ---
 
-## Next Steps (Phase 20+)
+## Phase 20: Show Unassigned Containers in LocationPicker
 
-### Phase 20: Complete i18n Migration (Optional)
+**Status: IN PROGRESS 🚀**
+
+Allow users to assign items to unassigned container items in the Inbox. Display unassigned containers at the root level of LocationPicker with visual separation from locations.
+
+### 20.1 Fix LocationPicker Root Level
+
+**`src/components/LocationPicker.tsx`:**
+- Update `getChildren()` function to return unassigned container items at root level
+- Add section headers ("Locations" and "Unassigned") to separate the groups
+- Headers only show when both sections have items
+- Update both mobile (bottom sheet) and desktop (modal) rendering
+
+**Expected Behavior:**
+| Locations | Unassigned | Display |
+|-----------|------------|---------|
+| ✅ Yes | ✅ Yes | Both sections with headers |
+| ✅ Yes | ❌ No | Just locations, no header |
+| ❌ No | ✅ Yes | Just unassigned containers, no header |
+| ❌ No | ❌ No | Empty state message |
+
+---
+
+## Next Steps (Phase 21+)
+
+### Phase 21: Complete i18n Migration (Optional)
 
 Migrate all remaining UI strings to i18n:
 - Home.tsx, LocationView.tsx, ItemView.tsx
@@ -308,11 +333,11 @@ Migrate all remaining UI strings to i18n:
 - Search.tsx, Tags.tsx
 - All other UI components
 
-### Phase 21: Finnish Translation Completion (Optional)
+### Phase 22: Finnish Translation Completion (Optional)
 
 Complete and review Finnish translations for all UI strings.
 
-### Phase 22: Additional Features (Optional)
+### Phase 23: Additional Features (Optional)
 
 Potential future enhancements:
 - Bulk operations (select multiple items/locations)

@@ -15,6 +15,7 @@ This document contains ASCII representations of all UI components, pages, and la
 - ✅ **Phase 17 Complete:** Navigation polish (back button, consistency)
 - ✅ **Phase 18 Complete:** Sub-locations, Item details display (tags + additional info), Settings page, i18n infrastructure
 - ✅ **Phase 19 Complete:** Parent location picker for locations, circular reference prevention, location hierarchy management
+- 🚀 **Phase 20 In Progress:** Show unassigned containers in LocationPicker with section headers
 
 ## Design Principles
 
