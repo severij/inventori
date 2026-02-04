@@ -1,6 +1,6 @@
 # Inventori UI Design Specification
 
-**Last Updated:** Phase 15 Complete - Form improvements with LocationPicker and unassigned items ✅
+**Last Updated:** Phase 18 - Sub-locations and Item Details Display (IN PROGRESS)
 
 This document contains ASCII representations of all UI components, pages, and layouts for the Inventori app redesign.
 
@@ -11,7 +11,9 @@ This document contains ASCII representations of all UI components, pages, and la
 - ✅ **Phase 13 Complete:** Entity cards show recursive item counts with skeleton loading state
 - ✅ **Phase 14 Complete:** View pages have collapsible sections, overflow menus, breadcrumbs with icons
 - ✅ **Phase 15 Complete:** Form improvements with collapsible sections, tag input, LocationPicker with drill-down navigation, unassigned items support
-- ⏳ **Next:** Phase 16 - Tags system (tags page, rename/delete)
+- ✅ **Phase 16 Complete:** Tags system (tags page, rename/delete)
+- ✅ **Phase 17 Complete:** Navigation polish (back button, consistency)
+- ⏳ **Phase 18 IN PROGRESS:** Sub-locations, Item details display, Settings, i18n
 
 ## Design Principles
 
@@ -1143,3 +1145,102 @@ Instead of:
 └─────────────────────────────────────┘
 ```
 
+---
+
+## Settings Page
+
+Accessible via hamburger menu → Settings. All settings persist in localStorage.
+
+### Settings Page Layout
+
+```
+┌─────────────────────────────────────┐
+│ ← Settings                        ⋮ │
+├─────────────────────────────────────┤
+│                                     │
+│ ◾ APPEARANCE                        │
+│                                     │
+│ Theme                               │
+│ ◉ System default  ◯ Light ◯ Dark    │
+│                                     │
+│ ◾ REGIONAL                          │
+│                                     │
+│ Language                            │
+│ [English           ▼]               │
+│                                     │
+│ Currency                            │
+│ [USD               ▼]               │
+│                                     │
+│ Date Format                         │
+│ [System default    ▼]               │
+│                                     │
+│ ◾ DATA MANAGEMENT                   │
+│                                     │
+│ ┌──────────────────────────────────┐│
+│ │ 📥 Export Data                  ││
+│ │ Download a backup of all data   ││
+│ └──────────────────────────────────┘│
+│                                     │
+│ ┌──────────────────────────────────┐│
+│ │ 📤 Import Data                  ││
+│ │ Restore data from a backup      ││
+│ └──────────────────────────────────┘│
+│                                     │
+└─────────────────────────────────────┘
+```
+
+### ItemView - Additional Information Section
+
+When an item has additional details (purchase price, current value, date acquired, or includeInTotal=false), show collapsible "Additional Information" section:
+
+```
+┌─────────────────────────────────────┐
+│ ← Item Name                       ⋮ │
+├─────────────────────────────────────┤
+│                                     │
+│ [Photos gallery]                    │
+│                                     │
+│ ┌─────────────────────────────────┐ │
+│ │ Item Name                    x2 │ │
+│ │ ID: XXXX-XXXX                   │ │
+│ │ Description text here...        │ │
+│ │                                 │ │
+│ │ [electronics] [to-sell]         │ │ ← Tags (clickable)
+│ └─────────────────────────────────┘ │
+│                                     │
+│ ▼ Additional Information            │ ← Collapsible
+│ ┌─────────────────────────────────┐ │
+│ │ Purchase Price    $49.99        │ │ ← Formatted currency
+│ │ Current Value     $25.00        │ │ ← Only shown if set
+│ │ Date Acquired     Jan 15, 2024  │ │ ← Formatted date
+│ │ Include in Totals No            │ │ ← Only shown if false
+│ └─────────────────────────────────┘ │
+│                                     │
+│ ▼ Contents (3)                      │ ← If canHoldItems
+│ ├── [📦] Toolbox                    │
+│ ├── [📄] Hammer                     │
+│ └── [📄] Wrench                     │
+│                                     │
+│ Created: February 1, 2026           │
+│ Updated: February 3, 2026           │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+### Tag Chips in ItemView
+
+Tags appear as clickable chips below the item description. Clicking a tag navigates to the Search page with that tag filter applied.
+
+```
+[electronics] [to-sell] [fragile]
+```
+
+Each chip styling:
+- Background: accent-100 (light blue/purple)
+- Text: accent-700 (darker shade)
+- Hover: accent-200 (slightly darker background)
+- Padding: compact (4px 8px)
+- Rounded corners
+- Cursor: pointer
+
+---

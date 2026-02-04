@@ -233,7 +233,23 @@ Show at-a-glance information:
 - Back button (←): Goes to parent in hierarchy (not browser back)
 - Browser back: Goes to previous page in history
 - After save: Replace history (skip edit page on back)
-- Hamburger menu (☰): App-wide options (Tags, Export, Import, Install)
+- Hamburger menu (☰): App-wide options (Settings, Manage Tags, Install)
+
+### Settings
+
+Accessed via hamburger menu → Settings. Settings persist in localStorage.
+
+**Appearance:**
+- Theme: Light / Dark / System (default: System)
+
+**Regional:**
+- Language: English / Suomi (default: English)
+- Currency: USD / EUR (default: USD)
+- Date Format: System default / DD/MM/YYYY / MM/DD/YYYY / YYYY-MM-DD (default: System)
+
+**Data Management:**
+- Export Data: Download ZIP backup
+- Import Data: Restore from ZIP backup
 
 ---
 
@@ -281,8 +297,14 @@ Show at-a-glance information:
    - Photo preview and deletion
 
 7. **Data Management**
-   - ZIP export/backup
-   - ZIP import/restore (merge by ID)
+    - ZIP export/backup
+    - ZIP import/restore (merge by ID)
+
+8. **Settings**
+    - Appearance: Theme selection (Light/Dark/System)
+    - Regional: Language (English/Finnish), Currency, Date Format
+    - Data Management: Export/Import access
+    - Internationalization (i18n) support for English and Finnish
 
 #### PWA Features
 
