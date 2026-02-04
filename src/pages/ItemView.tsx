@@ -15,6 +15,8 @@ import { useChildren } from '../hooks/useChildren';
 import { useAncestors } from '../hooks/useAncestors';
 import { deleteItem } from '../db/items';
 import { useToast } from '../contexts/ToastContext';
+import { useSettings } from '../contexts/SettingsContext';
+import { formatCurrency, formatDate as formatDateUtil } from '../utils/format';
 
 /**
  * Get menu items for item overflow menu
@@ -49,6 +51,7 @@ export function ItemView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { settings } = useSettings();
 
   const { item, loading: itemLoading, error, refetch } = useItem(id);
   const { children, loading: childrenLoading } = useChildren(id, 'item');
@@ -95,14 +98,18 @@ export function ItemView() {
     }
   };
 
-  // Format date
+  // Format date using settings
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    }).format(new Date(date));
+    return formatDateUtil(date, settings.dateFormat, settings.language);
   };
+
+  // Check if should show Additional Information section
+  const hasAdditionalInfo = item && (
+    (item.purchasePrice !== null && item.purchasePrice !== undefined && item.purchasePrice > 0) ||
+    (item.currentValue !== null && item.currentValue !== undefined && item.currentValue > 0) ||
+    (item.dateAcquired && new Date(item.dateAcquired).getTime() !== 0) ||
+    !item.includeInTotal
+  );
 
   return (
     <Layout title={item?.name ?? 'Item'} onBack={handleBack}>
@@ -170,6 +177,59 @@ export function ItemView() {
                <p className="text-content-secondary mt-2">{item.description}</p>
              )}
            </div>
+
+           {/* Tags */}
+           {item.tags && item.tags.length > 0 && (
+             <div className="mb-6">
+               <div className="flex flex-wrap gap-2">
+                 {item.tags.map((tag) => (
+                   <Link
+                     key={tag}
+                     to={`/search?tag=${encodeURIComponent(tag)}`}
+                     className="inline-block px-3 py-1 bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300 rounded-full text-sm font-medium hover:bg-accent-200 dark:hover:bg-accent-900/50 transition-colors"
+                   >
+                     {tag}
+                   </Link>
+                 ))}
+               </div>
+             </div>
+           )}
+
+           {/* Additional Information */}
+           {hasAdditionalInfo && (
+             <CollapsibleSection title="Additional Information" defaultOpen={false}>
+               <div className="space-y-3">
+                 {item.purchasePrice !== null && item.purchasePrice !== undefined && item.purchasePrice > 0 && (
+                   <div className="flex justify-between">
+                     <span className="text-content-secondary">Purchase Price</span>
+                     <span className="text-content font-medium">
+                       {formatCurrency(item.purchasePrice, settings.currency, settings.language)}
+                     </span>
+                   </div>
+                 )}
+                 {item.currentValue !== null && item.currentValue !== undefined && item.currentValue > 0 && (
+                   <div className="flex justify-between">
+                     <span className="text-content-secondary">Current Value</span>
+                     <span className="text-content font-medium">
+                       {formatCurrency(item.currentValue, settings.currency, settings.language)}
+                     </span>
+                   </div>
+                 )}
+                 {item.dateAcquired && new Date(item.dateAcquired).getTime() !== 0 && (
+                   <div className="flex justify-between">
+                     <span className="text-content-secondary">Date Acquired</span>
+                     <span className="text-content font-medium">{formatDate(item.dateAcquired)}</span>
+                   </div>
+                 )}
+                 {!item.includeInTotal && (
+                   <div className="flex justify-between">
+                     <span className="text-content-secondary">Include in Totals</span>
+                     <span className="text-content font-medium">No</span>
+                   </div>
+                 )}
+               </div>
+             </CollapsibleSection>
+           )}
 
             {/* Container Contents - only shown for items with canHoldItems */}
             {item.canHoldItems && (

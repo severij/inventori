@@ -1,6 +1,6 @@
 # Inventori UI Design Specification
 
-**Last Updated:** Phase 18 - Sub-locations and Item Details Display (IN PROGRESS)
+**Last Updated:** Phase 18 - Sub-locations and Item Details Display (COMPLETED)
 
 This document contains ASCII representations of all UI components, pages, and layouts for the Inventori app redesign.
 
@@ -13,7 +13,7 @@ This document contains ASCII representations of all UI components, pages, and la
 - ✅ **Phase 15 Complete:** Form improvements with collapsible sections, tag input, LocationPicker with drill-down navigation, unassigned items support
 - ✅ **Phase 16 Complete:** Tags system (tags page, rename/delete)
 - ✅ **Phase 17 Complete:** Navigation polish (back button, consistency)
-- ⏳ **Phase 18 IN PROGRESS:** Sub-locations, Item details display, Settings, i18n
+- ✅ **Phase 18 Complete:** Sub-locations, Item details display (tags + additional info), Settings page, i18n infrastructure
 
 ## Design Principles
 

@@ -1,5 +1,6 @@
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import { ToastProvider } from './contexts/ToastContext';
+import { SettingsProvider } from './contexts/SettingsContext';
 import { ToastContainer } from './components/ToastContainer';
 
 // Pages
@@ -12,6 +13,7 @@ import { EditLocation } from './pages/EditLocation';
 import { EditItem } from './pages/EditItem';
 import { Search } from './pages/Search';
 import { Tags } from './pages/Tags';
+import { Settings } from './pages/Settings';
 
 /**
  * Main application component with HashRouter for routing.
@@ -19,33 +21,38 @@ import { Tags } from './pages/Tags';
  */
 function App() {
   return (
-    <ToastProvider>
-      <HashRouter>
-        <Routes>
-          {/* Home - list all locations */}
-          <Route path="/" element={<Home />} />
+    <SettingsProvider>
+      <ToastProvider>
+        <HashRouter>
+          <Routes>
+            {/* Home - list all locations */}
+            <Route path="/" element={<Home />} />
 
-          {/* View pages */}
-          <Route path="/location/:id" element={<LocationView />} />
-          <Route path="/item/:id" element={<ItemView />} />
+            {/* View pages */}
+            <Route path="/location/:id" element={<LocationView />} />
+            <Route path="/item/:id" element={<ItemView />} />
 
-          {/* Add pages */}
-          <Route path="/add/location" element={<AddLocation />} />
-          <Route path="/add/item" element={<AddItem />} />
+            {/* Add pages */}
+            <Route path="/add/location" element={<AddLocation />} />
+            <Route path="/add/item" element={<AddItem />} />
 
-          {/* Edit pages */}
-          <Route path="/edit/location/:id" element={<EditLocation />} />
-          <Route path="/edit/item/:id" element={<EditItem />} />
+            {/* Edit pages */}
+            <Route path="/edit/location/:id" element={<EditLocation />} />
+            <Route path="/edit/item/:id" element={<EditItem />} />
 
-           {/* Search */}
-           <Route path="/search" element={<Search />} />
+             {/* Search */}
+             <Route path="/search" element={<Search />} />
 
-           {/* Tags */}
-           <Route path="/tags" element={<Tags />} />
-        </Routes>
-        <ToastContainer />
-      </HashRouter>
-    </ToastProvider>
+             {/* Tags */}
+             <Route path="/tags" element={<Tags />} />
+
+             {/* Settings */}
+             <Route path="/settings" element={<Settings />} />
+          </Routes>
+          <ToastContainer />
+        </HashRouter>
+      </ToastProvider>
+    </SettingsProvider>
   );
 }
 
