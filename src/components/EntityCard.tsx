@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import type { Location, Item } from '../types';
 import { useTotalItemCount } from '../hooks/useTotalItemCount';
 
@@ -17,6 +18,10 @@ interface EntityCardProps {
  */
 export function EntityCard({ entity, entityType }: EntityCardProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  // Display name: Items may have no name, Locations always do
+  const displayName = entity.name || (entityType === 'item' ? t('common.unnamedItem') : entity.name);
 
   const handleClick = () => {
     navigate(`/${entityType}/${entity.id}`);
@@ -59,7 +64,7 @@ export function EntityCard({ entity, entityType }: EntityCardProps) {
     <button
       onClick={handleClick}
       className="w-full bg-surface rounded-lg shadow-sm border border-border p-3 flex items-center gap-3 hover:shadow-md hover:border-border-focus transition-all text-left min-h-[56px] focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2"
-      aria-label={`View ${entity.name}`}
+      aria-label={`View ${displayName}`}
     >
       {/* Thumbnail or icon */}
       <div 
@@ -79,7 +84,7 @@ export function EntityCard({ entity, entityType }: EntityCardProps) {
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <h3 className="font-medium text-content truncate">{entity.name}</h3>
+        <h3 className="font-medium text-content truncate">{displayName}</h3>
         {subtitleContent}
       </div>
 

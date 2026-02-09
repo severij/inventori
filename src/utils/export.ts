@@ -24,7 +24,7 @@ export interface ExportedLocation {
  */
 export interface ExportedItem {
   id: string; // 8-char Crockford Base32 ID (used for physical labels)
-  name: string;
+  name?: string;
   description?: string;
   parentId?: string;
   parentType?: 'location' | 'item';

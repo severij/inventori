@@ -96,7 +96,7 @@ async function importItem(
   // Check for ID collision with a different entity type
   const hasCollision = await isIdCollision(exported.id, 'item');
   if (hasCollision) {
-    warnings.push(`ID "${exported.id}" for item "${exported.name}" conflicts with another entity type. Skipped.`);
+    warnings.push(`ID "${exported.id}" for item "${exported.name || 'Unnamed item'}" conflicts with another entity type. Skipped.`);
     return null;
   }
 
@@ -278,7 +278,7 @@ export async function importData(file: File): Promise<ImportResult> {
       }
     } catch (err) {
       result.errors.push(
-        `Failed to import item "${exported.name}": ${err instanceof Error ? err.message : 'Unknown error'}`
+        `Failed to import item "${exported.name || 'Unnamed item'}": ${err instanceof Error ? err.message : 'Unknown error'}`
       );
     }
   }

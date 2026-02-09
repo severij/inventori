@@ -102,7 +102,7 @@ export function Search() {
 
       const matchingItems = items.filter(
         (item) =>
-          item.name.toLowerCase().includes(lowerTerm) ||
+          (item.name ?? '').toLowerCase().includes(lowerTerm) ||
           item.description?.toLowerCase().includes(lowerTerm)
       );
 

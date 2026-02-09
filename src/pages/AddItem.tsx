@@ -30,7 +30,7 @@ export function AddItem() {
     setIsSubmitting(true);
     try {
       const item = await createItem(data);
-      showToast('success', t('item.itemCreated', { name: item.name }));
+      showToast('success', t('item.itemCreated', { name: item.name || t('common.unnamedItem') }));
       navigate(`/item/${item.id}`);
     } catch (error) {
       console.error('Failed to create item:', error);

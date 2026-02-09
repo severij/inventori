@@ -74,11 +74,9 @@ export function ItemForm({
   const validate = (): boolean => {
      const newErrors: { name?: string; parentId?: string; quantity?: string } = {};
 
-     if (!name.trim()) {
-       newErrors.name = t('form.nameRequired');
-     }
+      // Name is optional for items (allows quick-add with photos only)
 
-     // parentId is now optional (can be unassigned)
+      // parentId is now optional (can be unassigned)
 
      // Validate quantity (only for non-containers)
      if (!canHoldItems) {
@@ -105,7 +103,7 @@ export function ItemForm({
      if (!validate()) return;
 
      const data: CreateItemInput = {
-       name: name.trim(),
+        name: name.trim() || undefined,
        description: description.trim() || undefined,
        parentId: parentId || undefined, // Can be undefined for unassigned items
        parentType: parentType, // Can be undefined for unassigned items
@@ -152,8 +150,7 @@ export function ItemForm({
            {/* Name field */}
            <div className="flex-1">
              <label htmlFor="item-name" className="block text-sm font-medium text-content-secondary">
-               {t('form.name')} <span className="text-red-500" aria-hidden="true">*</span>
-               <span className="sr-only">{t('form.requiredField')}</span>
+                {t('form.name')}
              </label>
              <input
                type="text"

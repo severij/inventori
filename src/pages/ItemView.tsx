@@ -72,7 +72,7 @@ export function ItemView() {
     setIsDeleting(true);
     try {
       await deleteItem(item.id);
-      showToast('success', `"${item.name}" has been deleted`);
+      showToast('success', `"${item.name || t('common.unnamedItem')}" has been deleted`);
       // Navigate to parent or home
       if (item.parentId && item.parentType) {
         navigate(`/${item.parentType}/${item.parentId}`);
@@ -115,7 +115,7 @@ export function ItemView() {
   );
 
   return (
-    <Layout title={item?.name ?? 'Item'} onBack={handleBack}>
+    <Layout title={item?.name || t('common.unnamedItem')} onBack={handleBack}>
       {/* Loading state */}
       {loading && <DetailSkeleton />}
 
@@ -151,7 +151,7 @@ export function ItemView() {
                   <img
                     key={index}
                     src={URL.createObjectURL(photo)}
-                    alt={`${item.name} photo ${index + 1}`}
+                    alt={`${item.name || t('common.unnamedItem')} photo ${index + 1}`}
                     className="w-48 h-48 object-cover rounded-lg flex-shrink-0"
                   />
                 ))}
@@ -163,7 +163,7 @@ export function ItemView() {
            <div className="bg-surface rounded-lg shadow-sm border border-border p-4 mb-6">
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="flex items-center gap-2 flex-1">
-                  <h2 className="text-xl font-semibold text-content">{item.name}</h2>
+                  <h2 className="text-xl font-semibold text-content">{item.name || t('common.unnamedItem')}</h2>
                   {item.quantity > 1 && (
                     <span className="bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300 text-sm font-medium px-2 py-1 rounded">
                       x{item.quantity}
@@ -278,14 +278,14 @@ export function ItemView() {
           isOpen={showDeleteDialog}
           title={t('item.deleteConfirm')}
           message={
-            item?.canHoldItems && hasChildren
-              ? t('item.deleteConfirmWithContents', {
-                  name: item?.name,
-                  count: children.length,
-                })
-              : t('item.deleteConfirmMsg', {
-                  name: item?.name,
-                })
+             item?.canHoldItems && hasChildren
+               ? t('item.deleteConfirmWithContents', {
+                   name: item?.name || t('common.unnamedItem'),
+                   count: children.length,
+                 })
+               : t('item.deleteConfirmMsg', {
+                   name: item?.name || t('common.unnamedItem'),
+                 })
           }
           confirmLabel={isDeleting ? t('common.deleting') : t('common.delete')}
           onConfirm={handleDelete}

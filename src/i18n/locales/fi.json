@@ -32,9 +32,10 @@
      "retry": "Yritä uudelleen",
      "deleting": "Poistetaan...",
      "goHome": "Mene etusivulle",
-     "created": "Luotu",
-     "updated": "Päivitetty"
-   },
+      "created": "Luotu",
+      "updated": "Päivitetty",
+      "unnamedItem": "Nimetön esine"
+    },
   "nav": {
     "home": "Etusivu",
     "settings": "Asetukset",

@@ -24,7 +24,7 @@ export interface Location {
  */
 export interface Item {
   id: string; // 8-char Crockford Base32 ID
-  name: string;
+  name?: string; // Optional - allows quick-add items (e.g., photo-only)
   description?: string;
 
   // Hierarchy (optional - allows unassigned items)

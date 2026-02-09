@@ -58,7 +58,7 @@ export function useAncestors(
             if (item) {
               path.unshift({ 
                 id: item.id, 
-                name: item.name, 
+                name: item.name || 'Unnamed item', 
                 type: 'item',
                 canHoldItems: item.canHoldItems,
               });

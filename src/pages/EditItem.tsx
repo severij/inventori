@@ -28,7 +28,7 @@ export function EditItem() {
      setIsSubmitting(true);
      try {
        await updateItem(id, data);
-       showToast('success', t('item.itemUpdated', { name: item?.name }));
+        showToast('success', t('item.itemUpdated', { name: item?.name || t('common.unnamedItem') }));
        // Replace history so browser back skips the edit page
        navigate(`/item/${id}`, { replace: true });
      } catch (err) {

@@ -297,7 +297,8 @@ Add ability to select and change parent locations when creating or editing locat
 - [x] **Phase 20:** Show unassigned containers in LocationPicker
 - [x] **Phase 21:** Accessibility & UI consistency
 - [x] **Phase 23:** Finnish translation completion
-- [ ] **Phase 24+:** Additional features (optional)
+- [x] **Phase 25:** Optional item names
+- [ ] **Phase 26+:** Additional features (optional)
 
 ---
 
@@ -533,7 +534,69 @@ Complete and review Finnish translations for all UI strings to ensure full langu
 
 ---
 
-## Next Steps (Phase 24+)
+## Phase 25: Optional Item Names
+
+**Status: COMPLETED ✅**
+
+Make `name` optional for Items so users can quickly capture photos without naming items in the moment. Locations still require names.
+
+### 25.1 Type Definitions
+
+**`src/types/index.ts`:**
+- Change `Item.name` from `string` to `name?: string` (optional)
+- `Location.name` remains `string` (required)
+- `BreadcrumbItem.name` remains `string` (fallback applied before reaching breadcrumbs)
+
+**`src/utils/export.ts`:**
+- Change `ExportedItem.name` from `string` to `name?: string`
+
+### 25.2 i18n Keys
+
+**`src/i18n/locales/en.json` & `fi.json`:**
+- Add `common.unnamedItem`: "Unnamed item" / "Nimetön esine"
+
+### 25.3 Form Changes
+
+**`src/components/ItemForm.tsx`:**
+- Remove `!name.trim()` validation (name is no longer required)
+- Remove red asterisk `*` and `sr-only` required text from name label
+- Submit `name: name.trim() || undefined` (store undefined if blank)
+
+### 25.4 Display Fallback
+
+All rendering locations use `item.name || t('common.unnamedItem')` or equivalent:
+
+- **`EntityCard.tsx`**: Card title and `aria-label`
+- **`ItemView.tsx`**: Page title, heading, photo alt text, toast messages, delete confirmations
+- **`AddItem.tsx`** / **`EditItem.tsx`**: Toast messages
+- **`Breadcrumbs.tsx`**: Breadcrumb text (via `useAncestors` hook)
+- **`LocationPicker.tsx`**: Item names in picker list, "Select" button, trigger display
+- **`useAncestors.ts`**: Provide fallback when building `BreadcrumbItem`
+
+### 25.5 Search
+
+**`src/pages/Search.tsx`:**
+- Guard `.toLowerCase()` call: `(item.name ?? '').toLowerCase().includes(...)`
+- Unnamed items still findable by description or ID
+
+### 25.6 Export/Import
+
+**`src/utils/export.ts`:**
+- `ExportedItem.name` becomes optional
+- Export writes `name: item.name` (may be undefined, omitted from JSON)
+
+**`src/utils/import.ts`:**
+- Handle missing `name` gracefully (already no validation)
+- Warning/error messages use fallback display name
+
+### 25.7 Build and Verification
+
+- Build passes with zero TypeScript errors
+- All display paths handle undefined name with "Unnamed item" fallback
+
+---
+
+## Next Steps (Phase 26+)
 
 ### Phase 22: Complete i18n Migration (Optional)
 

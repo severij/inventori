@@ -307,7 +307,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   const displayText = isUnassigned
     ? locationsOnly ? 'No parent (top-level)' : 'No location'
     : ancestors.length > 0
-      ? ancestors.map((a) => (a.type === 'location' ? '📍' : '📦') + ' ' + a.name).join(' > ')
+      ? ancestors.map((a) => (a.type === 'location' ? '📍' : '📦') + ' ' + (a.name || 'Unnamed item')).join(' > ')
       : placeholder;
 
    return (
@@ -442,40 +442,40 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                          </p>
                        )}
 
-                       {/* Child items */}
-                       {childItems.map((item) => (
-                         <button
-                           type="button"
-                           key={item.id}
-                           onClick={() => handleSelectItem(item.id, item.name, 'item')}
-                           className="w-full text-left px-3 py-3 rounded-lg hover:bg-surface-tertiary dark:hover:bg-surface-secondary transition-colors flex items-center justify-between group"
-                         >
-                           <span className="flex items-center gap-3">
-                             <span className="text-lg">📦</span>
-                             <span className="text-content">{item.name}</span>
-                           </span>
-                           {hasChildren(item.id, 'item') && (
-                             <span className="text-content-secondary group-hover:text-content transition-colors">
-                               {'>'}
-                             </span>
-                           )}
-                         </button>
-                       ))}
+                        {/* Child items */}
+                        {childItems.map((item) => (
+                          <button
+                            type="button"
+                            key={item.id}
+                            onClick={() => handleSelectItem(item.id, item.name || 'Unnamed item', 'item')}
+                            className="w-full text-left px-3 py-3 rounded-lg hover:bg-surface-tertiary dark:hover:bg-surface-secondary transition-colors flex items-center justify-between group"
+                          >
+                            <span className="flex items-center gap-3">
+                              <span className="text-lg">📦</span>
+                              <span className="text-content">{item.name || 'Unnamed item'}</span>
+                            </span>
+                            {hasChildren(item.id, 'item') && (
+                              <span className="text-content-secondary group-hover:text-content transition-colors">
+                                {'>'}
+                              </span>
+                            )}
+                          </button>
+                        ))}
 
-                       {/* Empty state */}
-                       {children.length === 0 && childItems.length === 0 && (
-                         <div className="text-center py-8">
-                           <p className="text-sm text-content-secondary">
-                             {currentLevel
-                               ? `"${currentLevel.name}" has no items`
-                               : 'No locations available'}
-                           </p>
-                         </div>
-                       )}
-                     </div>
-                   </>
-                 )}
-               </div>
+                        {/* Empty state */}
+                        {children.length === 0 && childItems.length === 0 && (
+                          <div className="text-center py-8">
+                            <p className="text-sm text-content-secondary">
+                              {currentLevel
+                                ? `"${currentLevel.name}" has no items`
+                                : 'No locations available'}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
 
               {/* Bottom padding for notch/safe area */}
               <div className="h-4 flex-shrink-0" />
@@ -572,40 +572,40 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                          </p>
                        )}
 
-                       {/* Child items */}
-                       {childItems.map((item) => (
-                         <button
-                           type="button"
-                           key={item.id}
-                           onClick={() => handleSelectItem(item.id, item.name, 'item')}
-                           className="w-full text-left px-3 py-3 rounded-lg hover:bg-surface-tertiary dark:hover:bg-surface-secondary transition-colors flex items-center justify-between group"
-                         >
-                           <span className="flex items-center gap-3">
-                             <span className="text-lg">📦</span>
-                             <span className="text-content">{item.name}</span>
-                           </span>
-                           {hasChildren(item.id, 'item') && (
-                             <span className="text-content-secondary group-hover:text-content transition-colors">
-                               {'>'}
-                             </span>
-                           )}
-                         </button>
-                       ))}
+                        {/* Child items */}
+                        {childItems.map((item) => (
+                          <button
+                            type="button"
+                            key={item.id}
+                            onClick={() => handleSelectItem(item.id, item.name || 'Unnamed item', 'item')}
+                            className="w-full text-left px-3 py-3 rounded-lg hover:bg-surface-tertiary dark:hover:bg-surface-secondary transition-colors flex items-center justify-between group"
+                          >
+                            <span className="flex items-center gap-3">
+                              <span className="text-lg">📦</span>
+                              <span className="text-content">{item.name || 'Unnamed item'}</span>
+                            </span>
+                            {hasChildren(item.id, 'item') && (
+                              <span className="text-content-secondary group-hover:text-content transition-colors">
+                                {'>'}
+                              </span>
+                            )}
+                          </button>
+                        ))}
 
-                       {/* Empty state */}
-                       {children.length === 0 && childItems.length === 0 && (
-                         <div className="text-center py-8">
-                           <p className="text-sm text-content-secondary">
-                             {currentLevel
-                               ? `"${currentLevel.name}" has no items`
-                               : 'No locations available'}
-                           </p>
-                         </div>
-                       )}
-                     </div>
-                   </>
-                 )}
-               </div>
+                        {/* Empty state */}
+                        {children.length === 0 && childItems.length === 0 && (
+                          <div className="text-center py-8">
+                            <p className="text-sm text-content-secondary">
+                              {currentLevel
+                                ? `"${currentLevel.name}" has no items`
+                                : 'No locations available'}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
             </div>
           )}
         </>

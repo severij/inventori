@@ -64,7 +64,7 @@ Container or individual item stored in locations. Supports rich tracking data.
 ```typescript
 interface Item {
   id: string;                            // 8-char Crockford Base32 ID
-  name: string;
+  name?: string;                         // Optional - allows quick-add items (e.g., photo-only)
   description?: string;
   
   // Hierarchy (optional - allows unassigned items)
@@ -94,6 +94,7 @@ interface Item {
 **Notes:**
 - Items can be unassigned (no parent) or assigned to a location/item
 - Items with `canHoldItems: true` act as containers
+- Items without a name display as "Unnamed item" (translatable)
 - Tags replace the old status system for flexible categorization
 
 ### Hierarchy Example
@@ -186,7 +187,7 @@ Show at-a-glance information:
 ### Forms
 
 **ItemForm - Basic Information Section:**
-- Name field (required, flex-1)
+- Name field (optional for items, required for locations)
 - Quantity field (narrow, w-20, hidden when canHoldItems is true)
 - Description field
 - **Location/Parent selector** (LocationPicker component)
@@ -364,7 +365,7 @@ interface ExportedLocation {
 
 interface ExportedItem {
   id: string;
-  name: string;
+  name?: string;                // Optional since Phase 25
   description?: string;
   parentId?: string;
   parentType?: 'location' | 'item';
