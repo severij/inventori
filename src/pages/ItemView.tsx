@@ -18,12 +18,13 @@ import { deleteItem } from '../db/items';
 import { useToast } from '../contexts/ToastContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { formatCurrency, formatDate as formatDateUtil } from '../utils/format';
+import type { Item } from '../types';
 
 /**
  * Get menu items for item overflow menu
  */
 function getItemMenuItems(
-  itemId: string,
+  item: Item,
   navigate: ReturnType<typeof useNavigate>,
   setShowDeleteDialog: (show: boolean) => void,
   t: (key: string) => string
@@ -33,7 +34,13 @@ function getItemMenuItems(
       id: 'edit',
       label: t('common.edit'),
       icon: '✏️',
-      onClick: () => navigate(`/edit/item/${itemId}`),
+      onClick: () => navigate(`/edit/item/${item.id}`),
+    },
+    {
+      id: 'duplicate',
+      label: t('item.duplicate'),
+      icon: '📋',
+      onClick: () => navigate('/add/item', { state: { duplicateFrom: item } }),
     },
     {
       id: 'delete',
@@ -171,7 +178,7 @@ export function ItemView() {
                   )}
                 </div>
                 <OverflowMenu
-                  items={getItemMenuItems(item.id, navigate, setShowDeleteDialog, t)}
+                  items={getItemMenuItems(item, navigate, setShowDeleteDialog, t)}
                 />
               </div>
              <IdDisplay id={item.id} size="sm" />

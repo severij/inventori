@@ -173,6 +173,7 @@ Features:
 - Hero photo at top
 - Collapsible sections for "Locations" and "Items" (collapsed by default)
 - Edit/Delete in header overflow menu (⋮)
+- Duplicate item via overflow menu (copies all fields to AddItem form for review before saving)
 - "[+ Add Location]" and "[+ Add Item]" buttons always visible
 
 ### Entity Cards
@@ -213,6 +214,10 @@ Show at-a-glance information:
 
 **ItemForm - Container Toggle:**
 - "This item can hold other items" checkbox (at top, separate from sections)
+
+**ItemForm - Props:**
+- `initialValues?: Item` — Pre-fills form for editing or duplicating
+- `isEditMode?: boolean` — Overrides edit mode detection (defaults to `!!initialValues`). Controls button text and LocationPicker exclusion. Set to `false` when duplicating to show "Create Item" button.
 
 ### Search
 
@@ -266,9 +271,10 @@ Accessed via hamburger menu → Settings. Settings persist in localStorage.
    - Photo attachments
    - ID displayed for physical labels
 
-2. **Item Management**
-   - Create, view, edit, delete items
-   - Items can be assigned to locations or other items
+ 2. **Item Management**
+    - Create, view, edit, delete items
+    - Duplicate items (deep copy all fields including photos, new ID/timestamps)
+    - Items can be assigned to locations or other items
    - Items can be unassigned
    - Items can hold other items (`canHoldItems: true`)
    - Tags for categorization

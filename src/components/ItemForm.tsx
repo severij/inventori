@@ -16,6 +16,8 @@ interface ItemFormProps {
   defaultParentType?: 'location' | 'item';
   /** Default value for canHoldItems (from URL query params) */
   defaultCanHoldItems?: boolean;
+  /** Override edit mode detection (defaults to !!initialValues) */
+  isEditMode?: boolean;
   /** Called when form is submitted with valid data */
   onSubmit: (data: CreateItemInput) => void;
   /** Called when user cancels */
@@ -33,6 +35,7 @@ export function ItemForm({
   defaultParentId,
   defaultParentType,
   defaultCanHoldItems = false,
+  isEditMode: isEditModeProp,
   onSubmit,
   onCancel,
   isSubmitting = false,
@@ -68,7 +71,7 @@ export function ItemForm({
 
   const [errors, setErrors] = useState<{ name?: string; parentId?: string; quantity?: string }>({});
 
-  const isEditMode = !!initialValues;
+  const isEditMode = isEditModeProp ?? !!initialValues;
   const isLoadingParents = false; // LocationPicker handles loading internally
 
   const validate = (): boolean => {
@@ -224,7 +227,7 @@ export function ItemForm({
                }}
                disabled={isSubmitting || isLoadingParents}
                hasError={!!errors.parentId}
-               excludeItemId={initialValues?.id}
+                excludeItemId={isEditMode ? initialValues?.id : undefined}
                placeholder={t('form.selectLocation')}
              />
              {errors.parentId && <p id="item-parent-error" className="mt-1 text-sm text-red-500" role="alert">{errors.parentId}</p>}

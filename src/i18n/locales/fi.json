@@ -113,8 +113,10 @@
      "deleted": "\"{{name}}\" on poistettu",
      "itemCreated": "\"{{name}}\" on luotu",
      "itemUpdated": "\"{{name}}\" on päivitetty",
-     "notFound": "Tavaraa ei löytynyt",
-     "failedToLoad": "Tavaran lataaminen epäonnistui"
+      "duplicate": "Kopioi",
+      "itemDuplicated": "\"{{name}}\" on kopioitu",
+      "notFound": "Tavaraa ei löytynyt",
+      "failedToLoad": "Tavaran lataaminen epäonnistui"
    },
    "location": {
      "addLocation": "Lisää sijainti",

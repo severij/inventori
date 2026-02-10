@@ -1,21 +1,25 @@
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Layout } from '../components/Layout';
 import { ItemForm } from '../components/ItemForm';
 import { createItem } from '../db/items';
 import { useToast } from '../contexts/ToastContext';
-import type { CreateItemInput } from '../types';
+import type { CreateItemInput, Item } from '../types';
 
 /**
  * Add Item page
  */
 export function AddItem() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const { showToast } = useToast();
   const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Check if duplicating from an existing item (passed via navigation state)
+  const duplicateFrom = (location.state?.duplicateFrom as Item) ?? undefined;
 
   // Get parent from URL params if provided
   const defaultParentId = searchParams.get('parentId') ?? undefined;
@@ -30,7 +34,12 @@ export function AddItem() {
     setIsSubmitting(true);
     try {
       const item = await createItem(data);
-      showToast('success', t('item.itemCreated', { name: item.name || t('common.unnamedItem') }));
+      const displayName = item.name || t('common.unnamedItem');
+      if (duplicateFrom) {
+        showToast('success', t('item.itemDuplicated', { name: displayName }));
+      } else {
+        showToast('success', t('item.itemCreated', { name: displayName }));
+      }
       navigate(`/item/${item.id}`);
     } catch (error) {
       console.error('Failed to create item:', error);
@@ -51,6 +60,8 @@ export function AddItem() {
   return (
     <Layout title={t('item.addItem')}>
       <ItemForm
+        initialValues={duplicateFrom}
+        isEditMode={false}
         defaultParentId={defaultParentId}
         defaultParentType={defaultParentType}
         onSubmit={handleSubmit}

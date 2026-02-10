@@ -298,7 +298,8 @@ Add ability to select and change parent locations when creating or editing locat
 - [x] **Phase 21:** Accessibility & UI consistency
 - [x] **Phase 23:** Finnish translation completion
 - [x] **Phase 25:** Optional item names
-- [ ] **Phase 26+:** Additional features (optional)
+- [x] **Phase 26:** Duplicate/copy item
+- [ ] **Phase 27+:** Additional features (optional)
 
 ---
 
@@ -596,7 +597,65 @@ All rendering locations use `item.name || t('common.unnamedItem')` or equivalent
 
 ---
 
-## Next Steps (Phase 26+)
+## Phase 26: Duplicate/Copy Item
+
+**Status: COMPLETED ✅**
+
+Add ability to duplicate an existing item. Users can tap "Duplicate" from the item overflow menu to navigate to the AddItem page with all fields pre-filled (including photos), adjust if needed, then save as a new item with a fresh ID and timestamps.
+
+### 26.1 i18n Strings ✅
+
+**`src/i18n/locales/en.json`:**
+- ✅ Added `item.duplicate`: "Duplicate"
+- ✅ Added `item.itemDuplicated`: "\"{{name}}\" has been duplicated"
+
+**`src/i18n/locales/fi.json`:**
+- ✅ Added `item.duplicate`: "Kopioi"
+- ✅ Added `item.itemDuplicated`: "\"{{name}}\" on kopioitu"
+
+### 26.2 ItemForm isEditMode Prop ✅
+
+**`src/components/ItemForm.tsx`:**
+- ✅ Added optional `isEditMode?: boolean` prop (defaults to `!!initialValues`)
+- ✅ Replaced hardcoded `const isEditMode = !!initialValues` with prop-driven value
+- ✅ `isEditMode` controls button text ("Create Item" vs "Update Item")
+- ✅ `isEditMode` controls `excludeItemId` in LocationPicker (only exclude in edit mode, not duplicate mode)
+
+### 26.3 ItemView Duplicate Menu Entry ✅
+
+**`src/pages/ItemView.tsx`:**
+- ✅ Imported `Item` type
+- ✅ Changed `getItemMenuItems` parameter from `itemId: string` to `item: Item`
+- ✅ Added "Duplicate" menu entry (id: `duplicate`, icon: `📋`) between Edit and Delete
+- ✅ Duplicate navigates to `/add/item` with `{ state: { duplicateFrom: item } }`
+- ✅ Updated call site to pass full `item` object
+
+### 26.4 AddItem Duplicate Support ✅
+
+**`src/pages/AddItem.tsx`:**
+- ✅ Imported `useLocation` from React Router and `Item` type
+- ✅ Reads `location.state?.duplicateFrom` as `Item`
+- ✅ Passes `duplicateFrom` as `initialValues` to ItemForm with `isEditMode={false}`
+- ✅ Shows `item.itemDuplicated` toast when duplicating, `item.itemCreated` otherwise
+
+### 26.5 Build and Verification ✅
+
+- ✅ Build passes with zero TypeScript errors
+- ✅ All 134 modules transformed correctly
+
+**Files Modified (5 total):**
+1. `src/i18n/locales/en.json`
+2. `src/i18n/locales/fi.json`
+3. `src/components/ItemForm.tsx`
+4. `src/pages/ItemView.tsx`
+5. `src/pages/AddItem.tsx`
+
+**Flow:**
+ItemView overflow menu (⋮) → "Duplicate" → AddItem page with all fields pre-filled (including photos) → user adjusts if needed → submit → `createItem()` creates new item with fresh ID/timestamps → "duplicated" toast → navigate to new item view
+
+---
+
+## Next Steps (Phase 27+)
 
 ### Phase 22: Complete i18n Migration (Optional)
 

@@ -113,8 +113,10 @@
      "deleted": "\"{{name}}\" has been deleted",
      "itemCreated": "\"{{name}}\" has been created",
      "itemUpdated": "\"{{name}}\" has been updated",
-     "notFound": "Item not found",
-     "failedToLoad": "Failed to load item"
+      "duplicate": "Duplicate",
+      "itemDuplicated": "\"{{name}}\" has been duplicated",
+      "notFound": "Item not found",
+      "failedToLoad": "Failed to load item"
    },
    "location": {
      "addLocation": "Add Location",
