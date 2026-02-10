@@ -299,7 +299,8 @@ Add ability to select and change parent locations when creating or editing locat
 - [x] **Phase 23:** Finnish translation completion
 - [x] **Phase 25:** Optional item names
 - [x] **Phase 26:** Duplicate/copy item
-- [ ] **Phase 27+:** Additional features (optional)
+- [x] **Phase 27:** Native camera for photo capture
+- [ ] **Phase 28+:** Additional features (optional)
 
 ---
 
@@ -655,7 +656,54 @@ ItemView overflow menu (⋮) → "Duplicate" → AddItem page with all fields pr
 
 ---
 
-## Next Steps (Phase 27+)
+## Phase 27: Native Camera for Photo Capture
+
+**Status: COMPLETED ✅**
+
+Replace the custom in-browser camera (getUserMedia with pinch-to-zoom, tap-to-focus, capture/retake flow) with native camera app integration using `<input type="file" capture="environment">`. On mobile, the Camera button now opens the device's native camera app. On desktop, it opens a file picker.
+
+### 27.1 Rewrite PhotoCapture Component ✅
+
+**`src/components/PhotoCapture.tsx`:**
+- ✅ Rewrote from 784 lines to 160 lines
+- ✅ Removed all `getUserMedia` / `MediaStream` handling
+- ✅ Removed custom video preview overlay (fullscreen camera UI)
+- ✅ Removed pinch-to-zoom logic (touch events, native zoom, CSS fallback zoom)
+- ✅ Removed tap-to-focus logic (focus point indicator, `applyConstraints`)
+- ✅ Removed camera flip logic (front/back toggle)
+- ✅ Removed capture/retake flow (canvas capture, review buttons)
+- ✅ Removed all camera-related state: `CameraState`, `ZoomRange`, `videoRef`, `streamRef`, `capturedImage`, `facingMode`, `errorMessage`, `zoomLevel`, `zoomRange`, `supportsNativeZoom`, `focusPoint`
+- ✅ Camera button now triggers `<input type="file" accept="image/*" capture="environment">`
+- ✅ Upload button unchanged (file picker / gallery, supports `multiple`)
+- ✅ Component API unchanged (`photos`, `onChange`, `maxPhotos`, `label`)
+- ✅ No changes needed in consuming components (`ItemForm`, `LocationForm`)
+
+### 27.2 Remove Camera CSS ✅
+
+**`src/index.css`:**
+- ✅ Removed `@keyframes focus-pulse` animation
+- ✅ Removed `.animate-focus-pulse` class
+
+### 27.3 Build and Verification ✅
+
+- ✅ Build passes with zero TypeScript errors
+- ✅ All 134 modules transformed correctly
+- ✅ Bundle size reduced: CSS -3.67 kB, JS -8.98 kB, Precache -12.35 KiB
+
+**Files Modified (2 total):**
+1. `src/components/PhotoCapture.tsx`
+2. `src/index.css`
+
+**Behavior:**
+
+| Platform | Camera button | Upload button |
+|----------|--------------|---------------|
+| Mobile | Opens native camera app | Opens file picker (gallery) |
+| Desktop | Opens file picker (with camera if available) | Opens file picker |
+
+---
+
+## Next Steps (Phase 28+)
 
 ### Phase 22: Complete i18n Migration (Optional)
 

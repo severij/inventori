@@ -298,10 +298,10 @@ Accessed via hamburger menu → Settings. Settings persist in localStorage.
    - Manage tags page (rename, delete)
    - Tag filtering in search
 
-6. **Photo Capture**
-   - Camera integration
-   - File upload
-   - Photo preview and deletion
+ 6. **Photo Capture**
+    - Native camera app integration via `capture="environment"` (opens device camera on mobile)
+    - File upload from gallery/filesystem
+    - Photo preview and deletion
 
 7. **Data Management**
     - ZIP export/backup
