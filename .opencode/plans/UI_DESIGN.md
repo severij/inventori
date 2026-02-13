@@ -1,6 +1,6 @@
 # Inventori UI Design Specification
 
-**Last Updated:** Phase 23 - Finnish Translation Completion (COMPLETED ✅)
+**Last Updated:** Phase 28 - Tag Input Add Button for Mobile (COMPLETED ✅)
 
 This document contains ASCII representations of all UI components, pages, and layouts for the Inventori app redesign.
 
@@ -18,6 +18,10 @@ This document contains ASCII representations of all UI components, pages, and la
 - ✅ **Phase 20 Complete:** Show unassigned containers in LocationPicker with section headers
 - ✅ **Phase 21 Complete:** Accessibility & UI consistency improvements (ARIA, keyboard nav, theme colors)
 - ✅ **Phase 23 Complete:** Finnish translation completion (100% coverage)
+- ✅ **Phase 25 Complete:** Optional item names with "Unnamed item" fallback display
+- ✅ **Phase 26 Complete:** Duplicate/copy item via overflow menu
+- ✅ **Phase 27 Complete:** Native camera for photo capture (replaced custom camera UI)
+- ✅ **Phase 28 Complete:** Tag input inline "+" add button for mobile
 
 ## Design Principles
 
@@ -270,36 +274,29 @@ This document contains ASCII representations of all UI components, pages, and la
 └─────────────────────────────────────┘
 ```
 
-### Overflow Menu (⋯ Button)
-```
-✏️  Edit    → Navigate to edit page
-🗑️  Delete  → Show confirmation dialog (red text)
-```
-
-### Features (Phase 14)
-- ✅ Breadcrumbs show emoji icons (🏠 Home > 📍 Kitchen)
-- ✅ Overflow menu in location title header
-- ✅ Edit/Delete moved to overflow menu
-- ✅ Contents section collapsible (shows count in title)
-- ✅ Contents defaultOpen: true (expanded on load)
-- ✅ "+ Add Item" button integrated with location card
-│ └─────────────────────────────────┘ │
-```
-
-### Overflow Menu (⋮)
+### Location Overflow Menu (⋯)
 ```
                               ┌──────────┐
-                              │ Edit     │
+                              │ ✏️ Edit   │
                               │ ──────── │
-                              │ Delete   │ ← Red text
+                              │ 🗑️ Delete │ ← Red text
                               └──────────┘
 ```
+
+### Features (Phase 18)
+- ✅ Breadcrumbs show emoji icons (🏠 Home > 📍 Kitchen)
+- ✅ Overflow menu in location title header
+- ✅ Edit/Delete in overflow menu
+- ✅ Sub-locations section collapsible (Phase 18)
+- ✅ Contents section collapsible (shows count in title)
+- ✅ Contents defaultOpen: true (expanded on load)
+- ✅ "+ Add Location" and "+ Add Item" buttons (Phase 18)
 
 ---
 
 ## Item View Page
 
-### Regular Item (Phase 14 Updated)
+### Regular Item (Phase 26 Updated)
 ```
 ┌─────────────────────────────────────┐
 │ [←]      Blender       [🔍] [☰]     │
@@ -321,6 +318,32 @@ This document contains ASCII representations of all UI components, pages, and la
 │ Updated: January 20, 2025           │
 └─────────────────────────────────────┘
 ```
+
+### Unnamed Item (Phase 25)
+```
+┌─────────────────────────────────────┐
+│ [←]   Unnamed item     [🔍] [☰]     │
+├─────────────────────────────────────┤
+│                                     │
+│ 🏠 Home > 📍 Kitchen > 📄 Unnamed item
+│                                     │
+│ ┌───────┐                           │
+│ │ photo │                           │
+│ └───────┘                           │
+│                                     │
+│ Unnamed item                  [⋯]   │  ← Fallback display name
+│ ID: ABCD-1234 [📋]                  │
+│                                     │
+│ ─────────────────────────────────── │
+│ Created: January 15, 2025           │
+│ Updated: January 20, 2025           │
+└─────────────────────────────────────┘
+```
+
+**Unnamed item fallback** (Phase 25):
+- When `item.name` is undefined/empty, display "Unnamed item" (i18n: `common.unnamedItem`)
+- Applied in: EntityCard title, ItemView heading, breadcrumbs, LocationPicker, toast messages
+- Items can be created with photos only — name field is optional in ItemForm
 
 ### Container Item - canHoldItems: true (Phase 14 Updated)
 ```
@@ -358,13 +381,31 @@ This document contains ASCII representations of all UI components, pages, and la
 └─────────────────────────────────────┘
 ```
 
-### Features (Phase 14)
+### Features (Phase 26)
 - ✅ Breadcrumbs show emoji icons (🏠 Home > 📍 Kitchen > 📄/📦 Item)
 - ✅ Overflow menu (⋯) in item title header
-- ✅ Edit/Delete moved to overflow menu
+- ✅ Edit/Duplicate/Delete in overflow menu
 - ✅ Contents section collapsible (for containers only)
 - ✅ Contents defaultOpen: true (expanded on load)
 - ✅ "+ Add Item" button integrated with container section
+- ✅ Unnamed items display "Unnamed item" fallback (Phase 25)
+- ✅ "Duplicate" creates a copy with all fields pre-filled (Phase 26)
+
+### Item Overflow Menu (⋮)
+```
+                              ┌──────────┐
+                              │ ✏️ Edit   │
+                              │ 📋 Duplicate│  ← Phase 26
+                              │ ──────── │
+                              │ 🗑️ Delete │  ← Red text
+                              └──────────┘
+```
+
+**Duplicate flow** (Phase 26):
+- Navigates to AddItem with all fields pre-filled (including photos as Blobs via route state)
+- User can adjust any field before saving
+- Creates new item with fresh ID and timestamps
+- Shows "duplicated" toast on save
 
 ---
 
@@ -742,7 +783,7 @@ Dimensions:
 │                                     │
 │ ┌─ Basic Information ─────────────┐ │
 │ │                                 │ │
-│ │ Name *            Quantity *    │ │
+│ │ Name              Quantity *    │ │  ← Name is optional (Phase 25)
 │ │ ┌──────────────┐  ┌──────────┐  │ │
 │ │ │ Hammer       │  │    3     │  │ │
 │ │ └──────────────┘  └──────────┘  │ │
@@ -766,7 +807,7 @@ Dimensions:
 │ │ └─────────────────────────────┘ │ │
 │ │                                 │ │
 │ │ Photos                          │ │
-│ │ [📷 Camera]  [📁 Upload]        │ │
+│ │ [📷 Camera]  [📁 Upload]        │ │  ← Camera opens native app (Phase 27)
 │ │ ┌───────┐ ┌───────┐             │ │
 │ │ │ photo │ │ photo │             │ │
 │ │ │   ✕   │ │   ✕   │             │ │
@@ -824,11 +865,11 @@ Dimensions:
 │ └─────────────────────────────────┘ │
 ```
 
-### Tag Input with Autocomplete
+### Tag Input with Autocomplete (Phase 28 Updated)
 ```
 │ Tags                                │
 │ [electronics ✕] [kitchen ✕]         │
-│ ┌─────────────────────────────────┐ │
+│ ┌──────────────────────────────[+]┐ │  ← "+" button appears when text entered
 │ │ sea...                          │ │
 │ └─────────────────────────────────┘ │
 │ ┌─────────────────────────────────┐ │
@@ -836,6 +877,68 @@ Dimensions:
 │ │ sealed (2 items)                │ │
 │ └─────────────────────────────────┘ │
 ```
+
+**Tag Input States (Phase 28):**
+```
+Empty input:
+┌─────────────────────────────────────┐
+│ Add tags...                         │  ← Full width, fully rounded
+└─────────────────────────────────────┘
+
+With text entered:
+┌──────────────────────────────┐ ┌──┐
+│ sea...                       │ │+ │  ← Accent-colored "+" button
+└──────────────────────────────┘ └──┘
+  rounded-l-lg                   rounded-r-lg, w-10 h-10
+
+With text + suggestion highlighted:
+┌──────────────────────────────┐ ┌──┐
+│ sea...                       │ │+ │  ← Tapping adds highlighted suggestion
+└──────────────────────────────┘ └──┘
+┌─────────────────────────────────────┐
+│ ▸ seasonal (8 items)                │  ← Highlighted
+│   sealed (2 items)                  │
+└─────────────────────────────────────┘
+```
+
+- "+" button only visible when `inputValue.trim()` is non-empty
+- Button is square (w-10 h-10, matching input height)
+- Styled: `bg-accent-500 hover:bg-accent-600 text-white`
+- Has `aria-label="Add tag"` and `type="button"`
+- Enter key still works on desktop keyboards
+- Fixes mobile issue where Enter key blurs input instead of adding tag
+
+### PhotoCapture Component (Phase 27)
+
+Simplified from custom in-browser camera (784 lines) to native camera delegation (160 lines).
+
+```
+Photos (2/5)
+┌──────────┐ ┌──────────┐
+│ [📷]     │ │ [📁]     │
+│ Camera   │ │ Upload   │
+└──────────┘ └──────────┘
+
+┌───────┐ ┌───────┐
+│ photo │ │ photo │
+│   ✕   │ │   ✕   │
+└───────┘ └───────┘
+```
+
+**Camera button behavior:**
+
+| Platform | Camera button | Upload button |
+|----------|--------------|---------------|
+| Mobile | Opens native camera app | Opens file picker (gallery) |
+| Desktop | Opens file picker (with camera if available) | Opens file picker |
+
+**Implementation:**
+- Camera: `<input type="file" accept="image/*" capture="environment">` (hidden, triggered by button)
+- Upload: `<input type="file" accept="image/*" multiple>` (hidden, triggered by button)
+- Both buttons are `type="button"` with `min-h-[44px]` touch targets
+- Photo thumbnails show with "✕" remove button overlay
+- Max photos configurable via `maxPhotos` prop (default 5)
+- Buttons hidden when max photos reached
 
 ### Add/Edit Location Form
 ```
@@ -881,13 +984,14 @@ Dimensions:
                                    │
                            ┌───────────────┐
                            │ Manage Tags   │
-                           │ ───────────── │
-                           │ Export Data   │
-                           │ Import Data   │
+                           │ Settings      │
                            │ ───────────── │
                            │ Install App   │
                            └───────────────┘
 ```
+
+- Export/Import moved to Settings page (Phase 18)
+- "Clear All Data" moved to Settings page (Phase 18)
 
 ---
 
@@ -970,7 +1074,8 @@ Dimensions:
 ```
 ┌──────────────────┐
 │ ✏️  Edit         │
-│ 🗑️  Delete       │ ← Red text
+│ 📋  Duplicate    │  ← Items only (Phase 26)
+│ 🗑️  Delete       │  ← Red text
 └──────────────────┘
   ↓ Positioned below button
 ```
@@ -985,6 +1090,7 @@ Screen:
 │  │                          ││
 │  │    ═════════════════     ││ ← Drag handle
 │  │    ✏️  Edit              ││
+│  │    📋  Duplicate         ││ ← Items only (Phase 26)
 │  │    🗑️  Delete            ││ ← Red text
 │  │                          ││
 │  └──────────────────────────┘│

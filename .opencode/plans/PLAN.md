@@ -300,7 +300,8 @@ Add ability to select and change parent locations when creating or editing locat
 - [x] **Phase 25:** Optional item names
 - [x] **Phase 26:** Duplicate/copy item
 - [x] **Phase 27:** Native camera for photo capture
-- [ ] **Phase 28+:** Additional features (optional)
+- [x] **Phase 28:** Tag input Add button for mobile
+- [ ] **Phase 29+:** Additional features (optional)
 
 ---
 
@@ -703,7 +704,44 @@ Replace the custom in-browser camera (getUserMedia with pinch-to-zoom, tap-to-fo
 
 ---
 
-## Next Steps (Phase 28+)
+## Phase 28: Tag Input Add Button for Mobile
+
+**Status: COMPLETED ✅**
+
+Fix mobile tag input — pressing Enter on mobile virtual keyboards often blurs the input instead of adding the tag. Add a visible "+" button inline with the input field that appears when text is entered, providing a reliable touch target on all devices.
+
+### 28.1 Add Button to TagInput Component ✅
+
+**`src/components/TagInput.tsx`:**
+- ✅ Wrapped input in a `flex` container
+- ✅ Added square "+" button to the right of the input, visible only when `inputValue.trim()` is not empty
+- ✅ Button calls `addTag()` with highlighted suggestion (if any) or typed text
+- ✅ Input border-radius changes dynamically: `rounded-lg` when alone, `rounded-l-lg` when button is visible
+- ✅ Button styled with `bg-accent-500 hover:bg-accent-600 text-white rounded-r-lg`
+- ✅ Button is square (`w-10 h-10`) to match input height
+- ✅ Button has `type="button"` to prevent form submission
+- ✅ Button has `aria-label="Add tag"` for accessibility
+- ✅ Existing Enter key handler preserved for desktop users
+
+### 28.2 Build and Verification ✅
+
+- ✅ Build passes with zero TypeScript errors
+- ✅ All 134 modules transformed correctly
+
+**Files Modified (1 total):**
+1. `src/components/TagInput.tsx`
+
+**Behavior:**
+
+| Input State | Button | Action |
+|-------------|--------|--------|
+| Empty | Hidden | Input is full width, fully rounded |
+| Has text | Visible (➕) | Tap adds tag, input clears, button disappears |
+| Has text + suggestion highlighted | Visible (➕) | Tap adds highlighted suggestion |
+
+---
+
+## Next Steps (Phase 29+)
 
 ### Phase 22: Complete i18n Migration (Optional)
 

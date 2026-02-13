@@ -139,6 +139,16 @@ export const TagInput: React.FC<TagInputProps> = ({
     addTag(tag);
   };
 
+  const handleAddClick = () => {
+    if (highlightedIndex >= 0 && filteredSuggestions[highlightedIndex]) {
+      addTag(filteredSuggestions[highlightedIndex].tag);
+    } else if (inputValue.trim()) {
+      addTag(inputValue);
+    }
+  };
+
+  const hasInput = inputValue.trim().length > 0;
+
   return (
     <div ref={containerRef} className={`relative ${className}`}>
       {/* Tag Display Area */}
@@ -163,22 +173,45 @@ export const TagInput: React.FC<TagInputProps> = ({
 
        {/* Input Field */}
        <div className="relative">
-         <input
-           ref={inputRef}
-           id={id}
-           type="text"
-           value={inputValue}
-           onChange={handleInputChange}
-           onKeyDown={handleInputKeyDown}
-           onFocus={() => setShowSuggestions(true)}
-           placeholder={placeholder}
-           disabled={!!(maxTags && tags.length >= maxTags)}
-           className="w-full px-3 py-2 border border-border rounded-lg bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none disabled:bg-surface-tertiary disabled:text-content-muted"
-           aria-label="Tag input"
-           aria-autocomplete="list"
-           aria-expanded={showSuggestions}
-           aria-controls="tag-suggestions"
-         />
+         <div className="flex">
+           <input
+             ref={inputRef}
+             id={id}
+             type="text"
+             value={inputValue}
+             onChange={handleInputChange}
+             onKeyDown={handleInputKeyDown}
+             onFocus={() => setShowSuggestions(true)}
+             placeholder={placeholder}
+             disabled={!!(maxTags && tags.length >= maxTags)}
+             className={`flex-1 min-w-0 px-3 py-2 border border-border bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-inset focus:ring-accent-500 outline-none disabled:bg-surface-tertiary disabled:text-content-muted ${
+               hasInput ? 'rounded-l-lg' : 'rounded-lg'
+             }`}
+             aria-label="Tag input"
+             aria-autocomplete="list"
+             aria-expanded={showSuggestions}
+             aria-controls="tag-suggestions"
+           />
+           {hasInput && (
+             <button
+               type="button"
+               onClick={handleAddClick}
+                className="w-10 self-stretch flex items-center justify-center bg-accent-500 hover:bg-accent-600 text-white rounded-r-lg transition-colors flex-shrink-0"
+               aria-label="Add tag"
+             >
+               <svg
+                 xmlns="http://www.w3.org/2000/svg"
+                 fill="none"
+                 viewBox="0 0 24 24"
+                 strokeWidth={2.5}
+                 stroke="currentColor"
+                 className="w-5 h-5"
+               >
+                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+               </svg>
+             </button>
+           )}
+         </div>
 
          {/* Autocomplete Suggestions Dropdown */}
          {showSuggestions && filteredSuggestions.length > 0 && (

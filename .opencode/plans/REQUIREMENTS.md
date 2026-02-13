@@ -203,7 +203,7 @@ Show at-a-glance information:
   - Visual indicators: Icons (📍 location, 📦 container), arrow (>) for drillable items
   - Form submission prevention: All buttons have `type="button"`
   - Event handling: Overlay click handled with `stopPropagation()`
-- Tags with autocomplete from existing tags
+- Tags with autocomplete from existing tags and inline "+" add button for mobile
 - Photos (camera + upload)
 
 **ItemForm - Additional Information Section (collapsed by default):**
