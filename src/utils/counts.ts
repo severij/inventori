@@ -51,13 +51,14 @@ async function countItemsInLocation(locationId: string): Promise<number> {
   // Count direct items in this location
   const directItems = await getItemsByParent(locationId, 'location');
   for (const item of directItems) {
+    // Count the item itself only if includeInTotal is true
     if (item.includeInTotal) {
       total += item.quantity;
+    }
 
-      // If this item is a container, count items inside it
-      if (item.canHoldItems) {
-        total += await countItemsInItem(item.id);
-      }
+    // Always recurse into containers, regardless of includeInTotal
+    if (item.canHoldItems) {
+      total += await countItemsInItem(item.id);
     }
   }
 
@@ -79,13 +80,14 @@ async function countItemsInItem(itemId: string): Promise<number> {
 
   const childItems = await getItemsByParent(itemId, 'item');
   for (const item of childItems) {
+    // Count the item itself only if includeInTotal is true
     if (item.includeInTotal) {
       total += item.quantity;
+    }
 
-      // If this item is also a container, count items inside it
-      if (item.canHoldItems) {
-        total += await countItemsInItem(item.id);
-      }
+    // Always recurse into containers, regardless of includeInTotal
+    if (item.canHoldItems) {
+      total += await countItemsInItem(item.id);
     }
   }
 

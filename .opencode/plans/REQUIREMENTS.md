@@ -131,10 +131,12 @@ count = SUM(
 )
 ```
 
+**Important:** `includeInTotal: false` only excludes the item itself from the count. Items inside a container with `includeInTotal: false` are still counted (if they themselves have `includeInTotal: true`). The recursion into containers always happens regardless of the container's `includeInTotal` flag.
+
 Example:
 - Garage has: Metal Shelf (not counted), Car Jack, Toolbox with 2 items
 - Count: Car Jack (1) + Toolbox (1) + 2 items = 4
-- Metal Shelf excluded (includeInTotal: false)
+- Metal Shelf excluded (includeInTotal: false), but items inside it are still counted
 
 ### Tags
 

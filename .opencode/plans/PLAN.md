@@ -302,7 +302,8 @@ Add ability to select and change parent locations when creating or editing locat
 - [x] **Phase 27:** Native camera for photo capture
 - [x] **Phase 28:** Tag input Add button for mobile
 - [x] **Phase 29:** Fix tag search query parameter
-- [ ] **Phase 30+:** Additional features (optional)
+- [x] **Phase 30:** Fix includeInTotal counting bug
+- [ ] **Phase 31+:** Additional features (optional)
 
 ---
 
@@ -778,7 +779,52 @@ Fix broken tag-based search navigation. Clicking a tag chip in ItemView navigate
 
 ---
 
-## Next Steps (Phase 30+)
+## Phase 30: Fix includeInTotal Counting Bug
+
+**Status: COMPLETED ✅**
+
+Fix bug where setting `includeInTotal: false` on a container item causes all items inside it to also be excluded from inventory totals. The `includeInTotal` flag should only exclude the container itself, not its children.
+
+### Bug Description
+
+In `src/utils/counts.ts`, both `countItemsInLocation` and `countItemsInItem` wrap the container recursion inside the `if (item.includeInTotal)` check. When a container has `includeInTotal: false`, the entire block is skipped — including the recursive call to count its children.
+
+**Example:**
+```
+Garage
+└── Metal Shelf (includeInTotal: false, canHoldItems: true)
+    ├── Toolbox (includeInTotal: true, canHoldItems: true)
+    │   ├── Hammer (includeInTotal: true)
+    │   └── Wrench (includeInTotal: true)
+    └── Screwdriver (includeInTotal: true, quantity: 5)
+```
+
+- **Current (buggy) count for Garage:** 0 (Metal Shelf excluded → recursion stops)
+- **Expected count for Garage:** 8 (Toolbox:1 + Hammer:1 + Wrench:1 + Screwdriver:5)
+
+### 30.1 Fix countItemsInLocation
+
+**`src/utils/counts.ts`:**
+- Separate counting the item itself (controlled by `includeInTotal`) from recursing into containers (always recurse)
+- Before: container recursion nested inside `if (item.includeInTotal)` block
+- After: `if (item.includeInTotal)` adds quantity; `if (item.canHoldItems)` recurses — as independent checks
+
+### 30.2 Fix countItemsInItem
+
+**`src/utils/counts.ts`:**
+- Same fix as 30.1 but for the `countItemsInItem` function
+
+### 30.3 Build and Verification
+
+- Build passes with zero TypeScript errors
+- Container with `includeInTotal: false` is excluded from count, but items inside it are still counted
+
+**Files Modified (1 total):**
+1. `src/utils/counts.ts`
+
+---
+
+## Next Steps (Phase 31+)
 
 ### Phase 22: Complete i18n Migration (Optional)
 
