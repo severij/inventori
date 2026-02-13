@@ -225,6 +225,8 @@ Show at-a-glance information:
 - ID exact match
 - Filter by type: All, Locations, Items
 - Filter by tags
+- Tag filter URL format: repeated `tags` parameter (e.g., `/search?tags=electronics&tags=tools`)
+- Clicking tag chips in ItemView navigates to Search with that tag pre-filtered
 - Results show location path as subtitle
 
 ### Tags Page

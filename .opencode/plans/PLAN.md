@@ -301,7 +301,8 @@ Add ability to select and change parent locations when creating or editing locat
 - [x] **Phase 26:** Duplicate/copy item
 - [x] **Phase 27:** Native camera for photo capture
 - [x] **Phase 28:** Tag input Add button for mobile
-- [ ] **Phase 29+:** Additional features (optional)
+- [x] **Phase 29:** Fix tag search query parameter
+- [ ] **Phase 30+:** Additional features (optional)
 
 ---
 
@@ -741,7 +742,43 @@ Fix mobile tag input — pressing Enter on mobile virtual keyboards often blurs 
 
 ---
 
-## Next Steps (Phase 29+)
+## Phase 29: Fix Tag Search Query Parameter
+
+**Status: COMPLETED ✅**
+
+Fix broken tag-based search navigation. Clicking a tag chip in ItemView navigates to the Search page but no results are shown because of a query parameter name mismatch, and simplify the redundant URL parsing logic.
+
+### Bug Description
+
+- ItemView links to `/search?tag=testi` (singular `tag`)
+- Search.tsx reads from `searchParams.getAll('tags')` (plural `tags`)
+- The parameter name mismatch means Search never sees the tag filter from the URL
+
+### 29.1 Fix ItemView Tag Link Parameter
+
+**`src/pages/ItemView.tsx`:**
+- Change tag chip link from `/search?tag=...` to `/search?tags=...`
+- Uses repeated parameter format for multiple values: `/search?tags=a&tags=b`
+
+### 29.2 Simplify Search.tsx Tag URL Parsing
+
+**`src/pages/Search.tsx`:**
+- Remove unnecessary join/split round-trip in URL tag parsing
+- Current (redundant): `searchParams.getAll('tags').join(',')` → `.split(',').filter(Boolean)`
+- Simplified: `searchParams.getAll('tags')` (already returns an array)
+
+### 29.3 Build and Verification
+
+- Build passes with zero TypeScript errors
+- Clicking a tag in ItemView correctly navigates to Search with results filtered
+
+**Files Modified (2 total):**
+1. `src/pages/ItemView.tsx`
+2. `src/pages/Search.tsx`
+
+---
+
+## Next Steps (Phase 30+)
 
 ### Phase 22: Complete i18n Migration (Optional)
 

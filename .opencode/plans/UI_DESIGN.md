@@ -1398,5 +1398,6 @@ Each chip styling:
 - Padding: compact (4px 8px)
 - Rounded corners
 - Cursor: pointer
+- Click navigates to: `/search?tags={tagname}` (uses repeated `tags` parameter format)
 
 ---

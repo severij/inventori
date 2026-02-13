@@ -195,7 +195,7 @@ export function ItemView() {
                  {item.tags.map((tag) => (
                    <Link
                      key={tag}
-                     to={`/search?tag=${encodeURIComponent(tag)}`}
+                      to={`/search?tags=${encodeURIComponent(tag)}`}
                      className="inline-block px-3 py-1 bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300 rounded-full text-sm font-medium hover:bg-accent-200 dark:hover:bg-accent-900/50 transition-colors"
                    >
                      {tag}

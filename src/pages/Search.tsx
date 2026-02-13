@@ -25,11 +25,10 @@ export function Search() {
   const [showTagInput, setShowTagInput] = useState(false);
   const [tagInputValue, setTagInputValue] = useState('');
 
-  // Get tags from URL query params - memoize to prevent infinite renders
-  const urlTagsString = searchParams.getAll('tags').join(',');
+  // Get tags from URL query params
   const urlTags = useMemo(() => 
-    urlTagsString.split(',').filter(Boolean), 
-    [urlTagsString]
+    searchParams.getAll('tags'), 
+    [searchParams]
   );
   const [selectedTags, setSelectedTags] = useState<string[]>(urlTags);
 
