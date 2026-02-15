@@ -10,7 +10,7 @@ import { useState, useRef } from 'react';
 import { importData, previewImport } from '../utils/import';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { clearAllData } from '../db';
-import type { Language, Currency, DateFormat } from '../types/settings';
+import type { Language, Currency, DateFormat, ItemCountMethod, ValueCalculation } from '../types/settings';
 
 /**
  * Settings page - Appearance, Regional, and Data Management
@@ -55,6 +55,16 @@ export function Settings() {
 
   const handleDateFormatChange = (dateFormat: DateFormat) => {
     updateSettings({ dateFormat });
+    showToast('success', t('common.settingsSaved'));
+  };
+
+  const handleItemCountMethodChange = (itemCountMethod: ItemCountMethod) => {
+    updateSettings({ itemCountMethod });
+    showToast('success', t('common.settingsSaved'));
+  };
+
+  const handleValueCalculationChange = (valueCalculation: ValueCalculation) => {
+    updateSettings({ valueCalculation });
     showToast('success', t('common.settingsSaved'));
   };
 
@@ -237,6 +247,51 @@ export function Settings() {
                 <option value="MM/DD/YYYY">MM/DD/YYYY</option>
                 <option value="YYYY-MM-DD">YYYY-MM-DD</option>
               </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Inventory Stats Section */}
+        <div className="bg-surface rounded-lg shadow-sm border border-border p-4">
+          <h2 className="text-lg font-semibold text-content mb-4">{t('settings.inventoryStats')}</h2>
+          <div className="space-y-4">
+            {/* Item Count Method */}
+            <div>
+              <label htmlFor="itemCountMethod" className="block text-sm font-medium text-content mb-2">
+                {t('settings.itemCountMethod')}
+              </label>
+              <select
+                id="itemCountMethod"
+                value={settings.itemCountMethod}
+                onChange={(e) => handleItemCountMethodChange(e.target.value as ItemCountMethod)}
+                className="w-full px-3 py-2 bg-surface-secondary border border-border rounded-lg text-content focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent transition-colors"
+              >
+                <option value="unique">{t('settings.itemCountMethod_unique')}</option>
+                <option value="quantity">{t('settings.itemCountMethod_quantity')}</option>
+              </select>
+              <p className="mt-1 text-sm text-content-secondary">
+                {t('settings.itemCountMethodDescription')}
+              </p>
+            </div>
+
+            {/* Value Calculation */}
+            <div>
+              <label htmlFor="valueCalculation" className="block text-sm font-medium text-content mb-2">
+                {t('settings.valueCalculation')}
+              </label>
+              <select
+                id="valueCalculation"
+                value={settings.valueCalculation}
+                onChange={(e) => handleValueCalculationChange(e.target.value as ValueCalculation)}
+                className="w-full px-3 py-2 bg-surface-secondary border border-border rounded-lg text-content focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent transition-colors"
+              >
+                <option value="currentWithFallback">{t('settings.valueCalculation_currentWithFallback')}</option>
+                <option value="currentValue">{t('settings.valueCalculation_currentValue')}</option>
+                <option value="purchasePrice">{t('settings.valueCalculation_purchasePrice')}</option>
+              </select>
+              <p className="mt-1 text-sm text-content-secondary">
+                {t('settings.valueCalculationDescription')}
+              </p>
             </div>
           </div>
         </div>

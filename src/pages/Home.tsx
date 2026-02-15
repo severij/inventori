@@ -7,8 +7,10 @@ import { EntityCard } from '../components/EntityCard';
 import { CardListSkeleton } from '../components/Skeleton';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
+import { StatsBar } from '../components/StatsBar';
 import { useTopLevelLocations } from '../hooks/useLocations';
 import { useUnassignedItems } from '../hooks/useItems';
+import { useInventoryStats } from '../hooks/useInventoryStats';
 
 /**
  * Home page - Two-tab layout for Inbox and Locations
@@ -16,6 +18,9 @@ import { useUnassignedItems } from '../hooks/useItems';
 export function Home() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('inbox');
+
+  // Fetch inventory stats
+  const stats = useInventoryStats();
 
   // Fetch both tabs in parallel
   const {
@@ -106,6 +111,13 @@ export function Home() {
 
   return (
     <Layout title="Inventori">
+      {/* Inventory Stats Bar */}
+      <StatsBar
+        itemCount={stats.itemCount}
+        totalValue={stats.totalValue}
+        isLoading={stats.isLoading}
+      />
+
       {/* Two-tab layout */}
       <Tabs
         tabs={[

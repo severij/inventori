@@ -11,10 +11,12 @@ import { DetailSkeleton, CardListSkeleton } from '../components/Skeleton';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { StatsCard } from '../components/StatsCard';
 import { useLocation } from '../hooks/useLocations';
 import { useChildren } from '../hooks/useChildren';
 import { useChildLocations } from '../hooks/useChildLocations';
 import { useAncestors } from '../hooks/useAncestors';
+import { useEntityStats } from '../hooks/useEntityStats';
 import { deleteLocation } from '../db/locations';
 import { useToast } from '../contexts/ToastContext';
 
@@ -57,22 +59,30 @@ export function LocationView() {
   const { locations: childLocations, loading: childLocationsLoading } = useChildLocations(id);
   const { children: childItems, loading: childItemsLoading } = useChildren(id, 'location');
   const { ancestors } = useAncestors(id, 'location');
+  const stats = useEntityStats(id || '', 'location');
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [destinationId, setDestinationId] = useState<string>('');
+  const [destinationType, setDestinationType] = useState<'location' | 'item' | undefined>(undefined);
 
   const loading = locationLoading || childLocationsLoading || childItemsLoading;
   const hasChildLocations = childLocations.length > 0;
   const hasChildItems = childItems.length > 0;
   const isEmpty = !hasChildLocations && !hasChildItems;
+  const hasChildren = hasChildLocations || hasChildItems;
+  const totalChildrenCount = childLocations.length + childItems.length;
 
-  const handleDelete = async () => {
+  const handleDelete = async (choice?: string, dest?: { id: string; type?: 'location' | 'item' }) => {
     if (!location) return;
 
     setIsDeleting(true);
     try {
-      await deleteLocation(location.id);
-      showToast('success', `"${location.name}" has been deleted`);
+      // choice is 'cascade' or 'move' (or undefined for simple delete)
+      const shouldCascade = choice === 'cascade';
+      // Use the destination passed from dialog (which comes from locationPicker state)
+      await deleteLocation(location.id, shouldCascade, dest?.id, dest?.type);
+      showToast('success', t('location.deleted', { name: location.name }));
       navigate('/');
     } catch (err) {
       console.error('Failed to delete location:', err);
@@ -80,6 +90,11 @@ export function LocationView() {
       setIsDeleting(false);
       setShowDeleteDialog(false);
     }
+  };
+
+  const handleDestinationChange = (parentId: string, parentType?: 'location' | 'item') => {
+    setDestinationId(parentId);
+    setDestinationType(parentType);
   };
 
   /**
@@ -142,12 +157,22 @@ export function LocationView() {
                   items={getLocationMenuItems(location.id, navigate, setShowDeleteDialog, t)}
                 />
               </div>
-             <IdDisplay id={location.id} size="sm" />
-              {location.description && (
-                <p className="text-content-secondary mt-2">{location.description}</p>
-              )}
+              <IdDisplay id={location.id} size="sm" />
+               {location.description && (
+                 <p className="text-content-secondary mt-2">{location.description}</p>
+               )}
+             </div>
 
-               {/* Add buttons */}
+             {/* Location Stats */}
+             <StatsCard
+               itemCount={stats.itemCount}
+               totalValue={stats.totalValue}
+               isLoading={stats.isLoading}
+             />
+
+             {/* Location details - Add buttons */}
+             <div className="bg-surface rounded-lg shadow-sm border border-border p-4 mb-6">
+                {/* Add buttons */}
                <div className="flex gap-3 mt-4">
                  <Link
                    to={`/add/location?parentId=${location.id}`}
@@ -201,26 +226,53 @@ export function LocationView() {
       )}
 
          {/* Delete confirmation dialog */}
-         <ConfirmDialog
-           isOpen={showDeleteDialog}
-           title={t('location.deleteConfirm')}
-           message={
-             hasChildLocations || hasChildItems
-               ? t('location.deleteConfirmWithContents', {
-                   name: location?.name,
-                   locations: childLocations.length,
-                   items: childItems.length,
-                 })
-               : t('location.deleteConfirmMsg', {
-                   name: location?.name,
-                 })
-           }
-           confirmLabel={isDeleting ? t('common.deleting') : t('common.delete')}
-           onConfirm={handleDelete}
-           onCancel={() => setShowDeleteDialog(false)}
-           isDestructive
-           confirmDisabled={isDeleting}
-         />
+         {location && (
+           <ConfirmDialog
+             isOpen={showDeleteDialog}
+             title={hasChildren ? t('location.deleteWithContents') : t('location.deleteConfirm')}
+             message={
+               hasChildren
+                 ? t('location.deleteWithContentsMessage', { count: totalChildrenCount })
+                 : t('location.deleteConfirmMsg', { name: location.name })
+             }
+             confirmLabel={isDeleting ? t('common.deleting') : t('common.delete')}
+             onConfirm={handleDelete}
+             onCancel={() => {
+               setShowDeleteDialog(false);
+               setDestinationId('');
+               setDestinationType(undefined);
+             }}
+             isDestructive
+             confirmDisabled={isDeleting}
+             choices={
+               hasChildren
+                 ? [
+                     {
+                       value: 'move',
+                       label: t('location.deleteChoice_move'),
+                       description: t('location.deleteChoice_move_desc'),
+                     },
+                     {
+                       value: 'cascade',
+                       label: t('location.deleteChoice_cascade'),
+                       description: t('location.deleteChoice_cascade_desc'),
+                     },
+                   ]
+                 : undefined
+             }
+             defaultChoice="move"
+             locationPicker={
+               hasChildren
+                 ? {
+                     value: destinationId,
+                     parentType: destinationType,
+                     onChange: handleDestinationChange,
+                     excludeLocationId: location.id,
+                   }
+                 : undefined
+             }
+           />
+         )}
     </Layout>
   );
 }

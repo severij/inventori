@@ -1,7 +1,7 @@
 import { getDB } from './index';
 import { generateUniqueId } from '../utils/shortId';
 import type { Location, CreateLocationInput, UpdateLocationInput } from '../types';
-import { getItemsByParent, deleteItem } from './items';
+import { getItemsByParent, deleteItem, updateItem } from './items';
 
 /**
  * Get all locations
@@ -118,7 +118,12 @@ export async function updateLocation(
  * Default: soft cascade (orphan child locations, delete child items)
  * With deleteChildren=true: recursive delete all descendants
  */
-export async function deleteLocation(id: string, deleteChildren: boolean = false): Promise<void> {
+export async function deleteLocation(
+  id: string,
+  deleteChildren: boolean = false,
+  moveToId?: string,
+  moveToType?: 'location' | 'item'
+): Promise<void> {
   const db = await getDB();
 
   const location = await getLocation(id);
@@ -131,7 +136,7 @@ export async function deleteLocation(id: string, deleteChildren: boolean = false
   const childItems = await getItemsByParent(id, 'location');
 
   if (deleteChildren) {
-    // Recursive delete
+    // Cascade delete: recursively delete everything
     for (const childLoc of childLocations) {
       await deleteLocation(childLoc.id, true);
     }
@@ -139,13 +144,42 @@ export async function deleteLocation(id: string, deleteChildren: boolean = false
       await deleteItem(childItem.id, true);
     }
   } else {
-    // Soft cascade: orphan child locations, delete child items
+    // Move or orphan contents based on moveToId parameter
+    
+    // Handle child locations
     for (const childLoc of childLocations) {
-      await updateLocation(childLoc.id, { parentId: undefined });
+      if (moveToId !== undefined) {
+        // Move to destination if it's a location, otherwise make top-level
+        if (moveToId === '' || moveToType === 'item') {
+          // Empty string or container destination = make top-level
+          await updateLocation(childLoc.id, { parentId: undefined });
+        } else {
+          // Move to another location
+          await updateLocation(childLoc.id, { parentId: moveToId });
+        }
+      } else {
+        // No moveToId specified, make top-level (backward compatibility)
+        await updateLocation(childLoc.id, { parentId: undefined });
+      }
     }
+    
+    // Handle child items
     for (const childItem of childItems) {
-      // Items can't be orphaned (parentId is required), so delete them
-      await deleteItem(childItem.id, false);
+      if (moveToId !== undefined) {
+        if (moveToId === '') {
+          // Empty string = make unassigned
+          await updateItem(childItem.id, { parentId: undefined, parentType: undefined });
+        } else {
+          // Move to specified destination
+          await updateItem(childItem.id, {
+            parentId: moveToId,
+            parentType: moveToType || 'location',
+          });
+        }
+      } else {
+        // No moveToId specified, make unassigned (backward compatibility)
+        await updateItem(childItem.id, { parentId: undefined, parentType: undefined });
+      }
     }
   }
 

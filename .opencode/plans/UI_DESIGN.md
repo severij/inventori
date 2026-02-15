@@ -142,10 +142,12 @@ This document contains ASCII representations of all UI components, pages, and la
 
 ## Home Page
 
-### Two-Tab Layout
+### Two-Tab Layout with Stats Bar
 ```
 ┌─────────────────────────────────────┐
 │         Inventori          [🔍] [☰] │
+├─────────────────────────────────────┤
+│  📦 142 Items    │   💰 $12,450     │ ← Stats Bar
 ├─────────────────────────────────────┤
 │ [Locations (8)]  [Unassigned (2)]   │
 ├─────────────────────────────────────┤
@@ -169,6 +171,15 @@ This document contains ASCII representations of all UI components, pages, and la
 │                        [+ Location] │
 └─────────────────────────────────────┘
 ```
+
+**Stats Bar:**
+- Compact horizontal bar above tabs
+- Shows global inventory totals
+- Two columns: Total Items | Total Value
+- Display-only (not clickable)
+- Updates when items change or settings change
+- Respects `includeInTotal` flag
+- Uses user's currency and item counting preferences from Settings
 
 ### Unassigned Tab
 ```
@@ -239,7 +250,7 @@ This document contains ASCII representations of all UI components, pages, and la
 
 ## Location View Page
 
-### Full Layout (Phase 14 Updated)
+### Full Layout with Stats Card (Phase 32 Updated)
 ```
 ┌─────────────────────────────────────┐
 │ [←]      Kitchen       [🔍] [☰]     │
@@ -257,9 +268,20 @@ This document contains ASCII representations of all UI components, pages, and la
 │ ID: KZMT-Q7X3 [📋]                  │
 │ Main cooking and dining area        │
 │                                     │
-│ [+ Add Item]                        │
+│ ┌──────────────┬──────────────────┐ │ ← Stats Card
+│ │ Total Items  │  Total Value     │ │
+│ │     23       │    $1,450        │ │
+│ └──────────────┴──────────────────┘ │
+│                                     │
+│ [+ Add Location]  [+ Add Item]      │
 │                                     │
 │ ─────────────────────────────────── │
+│                                     │
+│ ▼ Locations (2)                     │ ← Collapsible
+│ ┌─────────────────────────────────┐ │
+│ │ [img] 📍 Pantry            📋   │ │
+│ │           0  3  8              >│ │
+│ └─────────────────────────────────┘ │
 │                                     │
 │ ▼ Contents (5)                      │ ← Collapsible
 │ ┌─────────────────────────────────┐ │
@@ -273,6 +295,14 @@ This document contains ASCII representations of all UI components, pages, and la
 │                                     │
 └─────────────────────────────────────┘
 ```
+
+**Stats Card:**
+- 2-column grid layout
+- Shows recursive totals (includes sub-locations and their contents)
+- Always visible (shows "0 items" and "$0.00" for empty locations)
+- Display-only (not clickable)
+- Positioned after description, before action buttons
+- Respects `includeInTotal` flag and user's calculation preferences
 
 ### Location Overflow Menu (⋯)
 ```
@@ -345,7 +375,7 @@ This document contains ASCII representations of all UI components, pages, and la
 - Applied in: EntityCard title, ItemView heading, breadcrumbs, LocationPicker, toast messages
 - Items can be created with photos only — name field is optional in ItemForm
 
-### Container Item - canHoldItems: true (Phase 14 Updated)
+### Container Item - canHoldItems: true (Phase 32 Updated)
 ```
 ┌─────────────────────────────────────┐
 │ [←]    Refrigerator    [🔍] [☰]     │
@@ -360,6 +390,11 @@ This document contains ASCII representations of all UI components, pages, and la
 │ Refrigerator                   [⋯]  │
 │ ID: WXYZ-5678 [📋]                  │
 │ Samsung French Door, stainless      │
+│                                     │
+│ ┌──────────────┬──────────────────┐ │ ← Stats Card (containers only)
+│ │ Total Items  │  Total Value     │ │
+│ │     12       │    $180          │ │
+│ └──────────────┴──────────────────┘ │
 │                                     │
 │ [+ Add Item]                        │
 │                                     │
@@ -380,6 +415,13 @@ This document contains ASCII representations of all UI components, pages, and la
 │ Updated: January 20, 2025           │
 └─────────────────────────────────────┘
 ```
+
+**Stats Card (Container Items):**
+- Only displayed for items with `canHoldItems: true`
+- Shows recursive totals (includes nested containers)
+- Positioned after description, before "+ Add Item" button
+- Same 2-column grid layout as LocationView stats
+- Always visible for containers (shows zeros if empty)
 
 ### Features (Phase 26)
 - ✅ Breadcrumbs show emoji icons (🏠 Home > 📍 Kitchen > 📄/📦 Item)

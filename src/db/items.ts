@@ -158,7 +158,12 @@ export async function updateItem(
  * Default (deleteChildren=false): delete the item, also delete all child items (items can't be orphaned)
  * With deleteChildren=true: recursively delete all descendants
  */
-export async function deleteItem(id: string, deleteChildren: boolean = false): Promise<void> {
+export async function deleteItem(
+  id: string,
+  deleteChildren: boolean = false,
+  moveToId?: string,
+  moveToType?: 'location' | 'item'
+): Promise<void> {
   const db = await getDB();
 
   const item = await getItem(id);
@@ -170,14 +175,28 @@ export async function deleteItem(id: string, deleteChildren: boolean = false): P
   const childItems = await getItemsByParent(id, 'item');
 
   if (deleteChildren) {
-    // Recursive delete
+    // Cascade delete: recursively delete everything
     for (const child of childItems) {
       await deleteItem(child.id, true);
     }
   } else {
-    // Items can't be orphaned, so delete children
+    // Move or orphan child items based on moveToId parameter
     for (const child of childItems) {
-      await deleteItem(child.id, false);
+      if (moveToId !== undefined) {
+        if (moveToId === '') {
+          // Empty string = make unassigned
+          await updateItem(child.id, { parentId: undefined, parentType: undefined });
+        } else {
+          // Move to specified destination
+          await updateItem(child.id, {
+            parentId: moveToId,
+            parentType: moveToType || 'location',
+          });
+        }
+      } else {
+        // No moveToId specified, make unassigned (backward compatibility)
+        await updateItem(child.id, { parentId: undefined, parentType: undefined });
+      }
     }
   }
 

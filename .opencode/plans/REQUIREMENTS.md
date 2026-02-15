@@ -138,6 +138,22 @@ Example:
 - Count: Car Jack (1) + Toolbox (1) + 2 items = 4
 - Metal Shelf excluded (includeInTotal: false), but items inside it are still counted
 
+### Delete Behavior
+
+When deleting locations or container items that have contents, users are given a choice:
+
+**Cascade Delete:**
+- Deletes the location/container and all items inside recursively
+- Permanently removes all data
+
+**Orphan Contents (Make Unassigned):**
+- Deletes the location/container only
+- Child items are made unassigned (moved to Inbox)
+- Child locations (if any) are made top-level
+- Safer option that preserves data
+
+**Default:** The UI defaults to "Make contents unassigned" as the safer option.
+
 ### Tags
 
 Tags provide flexible categorization:
@@ -257,9 +273,23 @@ Accessed via hamburger menu → Settings. Settings persist in localStorage.
 - Currency: USD / EUR (default: USD)
 - Date Format: System default / DD/MM/YYYY / MM/DD/YYYY / YYYY-MM-DD (default: System)
 
+**Inventory Stats:**
+- Item Counting Method: Count unique items / Sum quantities (default: Count unique items)
+  - "Count unique items": Each item record counts as 1 (organizational view)
+  - "Sum quantities": Sum all `item.quantity` fields (physical count)
+- Value Calculation: Current value (with fallback) / Current value only / Purchase price only (default: Current value with fallback)
+  - "Current value (with fallback)": Use `currentValue`, fallback to `purchasePrice` if not set
+  - "Current value only": Only use `currentValue` field (items without it count as $0)
+  - "Purchase price only": Only use `purchasePrice` field (original cost)
+
 **Data Management:**
 - Export Data: Download ZIP backup
 - Import Data: Restore from ZIP backup
+
+**Notes:**
+- Stats settings affect how totals are calculated on Home page, LocationView, and ItemView
+- All stats respect the `includeInTotal` flag (items with `includeInTotal: false` are excluded)
+- Stats are recursive (locations include sub-locations, containers include nested containers)
 
 ---
 

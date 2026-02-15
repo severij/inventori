@@ -11,9 +11,11 @@ import { DetailSkeleton, CardListSkeleton } from '../components/Skeleton';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { StatsCard } from '../components/StatsCard';
 import { useItem } from '../hooks/useItems';
 import { useChildren } from '../hooks/useChildren';
 import { useAncestors } from '../hooks/useAncestors';
+import { useEntityStats } from '../hooks/useEntityStats';
 import { deleteItem } from '../db/items';
 import { useToast } from '../contexts/ToastContext';
 import { useSettings } from '../contexts/SettingsContext';
@@ -66,20 +68,27 @@ export function ItemView() {
   const { item, loading: itemLoading, error, refetch } = useItem(id);
   const { children, loading: childrenLoading } = useChildren(id, 'item');
   const { ancestors } = useAncestors(id, 'item');
+  const stats = useEntityStats(id || '', 'item');
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [destinationId, setDestinationId] = useState<string>('');
+  const [destinationType, setDestinationType] = useState<'location' | 'item' | undefined>(undefined);
 
   const loading = itemLoading || (item?.canHoldItems && childrenLoading);
   const hasChildren = children.length > 0;
+  const isContainer = item?.canHoldItems === true;
 
-  const handleDelete = async () => {
+  const handleDelete = async (choice?: string, dest?: { id: string; type?: 'location' | 'item' }) => {
     if (!item) return;
 
     setIsDeleting(true);
     try {
-      await deleteItem(item.id);
-      showToast('success', `"${item.name || t('common.unnamedItem')}" has been deleted`);
+      // choice is 'cascade' or 'move' (or undefined for simple delete)
+      const shouldCascade = choice === 'cascade';
+      // Use the destination passed from dialog (which comes from locationPicker state)
+      await deleteItem(item.id, shouldCascade, dest?.id, dest?.type);
+      showToast('success', t('item.deleted', { name: item.name || t('common.unnamedItem') }));
       // Navigate to parent or home
       if (item.parentId && item.parentType) {
         navigate(`/${item.parentType}/${item.parentId}`);
@@ -92,6 +101,11 @@ export function ItemView() {
       setIsDeleting(false);
       setShowDeleteDialog(false);
     }
+  };
+
+  const handleDestinationChange = (parentId: string, parentType?: 'location' | 'item') => {
+    setDestinationId(parentId);
+    setDestinationType(parentType);
   };
 
   /**
@@ -188,6 +202,15 @@ export function ItemView() {
              )}
            </div>
 
+           {/* Container Stats - Only shown for containers */}
+           {isContainer && (
+             <StatsCard
+               itemCount={stats.itemCount}
+               totalValue={stats.totalValue}
+               isLoading={stats.isLoading}
+             />
+           )}
+
            {/* Tags */}
            {item.tags && item.tags.length > 0 && (
              <div className="mb-6">
@@ -281,25 +304,53 @@ export function ItemView() {
       )}
 
         {/* Delete confirmation dialog */}
-        <ConfirmDialog
-          isOpen={showDeleteDialog}
-          title={t('item.deleteConfirm')}
-          message={
-             item?.canHoldItems && hasChildren
-               ? t('item.deleteConfirmWithContents', {
-                   name: item?.name || t('common.unnamedItem'),
-                   count: children.length,
-                 })
-               : t('item.deleteConfirmMsg', {
-                   name: item?.name || t('common.unnamedItem'),
-                 })
-          }
-          confirmLabel={isDeleting ? t('common.deleting') : t('common.delete')}
-          onConfirm={handleDelete}
-          onCancel={() => setShowDeleteDialog(false)}
-          isDestructive
-          confirmDisabled={isDeleting}
-        />
+        {item && (
+          <ConfirmDialog
+            isOpen={showDeleteDialog}
+            title={isContainer && hasChildren ? t('item.deleteWithContents') : t('item.deleteConfirm')}
+            message={
+              isContainer && hasChildren
+                ? t('item.deleteWithContentsMessage', { count: children.length })
+                : t('item.deleteConfirmMsg', { name: item.name || t('common.unnamedItem') })
+            }
+            confirmLabel={isDeleting ? t('common.deleting') : t('common.delete')}
+            onConfirm={handleDelete}
+            onCancel={() => {
+              setShowDeleteDialog(false);
+              setDestinationId('');
+              setDestinationType(undefined);
+            }}
+            isDestructive
+            confirmDisabled={isDeleting}
+            choices={
+              isContainer && hasChildren
+                ? [
+                    {
+                      value: 'move',
+                      label: t('item.deleteChoice_move'),
+                      description: t('item.deleteChoice_move_desc'),
+                    },
+                    {
+                      value: 'cascade',
+                      label: t('item.deleteChoice_cascade'),
+                      description: t('item.deleteChoice_cascade_desc'),
+                    },
+                  ]
+                : undefined
+            }
+            defaultChoice="move"
+            locationPicker={
+              isContainer && hasChildren
+                ? {
+                    value: destinationId,
+                    parentType: destinationType,
+                    onChange: handleDestinationChange,
+                    excludeItemId: item.id,
+                  }
+                : undefined
+            }
+          />
+        )}
     </Layout>
   );
 }

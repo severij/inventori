@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import type { AppSettings, Theme, Language, Currency, DateFormat } from '../types/settings';
+import type { AppSettings, Theme, Language, Currency, DateFormat, ItemCountMethod, ValueCalculation } from '../types/settings';
 import { DEFAULT_SETTINGS, SETTINGS_KEYS } from '../types/settings';
 
 interface SettingsContextType {
@@ -20,6 +20,8 @@ function loadSettings(): AppSettings {
       language: (localStorage.getItem(SETTINGS_KEYS.LANGUAGE) as Language) || DEFAULT_SETTINGS.language,
       currency: (localStorage.getItem(SETTINGS_KEYS.CURRENCY) as Currency) || DEFAULT_SETTINGS.currency,
       dateFormat: (localStorage.getItem(SETTINGS_KEYS.DATE_FORMAT) as DateFormat) || DEFAULT_SETTINGS.dateFormat,
+      itemCountMethod: (localStorage.getItem(SETTINGS_KEYS.ITEM_COUNT_METHOD) as ItemCountMethod) || DEFAULT_SETTINGS.itemCountMethod,
+      valueCalculation: (localStorage.getItem(SETTINGS_KEYS.VALUE_CALCULATION) as ValueCalculation) || DEFAULT_SETTINGS.valueCalculation,
     };
   } catch {
     return DEFAULT_SETTINGS;
@@ -35,6 +37,8 @@ function saveSettings(settings: AppSettings): void {
     localStorage.setItem(SETTINGS_KEYS.LANGUAGE, settings.language);
     localStorage.setItem(SETTINGS_KEYS.CURRENCY, settings.currency);
     localStorage.setItem(SETTINGS_KEYS.DATE_FORMAT, settings.dateFormat);
+    localStorage.setItem(SETTINGS_KEYS.ITEM_COUNT_METHOD, settings.itemCountMethod);
+    localStorage.setItem(SETTINGS_KEYS.VALUE_CALCULATION, settings.valueCalculation);
   } catch (err) {
     console.error('Failed to save settings:', err);
   }

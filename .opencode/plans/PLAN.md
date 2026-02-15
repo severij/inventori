@@ -303,7 +303,9 @@ Add ability to select and change parent locations when creating or editing locat
 - [x] **Phase 28:** Tag input Add button for mobile
 - [x] **Phase 29:** Fix tag search query parameter
 - [x] **Phase 30:** Fix includeInTotal counting bug
-- [ ] **Phase 31+:** Additional features (optional)
+- [x] **Phase 31:** User choice on delete (cascade vs orphan)
+- [ ] **Phase 31.1:** Add destination picker to delete dialog
+- [ ] **Phase 32+:** Additional features (optional)
 
 ---
 
@@ -824,7 +826,638 @@ Garage
 
 ---
 
-## Next Steps (Phase 31+)
+## Phase 31: User Choice on Delete (Cascade vs Orphan)
+
+**Status: COMPLETED ✅**
+
+Add user choice when deleting locations or container items that have contents. Currently, all contents are cascade-deleted without asking. Users should be able to choose whether to delete all contents or make them unassigned (orphan them).
+
+### Current Behavior
+
+**Problem:**
+- Deleting a location/container always deletes all items inside
+- No warning about child items
+- No way to preserve items by making them unassigned
+- Data model supports unassigned items, but delete logic doesn't use it
+
+**Example:**
+```
+Garage
+└── Metal Shelf (container)
+    ├── Toolbox (container)
+    │   ├── Hammer
+    │   └── Wrench
+    └── Screwdriver (qty: 5)
+```
+
+Currently: Delete "Metal Shelf" → All 8 items deleted (no choice given)  
+Expected: User chooses → Delete all OR make them unassigned
+
+### 31.1 Extend ConfirmDialog with Choices ✅
+
+**`src/components/ConfirmDialog.tsx`:**
+- ✅ Added optional `choices` prop: `Array<{ value: string; label: string; description?: string }>`
+- ✅ Added optional `defaultChoice` prop: `string`
+- ✅ Changed `onConfirm` signature to accept selected choice: `(choice?: string) => void`
+- ✅ Render radio button group when `choices` is provided
+- ✅ Manage selected choice state internally with `useState`
+- ✅ Reset selected choice to default when dialog opens
+- ✅ Pass selected choice to `onConfirm` callback
+- ✅ Maintained backward compatibility (works without choices for existing usage)
+- ✅ Exported `DialogChoice` type for reuse
+
+### 31.2 Add i18n Strings ✅
+
+**`src/i18n/locales/en.json`:**
+- ✅ `location.deleteWithContents`: "Delete Location with Contents"
+- ✅ `location.deleteWithContentsMessage`: "This location contains {{count}} items. What would you like to do?"
+- ✅ `location.deleteChoice_cascade`: "Delete all contents"
+- ✅ `location.deleteChoice_cascade_desc`: "Permanently delete this location and all items inside"
+- ✅ `location.deleteChoice_orphan`: "Make contents unassigned"
+- ✅ `location.deleteChoice_orphan_desc`: "Delete this location but move items to Inbox"
+- ✅ `item.deleteWithContents`: "Delete Container with Contents"
+- ✅ `item.deleteWithContentsMessage`: "This container holds {{count}} items. What would you like to do?"
+- ✅ `item.deleteChoice_cascade`: "Delete all contents"
+- ✅ `item.deleteChoice_cascade_desc`: "Permanently delete this container and all items inside"
+- ✅ `item.deleteChoice_orphan`: "Make contents unassigned"
+- ✅ `item.deleteChoice_orphan_desc`: "Delete this container but move items to Inbox"
+
+**`src/i18n/locales/fi.json`:**
+- ✅ Mirrored all keys with Finnish translations
+
+### 31.3 Update deleteLocation Function ✅
+
+**`src/db/locations.ts`:**
+- ✅ Fixed `deleteLocation()` function to properly support orphaning items
+- ✅ When `deleteChildren=false`:
+  - Orphan child locations (already worked: line 144)
+  - **Orphan child items** (changed from delete to update `parentId: undefined, parentType: undefined`)
+- ✅ When `deleteChildren=true`:
+  - Recursively delete everything (already worked)
+- ✅ Removed incorrect comment "Items can't be orphaned"
+- ✅ Imported `updateItem` from `./items`
+
+### 31.4 Update deleteItem Function ✅
+
+**`src/db/items.ts`:**
+- ✅ Fixed `deleteItem()` function to properly support orphaning
+- ✅ When `deleteChildren=false`:
+  - **Orphan child items** (changed from delete to update `parentId: undefined, parentType: undefined`)
+- ✅ When `deleteChildren=true`:
+  - Recursively delete everything (already worked)
+- ✅ Removed incorrect comment "Items can't be orphaned"
+
+### 31.5 Update LocationView Delete Handler ✅
+
+**`src/pages/LocationView.tsx`:**
+- ✅ Added `hasChildren` and `totalChildrenCount` computed values
+- ✅ Updated `handleDelete` to accept optional `choice?: string` parameter
+- ✅ Pass choice to `deleteLocation(id, choice === 'cascade')`
+- ✅ Updated dialog rendering:
+  - Show `deleteWithContents` title when has children
+  - Show choice dialog message with count when has children
+  - Provide two choices: orphan (default) and cascade
+  - Render simple confirmation when no children
+- ✅ Wrapped dialog in conditional to ensure `location` exists
+
+### 31.6 Update ItemView Delete Handler ✅
+
+**`src/pages/ItemView.tsx`:**
+- ✅ Added `isContainer` computed value
+- ✅ Updated `handleDelete` to accept optional `choice?: string` parameter
+- ✅ Pass choice to `deleteItem(id, choice === 'cascade')`
+- ✅ Updated dialog rendering:
+  - Show `deleteWithContents` title when is container and has children
+  - Show choice dialog message with count when has children
+  - Provide two choices: orphan (default) and cascade
+  - Render simple confirmation when not a container or no children
+- ✅ Wrapped dialog in conditional to ensure `item` exists
+
+### 31.7 Build and Verification ✅
+
+**Build Status:**
+- ✅ Build passes with zero TypeScript errors
+- ✅ All 134 modules transformed correctly
+- ✅ CSS: 39.35 kB (gzip: 7.87 kB)
+- ✅ JS: 515.50 kB (gzip: 154.24 kB)
+- ✅ PWA precache: 11 entries (544.79 KiB)
+
+**Expected Behavior:**
+- ✅ Deleting empty location → Simple confirmation
+- ✅ Deleting location with contents → Choice dialog (orphan/cascade)
+- ✅ Deleting empty container item → Simple confirmation
+- ✅ Deleting container with contents → Choice dialog (orphan/cascade)
+- ✅ Deleting non-container item → Simple confirmation
+- ✅ Orphaned items appear in Inbox (unassigned)
+- ✅ Cascade delete removes everything recursively
+- ✅ Finnish translations work correctly
+
+**Files Modified (7 total):**
+1. `src/components/ConfirmDialog.tsx` - Extended with radio button choices
+2. `src/i18n/locales/en.json` - Added delete choice strings
+3. `src/i18n/locales/fi.json` - Added Finnish delete choice strings
+4. `src/db/locations.ts` - Fixed to orphan items instead of deleting
+5. `src/db/items.ts` - Fixed to orphan child items instead of deleting
+6. `src/pages/LocationView.tsx` - Added choice dialog for locations with contents
+7. `src/pages/ItemView.tsx` - Added choice dialog for containers with contents
+
+---
+
+## Phase 31.1: Add Destination Picker to Delete Dialog
+
+**Status: ✅ COMPLETED**
+
+Enhance the delete dialog to allow users to choose where contents should be moved, instead of only offering "make unassigned" or "delete all". This gives users full control over item relocation when deleting locations/containers.
+
+### Problem
+
+**Phase 31 provided two choices:**
+1. Make contents unassigned (move to Inbox)
+2. Delete all contents (cascade delete)
+
+**Limitation:** Users can't move items to a specific location/container in one step. They must:
+1. Delete the location (moving items to Inbox)
+2. Manually relocate each item from Inbox to desired destination
+
+This is tedious when reorganizing inventory.
+
+### Solution
+
+**Replace "make unassigned" with "choose destination":**
+1. **Choose destination for contents** (with LocationPicker) - default
+   - LocationPicker embedded inline in dialog
+   - Default selection: "No location" (Inbox/unassigned) - safe fallback
+   - User can select any valid location or container
+   - Picker dims when "Delete all" is selected
+2. **Delete all contents** (cascade delete)
+
+### 31.1.1 Extend ConfirmDialog Component ✅
+
+**`src/components/ConfirmDialog.tsx`:**
+- ✅ Add optional `locationPicker` prop with configuration:
+  - `value: string` - Current selection
+  - `parentType?: 'location' | 'item'` - Current type
+  - `onChange: (id, type?) => void` - Selection callback
+  - `excludeLocationId?: string` - For locations
+  - `excludeItemId?: string` - For container items
+  - `locationsOnly?: boolean` - Restrict to locations only
+- ✅ Change `onConfirm` signature: `(choice?, destination?) => void`
+- ✅ Import and render `LocationPicker` component inline below first choice
+- ✅ Apply `opacity-50 pointer-events-none` to picker when "cascade" choice selected
+- ✅ Add `max-h-[80vh] overflow-y-auto` to dialog content for scrolling
+- ✅ Pass selected destination to `onConfirm` callback
+- ✅ Track destination internally alongside choice selection
+
+### 31.1.2 Update i18n Strings ✅
+
+**`src/i18n/locales/en.json`:**
+- ✅ Replace `location.deleteChoice_orphan` → `location.deleteChoice_move`
+  - New label: "Choose destination for contents"
+  - New description: "Move items to a location or container before deleting"
+- ✅ Update `location.deleteChoice_cascade_desc` for consistency
+- ✅ Replace `item.deleteChoice_orphan` → `item.deleteChoice_move`
+  - New label: "Choose destination for contents"
+  - New description: "Move items to a location or container before deleting"
+- ✅ Update `item.deleteChoice_cascade_desc` for consistency
+
+**`src/i18n/locales/fi.json`:**
+- ✅ Mirror all English changes with Finnish translations
+
+### 31.1.3 Update deleteLocation Function ✅
+
+**`src/db/locations.ts`:**
+- ✅ Add parameters: `moveToId?: string`, `moveToType?: 'location' | 'item'`
+- ✅ Update signature: `deleteLocation(id, deleteChildren = false, moveToId?, moveToType?)`
+- ✅ When `deleteChildren=false` and `moveToId` provided:
+  - **Child locations:**
+    - If `moveToId === ''`: Make top-level (`parentId: undefined`)
+    - If `moveToId` provided AND `moveToType` is 'location' or undefined: Move to location (`parentId: moveToId`)
+    - Otherwise: Make top-level (can't move location into container)
+  - **Child items:**
+    - If `moveToId === ''`: Make unassigned (`parentId: undefined, parentType: undefined`)
+    - If `moveToId` provided: Move to destination (`parentId: moveToId, parentType: moveToType || 'location'`)
+- ✅ When `deleteChildren=false` and no `moveToId`: Keep existing behavior (orphan)
+- ✅ When `deleteChildren=true`: Keep existing behavior (cascade delete)
+
+### 31.1.4 Update deleteItem Function ✅
+
+**`src/db/items.ts`:**
+- ✅ Add parameters: `moveToId?: string`, `moveToType?: 'location' | 'item'`
+- ✅ Update signature: `deleteItem(id, deleteChildren = false, moveToId?, moveToType?)`
+- ✅ When `deleteChildren=false` and `moveToId` provided:
+  - **Child items:**
+    - If `moveToId === ''`: Make unassigned (`parentId: undefined, parentType: undefined`)
+    - If `moveToId` provided: Move to destination (`parentId: moveToId, parentType: moveToType || 'location'`)
+- ✅ When `deleteChildren=false` and no `moveToId`: Keep existing behavior (orphan)
+- ✅ When `deleteChildren=true`: Keep existing behavior (cascade delete)
+
+### 31.1.5 Update LocationView Delete Handler ✅
+
+**`src/pages/LocationView.tsx`:**
+- ✅ Add state: `destinationId: string` and `destinationType?: 'location' | 'item'`
+- ✅ Reset destination to `''` and `undefined` when dialog closes
+- ✅ Update `handleDelete` to accept `dest?` parameter
+- ✅ Pass `dest?.id` and `dest?.type` to `deleteLocation()`
+- ✅ Update dialog `choices`:
+  - Change `'orphan'` → `'move'`
+  - Update labels to use `deleteChoice_move` keys
+- ✅ Add `locationPicker` prop to dialog:
+  - `value: destinationId`
+  - `parentType: destinationType`
+  - `onChange: handleDestinationChange`
+  - `excludeLocationId: location.id`
+- ✅ Only provide `locationPicker` prop when `hasChildren` is true
+
+### 31.1.6 Update ItemView Delete Handler ✅
+
+**`src/pages/ItemView.tsx`:**
+- ✅ Add state: `destinationId: string` and `destinationType?: 'location' | 'item'`
+- ✅ Reset destination to `''` and `undefined` when dialog closes
+- ✅ Update `handleDelete` to accept `dest?` parameter
+- ✅ Pass `dest?.id` and `dest?.type` to `deleteItem()`
+- ✅ Update dialog `choices`:
+  - Change `'orphan'` → `'move'`
+  - Update labels to use `deleteChoice_move` keys
+- ✅ Add `locationPicker` prop to dialog:
+  - `value: destinationId`
+  - `parentType: destinationType`
+  - `onChange: handleDestinationChange`
+  - `excludeItemId: item.id`
+- ✅ Only provide `locationPicker` prop when `isContainer && hasChildren`
+
+### 31.1.7 Build and Verification ✅
+
+**Build Status:**
+- ✅ Build passes with zero TypeScript errors
+- ✅ All 134 modules transformed correctly
+- ✅ CSS: 39.42 kB (gzip: 7.88 kB)
+- ✅ JS: 516.68 kB (gzip: 154.39 kB)
+- ✅ PWA precache: 11 entries (546.01 KiB)
+
+**Files Modified (7 total):**
+1. `src/components/ConfirmDialog.tsx`
+2. `src/i18n/locales/en.json`
+3. `src/i18n/locales/fi.json`
+4. `src/db/locations.ts`
+5. `src/db/items.ts`
+6. `src/pages/LocationView.tsx`
+7. `src/pages/ItemView.tsx`
+
+---
+
+## Phase 32: Inventory Statistics Display
+
+**Status: IN PROGRESS**
+
+Add inventory statistics display to Home page, LocationView, and ItemView pages. Stats show total item count and total value, with configurable calculation methods in Settings.
+
+### Problem
+
+Users need quick visibility into their inventory metrics without manually counting or calculating:
+- **Global view**: "How many items do I have in total? What's my total inventory value?"
+- **Location view**: "What's inside this location and all its sub-locations?"
+- **Container view**: "What's the total value of items in this container?"
+
+Currently, users must manually browse through locations/containers to understand their inventory scope.
+
+### Solution
+
+Add three types of stats displays:
+
+1. **Home Page Stats Bar**: Compact horizontal bar above tabs showing global inventory stats
+2. **LocationView Stats Card**: 2-column card showing recursive stats for that location and all descendants
+3. **ItemView Stats Card**: 2-column card showing recursive stats for container items and nested contents
+
+**User Controls (Settings):**
+- **Item Counting Method**: "Count unique items" (default) or "Sum quantities"
+- **Value Calculation**: "Current value with fallback" (default), "Current value only", or "Purchase price only"
+
+**Behavior:**
+- All stats respect the `includeInTotal` flag (items marked to exclude don't count)
+- Recursive calculation for locations (includes sub-locations and nested containers)
+- Display-only (not clickable) - keeps UI simple
+- Shows "0 items" and "$0.00" for empty locations/containers
+- Updates when settings change
+
+### 32.1 Add New Settings Types
+
+**`src/types/settings.ts`:**
+- Add `ItemCountMethod` type: `'unique' | 'quantity'`
+  - `'unique'`: Each item record counts as 1 (organizational view)
+  - `'quantity'`: Sum all `item.quantity` fields (physical count)
+- Add `ValueCalculation` type: `'currentValue' | 'currentWithFallback' | 'purchasePrice'`
+  - `'currentValue'`: Only use currentValue field (strict)
+  - `'currentWithFallback'`: Use currentValue, fallback to purchasePrice (flexible, default)
+  - `'purchasePrice'`: Only use purchasePrice field (original cost)
+- Extend `AppSettings` interface with:
+  - `itemCountMethod: ItemCountMethod`
+  - `valueCalculation: ValueCalculation`
+- Update `DEFAULT_SETTINGS`:
+  - `itemCountMethod: 'unique'` (default: each item counts once)
+  - `valueCalculation: 'currentWithFallback'` (default: use current value with fallback)
+- Add to `SETTINGS_KEYS`:
+  - `ITEM_COUNT_METHOD: 'inventori-itemCountMethod'`
+  - `VALUE_CALCULATION: 'inventori-valueCalculation'`
+
+**Reasoning:** These settings give users control over how inventory is counted and valued, accommodating different use cases (home inventory vs warehouse management).
+
+### 32.2 Update SettingsContext
+
+**`src/contexts/SettingsContext.tsx`:**
+- Update `loadSettings()` function:
+  - Read `itemCountMethod` from localStorage with fallback to default
+  - Read `valueCalculation` from localStorage with fallback to default
+- Update `saveSettings()` function:
+  - Persist `itemCountMethod` to localStorage
+  - Persist `valueCalculation` to localStorage
+- No interface changes needed (already supports partial updates via `updateSettings`)
+
+**Reasoning:** Extends existing settings infrastructure without breaking changes.
+
+### 32.3 Add Inventory Stats Settings UI
+
+**`src/pages/Settings.tsx`:**
+- Import new types: `ItemCountMethod`, `ValueCalculation`
+- Add handler functions:
+  - `handleItemCountMethodChange(method: ItemCountMethod)`
+  - `handleValueCalculationChange(method: ValueCalculation)`
+- Insert new "Inventory Stats" section between "Regional" and "Data Management"
+- Add dropdown for "Item Counting Method":
+  - Option: "Count unique items" (`unique`) - "Each item record counts once"
+  - Option: "Sum quantities" (`quantity`) - "Add up all quantity values"
+  - Helper text: "Choose how items are counted in statistics"
+- Add dropdown for "Value Calculation":
+  - Option: "Current value (with fallback)" (`currentWithFallback`) - "Use purchase price if current value not set"
+  - Option: "Current value only" (`currentValue`) - "Only count items with current value"
+  - Option: "Purchase price only" (`purchasePrice`) - "Use original purchase price"
+  - Helper text: "Choose which price field to use for total value"
+- Show success toast on save
+
+**UI Structure:**
+- Consistent with existing settings sections
+- Same select styling as Language, Currency, Date Format
+- Descriptive helper text below each dropdown
+
+### 32.4 Create Stats Calculation Utilities
+
+**`src/utils/stats.ts` (new):**
+- **`getDescendantItems(locationId: string): Promise<Item[]>`**
+  - Find all items in a location and all sub-locations (recursive)
+  - Algorithm:
+    1. Get all locations from database
+    2. Build set of descendant location IDs (recursive traversal)
+    3. Filter all items where `parentType === 'location'` and `parentId` in descendant set
+  - Returns flat array of all descendant items
+  
+- **`getDescendantItemsForContainer(itemId: string): Promise<Item[]>`**
+  - Find all items in a container and nested sub-containers (recursive)
+  - Algorithm:
+    1. Get all items from database
+    2. Build set of descendant item IDs (recursive traversal)
+    3. Return all descendant items (excluding the container itself)
+  - Returns flat array of all descendant items
+
+- **`calculateItemCount(items: Item[], method: ItemCountMethod, includeInTotalOnly: boolean): number`**
+  - Filter items by `includeInTotal` flag if `includeInTotalOnly === true`
+  - If `method === 'unique'`: Return filtered array length
+  - If `method === 'quantity'`: Sum all `item.quantity` fields
+  - Returns total count as number
+
+- **`calculateTotalValue(items: Item[], valueCalc: ValueCalculation, includeInTotalOnly: boolean): number`**
+  - Filter items by `includeInTotal` flag if `includeInTotalOnly === true`
+  - For each item, determine value based on `valueCalc`:
+    - `'currentValue'`: Use `currentValue ?? 0`
+    - `'currentWithFallback'`: Use `currentValue ?? purchasePrice ?? 0`
+    - `'purchasePrice'`: Use `purchasePrice ?? 0`
+  - Sum all values
+  - Returns total value as number
+
+**Reasoning:** 
+- Separate utility functions are testable and reusable
+- Recursive algorithms handle nested hierarchies correctly
+- Settings-driven calculations provide flexibility
+
+### 32.5 Create Stats Hooks
+
+**Architecture: Shared Calculation Hook Pattern**
+
+The stats hooks follow a shared base hook pattern to eliminate duplication:
+- `useStatsCalculation.ts` - Base hook with shared calculation logic
+- `useInventoryStats.ts` - Thin wrapper for global stats
+- `useEntityStats.ts` - Thin wrapper for entity-specific stats
+
+This approach provides:
+- ✅ Zero code duplication (~40 lines saved)
+- ✅ Single source of truth for calculation logic
+- ✅ Simple, focused hooks that are easy to understand
+- ✅ Easy to maintain and extend
+
+**`src/hooks/useStatsCalculation.ts` (new - base hook):**
+- Purpose: Shared calculation logic for all stats hooks
+- Props:
+  - `fetchItems: () => Promise<Item[]>` - Function to fetch items
+  - `dependencies: any[]` - Additional dependencies for recalculation
+- Uses `useSettings()` to get current calculation methods
+- State management: `{ itemCount, totalValue, isLoading }`
+- Applies `calculateItemCount()` and `calculateTotalValue()` from utils
+- Handles errors gracefully
+- Cleanup on unmount with `mounted` flag
+- Returns: `{ itemCount, totalValue, isLoading }`
+
+**`src/hooks/useInventoryStats.ts` (new - wrapper):**
+- Purpose: Calculate global inventory statistics for Home page
+- Implementation: Calls `useStatsCalculation(getAllItems, [])`
+- Fetches all items from database
+- No additional dependencies (recalculates only when settings change)
+- Returns: `{ itemCount, totalValue, isLoading }`
+
+**`src/hooks/useEntityStats.ts` (new - wrapper):**
+- Purpose: Unified hook for location and container stats
+- Props:
+  - `entityId: string` - Location or item ID
+  - `entityType: 'location' | 'item'` - Which entity type
+- Implementation: Calls `useStatsCalculation()` with conditional fetch function
+- Fetches descendant items based on entity type:
+  - Location: `getDescendantItems(entityId)`
+  - Item: `getDescendantItemsForContainer(entityId)`
+- Additional dependencies: `[entityId, entityType]`
+- Returns: `{ itemCount, totalValue, isLoading }`
+
+**Reasoning:**
+- Base hook eliminates ~40 lines of duplication
+- Each hook has a single, clear responsibility
+- Easy to add more stat hooks in the future (just wrap the base)
+- The abstraction is natural: "fetch items, then calculate stats"
+- Three small files are easier to maintain than two medium files
+
+### 32.6 Create Stats Components
+
+**`src/components/StatsBar.tsx` (new):**
+- Purpose: Compact horizontal stats bar for Home page
+- Props: `{ totalItems, totalValue, currency, language, loading }`
+- UI Design:
+  - Thin horizontal bar with border-bottom
+  - Two-column layout: "📦 Total Items" | "💰 Total Value"
+  - Vertical divider between columns
+  - Background: `bg-surface-secondary`
+  - Shows "..." during loading
+  - Uses `formatCurrency()` for value display
+  - Number formatting with `toLocaleString()`
+- Display-only (not clickable)
+- Mobile-friendly: flexible layout, readable text sizes
+
+**`src/components/StatsCard.tsx` (new):**
+- Purpose: 2-column stats card for LocationView and ItemView
+- Props: `{ totalItems, totalValue, currency, language, loading }`
+- UI Design:
+  - 2-column grid with gap
+  - Each stat in card: `bg-surface-tertiary/50` with border
+  - Label (small, muted) above value (large, bold)
+  - Shows "..." during loading
+  - Uses `formatCurrency()` for value display
+- Display-only (not clickable)
+- Mobile-friendly: grid stacks or stays 2-column based on space
+
+**Reasoning:**
+- Separate components for different contexts (bar vs card)
+- Consistent visual language with existing UI
+- Loading states provide feedback
+- Currency/language props enable proper formatting
+
+### 32.7 Integrate Stats into Pages
+
+**`src/pages/Home.tsx`:**
+- Import `StatsBar`, `useInventoryStats`, `useSettings`
+- Call `useInventoryStats()` hook
+- Render `<StatsBar>` above `<Tabs>` component
+- Pass stats data, currency, and language to StatsBar
+- Show loading state while calculating
+
+**`src/pages/LocationView.tsx`:**
+- Import `StatsCard`, `useEntityStats`, `useSettings`
+- Call `useEntityStats()` with `entityType: 'location'`
+- Insert `<StatsCard>` after description, before action buttons (line ~152)
+- Wrapped in `<div className="mt-4">` for spacing
+- Pass stats data, currency, and language to StatsCard
+- Always visible (shows zeros for empty locations)
+
+**`src/pages/ItemView.tsx`:**
+- Import `StatsCard`, `useEntityStats`, `useSettings`
+- Call `useEntityStats()` with `entityType: 'item'` and `enabled: item?.canHoldItems`
+- Insert `<StatsCard>` after main details card, before tags (line ~192)
+- Only render if `item.canHoldItems === true`
+- Pass stats data, currency, and language to StatsCard
+- Shows zeros for empty containers
+
+**Placement reasoning:**
+- Home: Above tabs = always visible, doesn't interfere with tab content
+- LocationView: After description = natural info → action flow, prominent without cluttering
+- ItemView: After details, before tags = separates static info from container contents
+
+### 32.8 Add i18n Strings
+
+**`src/i18n/locales/en.json`:**
+- Add new `"stats"` section:
+  - `"totalItems": "Total Items"`
+  - `"totalValue": "Total Value"`
+- Add to `"settings"` section:
+  - `"inventoryStats": "Inventory Stats"`
+  - `"itemCountMethod": "Item Counting Method"`
+  - `"itemCountMethodDesc": "Choose how items are counted in statistics"`
+  - `"itemCount_unique": "Count unique items"`
+  - `"itemCount_quantity": "Sum quantities"`
+  - `"valueCalculation": "Value Calculation"`
+  - `"valueCalculationDesc": "Choose which price field to use for total value"`
+  - `"value_currentWithFallback": "Current value (with fallback)"`
+  - `"value_currentValue": "Current value only"`
+  - `"value_purchasePrice": "Purchase price only"`
+
+**`src/i18n/locales/fi.json`:**
+- Add corresponding Finnish translations:
+  - Stats: "Tuotteet yhteensä", "Kokonaisarvo"
+  - Settings: "Varaston tilastot", "Tuotteiden laskentamenetelmä", etc.
+- Maintain consistency with existing Finnish translations
+
+### 32.9 Build and Verification
+
+**Build:**
+- Run `pnpm build`
+- Verify zero TypeScript errors
+- All modules transform successfully
+- No console warnings
+
+**Testing Scenarios:**
+
+**Settings:**
+1. Navigate to Settings → verify "Inventory Stats" section appears
+2. Change "Item Counting Method" → verify settings save
+3. Change "Value Calculation" → verify settings save
+4. Reload page → verify settings persist
+
+**Home Page:**
+1. Navigate to Home → verify StatsBar appears above tabs
+2. Verify counts and values are correct
+3. Add new item → return to Home → verify stats update
+4. Toggle `includeInTotal` flag → verify stats update
+
+**LocationView:**
+1. Navigate to location with items → verify StatsCard appears
+2. Verify recursive count includes sub-locations
+3. Empty location → verify shows "0 items" and "$0.00"
+4. Add item to sub-location → verify parent stats update
+
+**ItemView:**
+1. Navigate to container → verify StatsCard appears
+2. Non-container → verify no stats card
+3. Empty container → verify shows zeros
+4. Nested containers → verify recursive count
+
+**Calculation Methods:**
+1. Create item with `quantity: 5`, `includeInTotal: true`
+2. "Count unique items" → Shows 1
+3. "Sum quantities" → Shows 5
+4. Set `includeInTotal: false` → Shows 0 (both methods)
+
+**Value Calculations:**
+1. Item A: `currentValue: 100`, `includeInTotal: true`
+2. Item B: `purchasePrice: 50` (no currentValue), `includeInTotal: true`
+3. "Current value only" → Shows $100
+4. "Current with fallback" → Shows $150
+5. "Purchase price only" → Shows $50
+
+**Mobile:**
+1. Test on 375px viewport
+2. Verify readable text and proper spacing
+3. No horizontal scroll
+
+**i18n:**
+1. Switch to Finnish → verify all translations
+2. Verify currency formatting (EUR uses €)
+
+### Files Modified (8) and Created (5)
+
+**New Files:**
+1. `src/utils/stats.ts` - Stats calculation utilities
+2. `src/hooks/useInventoryStats.ts` - Global stats hook
+3. `src/hooks/useEntityStats.ts` - Unified location/container stats hook
+4. `src/components/StatsBar.tsx` - Home page stats bar
+5. `src/components/StatsCard.tsx` - Location/Item stats card
+
+**Modified Files:**
+1. `src/types/settings.ts` - Add stats setting types
+2. `src/contexts/SettingsContext.tsx` - Handle new settings
+3. `src/pages/Settings.tsx` - Add stats settings UI
+4. `src/pages/Home.tsx` - Integrate StatsBar
+5. `src/pages/LocationView.tsx` - Integrate StatsCard
+6. `src/pages/ItemView.tsx` - Integrate StatsCard
+7. `src/i18n/locales/en.json` - Add English strings
+8. `src/i18n/locales/fi.json` - Add Finnish strings
+
+**Total: 13 files (5 new, 8 modified)**
+
+---
+
+## Next Steps (Phase 33+)
 
 ### Phase 22: Complete i18n Migration (Optional)
 

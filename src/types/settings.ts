@@ -8,6 +8,16 @@ export type Currency = 'USD' | 'EUR';
 export type DateFormat = 'system' | 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD';
 
 /**
+ * Item counting method for inventory statistics
+ */
+export type ItemCountMethod = 'unique' | 'quantity';
+
+/**
+ * Value calculation method for inventory totals
+ */
+export type ValueCalculation = 'currentValue' | 'currentWithFallback' | 'purchasePrice';
+
+/**
  * Complete application settings
  */
 export interface AppSettings {
@@ -18,6 +28,10 @@ export interface AppSettings {
   language: Language;
   currency: Currency;
   dateFormat: DateFormat;
+
+  // Inventory Stats
+  itemCountMethod: ItemCountMethod;
+  valueCalculation: ValueCalculation;
 }
 
 /**
@@ -28,6 +42,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   language: 'en',
   currency: 'USD',
   dateFormat: 'system',
+  itemCountMethod: 'unique',
+  valueCalculation: 'currentWithFallback',
 };
 
 /**
@@ -38,4 +54,6 @@ export const SETTINGS_KEYS = {
   LANGUAGE: 'inventori-language',
   CURRENCY: 'inventori-currency',
   DATE_FORMAT: 'inventori-dateFormat',
+  ITEM_COUNT_METHOD: 'inventori-itemCountMethod',
+  VALUE_CALCULATION: 'inventori-valueCalculation',
 } as const;
