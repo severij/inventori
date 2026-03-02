@@ -1,6 +1,6 @@
 # Inventori UI Design Specification
 
-**Last Updated:** Phase 28 - Tag Input Add Button for Mobile (COMPLETED ✅)
+**Last Updated:** Phase 33 - Image Lightbox Preview (COMPLETED ✅)
 
 This document contains ASCII representations of all UI components, pages, and layouts for the Inventori app redesign.
 
@@ -22,6 +22,8 @@ This document contains ASCII representations of all UI components, pages, and la
 - ✅ **Phase 26 Complete:** Duplicate/copy item via overflow menu
 - ✅ **Phase 27 Complete:** Native camera for photo capture (replaced custom camera UI)
 - ✅ **Phase 28 Complete:** Tag input inline "+" add button for mobile
+- ✅ **Phase 32 Complete:** Inventory statistics display (home, location, container stats)
+- ✅ **Phase 33 Complete:** Image lightbox preview with prev/next navigation
 
 ## Design Principles
 
@@ -375,6 +377,18 @@ This document contains ASCII representations of all UI components, pages, and la
 - Applied in: EntityCard title, ItemView heading, breadcrumbs, LocationPicker, toast messages
 - Items can be created with photos only — name field is optional in ItemForm
 
+**Photo Preview with Lightbox** (Phase 33):
+- Photos displayed as horizontal scroll strip of thumbnails (192×192px)
+- Tapping any thumbnail opens fullscreen lightbox overlay
+- Lightbox features:
+  - Full-size image centered on screen with `object-contain`
+  - ← / → arrow buttons for prev/next navigation (hidden at boundaries)
+  - Dot indicators (● ○ ○) showing current position, clickable to jump to photo
+  - ✕ close button (top-right)
+  - Escape key and backdrop click both close the overlay
+  - Proper object URL lifecycle management (created once, revoked on unmount)
+- Memory leak fixed: Previously, new object URLs were created on every render but never revoked
+
 ### Container Item - canHoldItems: true (Phase 32 Updated)
 ```
 ┌─────────────────────────────────────┐
@@ -448,6 +462,31 @@ This document contains ASCII representations of all UI components, pages, and la
 - User can adjust any field before saving
 - Creates new item with fresh ID and timestamps
 - Shows "duplicated" toast on save
+
+### Photo Lightbox (Phase 33)
+
+**Mobile/Desktop view:**
+```
+┌───────────────────────────────────────┐
+│ ✕                                     │ ← Close button (top-right)
+│                                       │
+│                                       │
+│   [←]    [Full-size photo]    [→]     │ ← Prev/Next arrows (hidden at boundaries)
+│                                       │
+│                                       │
+│        ●  ○  ○  ○ (dots)              │ ← Position indicators (clickable)
+└───────────────────────────────────────┘
+     (semi-transparent black background)
+```
+
+**Behavior:**
+- Fixed-position overlay (z-50) covering full viewport
+- Image centered, `object-contain` (preserves aspect ratio, fits screen)
+- Clicking backdrop (black area) closes overlay
+- Escape key closes overlay
+- Prev/Next arrows navigate between photos, hidden when at boundaries
+- Dot indicators show current position, clickable to jump to specific photo
+- All object URLs created once on mount, properly revoked on unmount
 
 ---
 
@@ -978,7 +1017,8 @@ Photos (2/5)
 - Camera: `<input type="file" accept="image/*" capture="environment">` (hidden, triggered by button)
 - Upload: `<input type="file" accept="image/*" multiple>` (hidden, triggered by button)
 - Both buttons are `type="button"` with `min-h-[44px]` touch targets
-- Photo thumbnails show with "✕" remove button overlay
+- Photo thumbnails show with "✕" remove button overlay (80×80px, separate from lightbox)
+- Tapping thumbnail (not the ✕) opens fullscreen lightbox to preview without closing form (Phase 33)
 - Max photos configurable via `maxPhotos` prop (default 5)
 - Buttons hidden when max photos reached
 

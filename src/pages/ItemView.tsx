@@ -7,6 +7,7 @@ import { EntityCard } from '../components/EntityCard';
 import { IdDisplay } from '../components/IdDisplay';
 import { CollapsibleSection } from '../components/CollapsibleSection';
 import { OverflowMenu, type MenuItem } from '../components/OverflowMenu';
+import { PhotoLightbox } from '../components/PhotoLightbox';
 import { DetailSkeleton, CardListSkeleton } from '../components/Skeleton';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
@@ -74,6 +75,7 @@ export function ItemView() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [destinationId, setDestinationId] = useState<string>('');
   const [destinationType, setDestinationType] = useState<'location' | 'item' | undefined>(undefined);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const loading = itemLoading || (item?.canHoldItems && childrenLoading);
   const hasChildren = children.length > 0;
@@ -173,7 +175,8 @@ export function ItemView() {
                     key={index}
                     src={URL.createObjectURL(photo)}
                     alt={`${item.name || t('common.unnamedItem')} photo ${index + 1}`}
-                    className="w-48 h-48 object-cover rounded-lg flex-shrink-0"
+                    className="w-48 h-48 object-cover rounded-lg flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => setLightboxIndex(index)}
                   />
                 ))}
               </div>
@@ -351,6 +354,15 @@ export function ItemView() {
             }
           />
         )}
+
+      {/* Photo lightbox overlay */}
+      {lightboxIndex !== null && item && (
+        <PhotoLightbox
+          photos={item.photos}
+          initialIndex={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+        />
+      )}
     </Layout>
   );
 }

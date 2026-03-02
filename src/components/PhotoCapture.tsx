@@ -1,4 +1,5 @@
-import { useRef } from 'react';
+import { useState, useRef } from 'react';
+import { PhotoLightbox } from './PhotoLightbox';
 
 interface PhotoCaptureProps {
   photos: Blob[];
@@ -21,6 +22,7 @@ export function PhotoCapture({
 }: PhotoCaptureProps) {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const addPhotos = (files: FileList) => {
     const newPhotos: Blob[] = [];
@@ -66,14 +68,15 @@ export function PhotoCapture({
       <label className="block text-sm font-medium text-content-secondary">{label}</label>
 
       {/* Photo previews */}
-      {photos.length > 0 && (
+       {photos.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {photos.map((photo, index) => (
-            <div key={index} className="relative">
+            <div key={index} className="relative group">
               <img
                 src={URL.createObjectURL(photo)}
                 alt={`Photo ${index + 1}`}
-                className="w-20 h-20 object-cover rounded-md border border-border"
+                className="w-20 h-20 object-cover rounded-md border border-border cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={() => setLightboxIndex(index)}
               />
               <button
                 type="button"
@@ -168,6 +171,15 @@ export function PhotoCapture({
       <p className="text-xs text-content-muted">
         {photos.length} / {maxPhotos} photos
       </p>
+
+      {/* Photo lightbox overlay */}
+      {lightboxIndex !== null && (
+        <PhotoLightbox
+          photos={photos}
+          initialIndex={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+        />
+      )}
     </div>
   );
 }

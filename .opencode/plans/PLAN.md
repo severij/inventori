@@ -304,8 +304,10 @@ Add ability to select and change parent locations when creating or editing locat
 - [x] **Phase 29:** Fix tag search query parameter
 - [x] **Phase 30:** Fix includeInTotal counting bug
 - [x] **Phase 31:** User choice on delete (cascade vs orphan)
-- [ ] **Phase 31.1:** Add destination picker to delete dialog
-- [ ] **Phase 32+:** Additional features (optional)
+- [x] **Phase 31.1:** Add destination picker to delete dialog
+- [x] **Phase 32:** Inventory statistics display
+- [x] **Phase 33:** Image lightbox preview
+- [ ] **Phase 34+:** Additional features (optional)
 
 ---
 
@@ -1107,7 +1109,7 @@ This is tedious when reorganizing inventory.
 
 ## Phase 32: Inventory Statistics Display
 
-**Status: IN PROGRESS**
+**Status: COMPLETED ✅**
 
 Add inventory statistics display to Home page, LocationView, and ItemView pages. Stats show total item count and total value, with configurable calculation methods in Settings.
 
@@ -1457,7 +1459,162 @@ This approach provides:
 
 ---
 
-## Next Steps (Phase 33+)
+## Phase 33: Image Lightbox Preview
+
+**Status: COMPLETED ✅**
+
+Add fullscreen image preview with lightbox overlay to both ItemView and edit form. Tapping a photo thumbnail opens a modal dialog displaying the full-size image with prev/next navigation and dot indicators.
+
+### Problem
+
+Currently:
+- ItemView shows photos as small 192×192px thumbnails in a horizontal scroll strip — hard to see details
+- Edit form shows even smaller 80×80px thumbnails — difficult to review photos before saving
+- No way to see full-size images without leaving the app
+- Object URLs created in renders are never revoked, causing memory leak
+
+### Solution
+
+Add a shared `PhotoLightbox` component that:
+- Displays full-size image in a fixed-position overlay
+- Provides prev/next arrow navigation between photos
+- Shows dot indicators (● ○ ○) for position when multiple photos
+- Closes on Escape key or backdrop click
+- Properly manages Blob → object URL lifecycle (fixes memory leak)
+- Works in both ItemView and PhotoCapture contexts
+
+### 33.1 Create PhotoLightbox Component ✅
+
+**`src/components/PhotoLightbox.tsx` (new):**
+- ✅ Props: `{ photos: Blob[], initialIndex: number, onClose: () => void }`
+- ✅ Layout: Fixed-position overlay with centered `<img object-contain>` and navigation controls
+- ✅ Controls:
+  - ✕ Close button (top-right)
+  - ← / → Prev/Next arrows (hidden at boundaries)
+  - Dot indicators below image (● for current, ○ for others)
+- ✅ Keyboard: Escape to close, arrow keys to navigate
+- ✅ Backdrop click: Close overlay
+- ✅ Accessibility: `role="dialog"`, `aria-modal="true"`, `aria-label`, focus management
+- ✅ Object URL management:
+  - Create all URLs once on mount with `useMemo`
+  - Revoke all on unmount with `useEffect` cleanup
+  - Fixes leak in ItemView and PhotoCapture
+
+### 33.2 Update ItemView ✅
+
+**`src/pages/ItemView.tsx`:**
+- ✅ Import `PhotoLightbox` component
+- ✅ Add state: `const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)`
+- ✅ Wire thumbnails: Each photo gets `onClick={() => setLightboxIndex(index)}` and `cursor-pointer` class
+- ✅ Render lightbox: `{lightboxIndex !== null && <PhotoLightbox ... />}`
+- ✅ Close handler: `onClose={() => setLightboxIndex(null)}`
+
+### 33.3 Update PhotoCapture ✅
+
+**`src/components/PhotoCapture.tsx`:**
+- ✅ Import `PhotoLightbox` component
+- ✅ Add state: `const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)`
+- ✅ Wire thumbnails: Each 80×80 preview gets `onClick={() => setLightboxIndex(index)}` and `cursor-pointer` class
+- ✅ Keep delete `×` button separate — it deletes immediately (doesn't open lightbox)
+- ✅ Render lightbox: `{lightboxIndex !== null && <PhotoLightbox ... />}`
+- ✅ Close handler: `onClose={() => setLightboxIndex(null)}`
+- ✅ Note: Lightbox is read-only, no delete action from within it
+
+### 33.4 Build and Verification ✅
+
+**Build:**
+- ✅ `pnpm build` — zero TypeScript errors
+- ✅ All modules transform successfully
+- ✅ No console warnings
+
+**Testing Scenarios:**
+1. ItemView with photos → tap thumbnail → lightbox opens with full image
+2. Navigation: prev/next arrows work, dots update, hidden at boundaries
+3. Close: Escape key, backdrop click, close button all work
+4. PhotoCapture (edit form): tap thumbnail → lightbox opens
+5. Delete `×` button works separately from lightbox
+6. Memory: No object URL leaks (cleaned up on unmount)
+7. Mobile: overlay fills viewport, image readable on small screens
+
+**Files Modified (3 total):**
+1. `src/components/PhotoLightbox.tsx` — New lightbox component
+2. `src/pages/ItemView.tsx` — Wire up thumbnail clicks, render lightbox
+3. `src/components/PhotoCapture.tsx` — Wire up thumbnail clicks, render lightbox
+
+---
+
+## Phase 33.1: Fix PhotoLightbox URL Lifecycle Bug
+
+**Status: IN PROGRESS**
+
+The initial lightbox implementation had a critical bug: object URLs were being revoked prematurely, causing `ERR_FILE_NOT_FOUND` errors when viewing images.
+
+### Problem
+
+**Root cause:** Object URL creation used `useMemo` with `photos` array as dependency. When the parent component (`ItemView`) re-renders after `lightboxIndex` state changes, the `item.photos` reference may change, causing:
+1. `useMemo` dependency change triggers URL recreation
+2. Cleanup effect from previous URLs runs and revokes them
+3. New URLs created but cleanup timing creates a race condition
+4. Browser can't find the URL that was sent to `<img src>`
+
+In React Strict Mode (development), effects run twice, which compounds the issue.
+
+### Solution
+
+Replace `useMemo` + separate cleanup effect with a single `useEffect` that:
+- Runs **once** on lightbox mount (empty dependency array)
+- Creates all object URLs for the lightbox's entire lifetime
+- Cleans up URLs **only** when lightbox unmounts
+- Stores URLs in state instead of memoizing
+
+This ensures URLs are stable and valid for the duration the lightbox is open.
+
+### 33.1.1 Fix PhotoLightbox Component ✅
+
+**`src/components/PhotoLightbox.tsx`:**
+- ✅ Remove `useMemo` for object URL creation
+- ✅ Add state: `const [objectUrls, setObjectUrls] = useState<string[]>([])`
+- ✅ Add `useEffect` with empty dependency array `[]`:
+  ```ts
+  useEffect(() => {
+    const urls = photos.map((photo) => URL.createObjectURL(photo));
+    setObjectUrls(urls);
+    return () => {
+      urls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, []); // ← Run once on mount, cleanup on unmount
+  ```
+- ✅ Image uses `src={objectUrls[currentIndex]}` (from state, not memoized)
+- ✅ Only memoization remains: `useMemo` for `canGoPrev`, `canGoNext`, `hasMultiple` calculations (optional, minimal impact)
+
+### 33.1.2 Build and Verification ✅
+
+**Build:**
+- ✅ `pnpm build` — zero TypeScript errors
+- ✅ All modules transform successfully
+
+**Testing:**
+1. ItemView: tap photo → lightbox opens
+2. Image displays at full size without error
+3. Prev/Next navigation works
+4. Escape key closes without errors
+5. Backdrop click closes without errors
+6. Switch between photos — all render correctly
+7. Close lightbox, reopen with different photo — works
+8. PhotoCapture edit form: thumbnail preview works
+
+**Expected Result:**
+- No `ERR_FILE_NOT_FOUND` errors
+- Images display correctly on first open
+- All navigation works smoothly
+- Memory cleanup confirmed (URLs revoked on unmount)
+
+**Files Modified (1 total):**
+1. `src/components/PhotoLightbox.tsx` — Fix URL lifecycle management
+
+---
+
+## Next Steps (Phase 34+)
 
 ### Phase 22: Complete i18n Migration (Optional)
 
