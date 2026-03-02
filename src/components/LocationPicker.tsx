@@ -297,33 +297,68 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
      return topLevelLocs.length > 0 && unassignedContainers.length > 0;
    };
 
-   const isLoading = locationsLoading || containerItemsLoading;
-   const { locations: children, items: childItems } = getChildren();
-   const currentLevel = navigationStack[navigationStack.length - 1];
-   const isUnassigned = !value;
-   const showHeaders = shouldShowSectionHeaders();
+    const isLoading = locationsLoading || containerItemsLoading;
+    const { locations: children, items: childItems } = getChildren();
+    const currentLevel = navigationStack[navigationStack.length - 1];
+    const isUnassigned = !value;
+    const showHeaders = shouldShowSectionHeaders();
 
-  // Build display text for trigger button
-  const displayText = isUnassigned
-    ? locationsOnly ? 'No parent (top-level)' : 'No location'
-    : ancestors.length > 0
-      ? ancestors.map((a) => (a.type === 'location' ? '📍' : '📦') + ' ' + (a.name || 'Unnamed item')).join(' > ')
-      : placeholder;
+   // Build aria-label text (plain string for accessibility)
+   const ariaLabelText = isUnassigned
+     ? locationsOnly ? 'No parent (top-level)' : 'No location'
+     : ancestors.length > 0
+       ? ancestors.map((a) => (a.type === 'location' ? '📍' : '📦') + ' ' + (a.name || 'Unnamed item')).join(' > ')
+       : placeholder;
+
+   // Build display text for trigger button
+   // For unassigned, use plain text; for assigned, use wrapped segments
+   const displayText = isUnassigned
+     ? locationsOnly ? 'No parent (top-level)' : 'No location'
+     : ancestors.length > 0
+       ? 'path-segments' // Placeholder - will be rendered as JSX below
+       : placeholder;
 
    return (
-     <div ref={pickerRef} className="relative">
+     <div ref={pickerRef} className="relative min-w-0">
         {/* Trigger Button */}
         <div className="flex items-center gap-2">
-          <button type="button"
-            id={id || "location-picker-button"}
-            onClick={() => setIsOpen(true)}
-            disabled={disabled}
-            aria-label={`Select location: ${displayText}`}
-            className={`flex-1 text-left mt-1 block rounded-lg shadow-sm px-3 py-2 border ${
-              hasError ? 'border-red-500' : 'border-border'
-            } bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between`}
-          >
-           <span className={`truncate ${isUnassigned ? 'text-content-secondary italic' : ''}`}>{displayText}</span>
+            <button type="button"
+              id={id || "location-picker-button"}
+              onClick={() => setIsOpen(true)}
+              disabled={disabled}
+              aria-label={`Select location: ${ariaLabelText}`}
+             className={`flex-1 min-w-0 text-left mt-1 block rounded-lg shadow-sm px-3 py-2 border ${
+               hasError ? 'border-red-500' : 'border-border'
+             } bg-surface text-content focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between`}
+            >
+            {ancestors.length > 0 ? (
+              <span className="flex flex-wrap gap-1">
+                {ancestors.map((a, i) => (
+                  <span key={a.id} className="flex items-center gap-1 whitespace-nowrap">
+                    <span>{a.type === 'location' ? '📍' : '📦'} {a.name || 'Unnamed item'}</span>
+                    {i < ancestors.length - 1 && (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2}
+                        stroke="currentColor"
+                        className="w-4 h-4 text-content flex-shrink-0"
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                        />
+                      </svg>
+                    )}
+                  </span>
+                ))}
+              </span>
+            ) : (
+              <span className={`${isUnassigned ? 'text-content-secondary italic' : ''}`}>{displayText}</span>
+            )}
            <span className="flex-shrink-0 ml-2" aria-hidden="true">▼</span>
          </button>
 

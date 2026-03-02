@@ -144,8 +144,8 @@ export function ItemForm({
          </label>
        </div>
 
-       {/* Basic Information Section */}
-       <fieldset className="space-y-4">
+        {/* Basic Information Section */}
+        <fieldset className="space-y-4 min-w-0">
          <legend className="text-lg font-medium text-content">{t('form.basicInfo')}</legend>
 
          {/* Name + Quantity on same row */}
@@ -212,8 +212,8 @@ export function ItemForm({
            />
          </div>
 
-           {/* Location field */}
-           <div>
+            {/* Location field */}
+            <div className="min-w-0">
              <label htmlFor="item-parent" className="block text-sm font-medium text-content-secondary">
                {t('form.location')}
              </label>

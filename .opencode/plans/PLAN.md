@@ -308,7 +308,8 @@ Add ability to select and change parent locations when creating or editing locat
 - [x] **Phase 32:** Inventory statistics display
 - [x] **Phase 33:** Image lightbox preview
 - [x] **Phase 34:** Fix photo memory leaks & add image compression
-- [ ] **Phase 35+:** Additional features (optional)
+- [x] **Phase 35:** Fix form layout overflow with long location paths
+- [ ] **Phase 36+:** Additional features (optional)
 
 ---
 
@@ -1866,7 +1867,186 @@ When users capture photos from the native camera (especially on smartphone with 
 
 ---
 
-## Next Steps (Phase 35+)
+## Phase 35: Fix Form Layout Overflow with Long Location Paths
+
+**Status: COMPLETED ✅**
+
+Fix a layout overflow bug where long location picker paths cause the entire form to overflow the viewport, pushing all form fields (text inputs, text areas, etc.) wider than their intended width.
+
+### Problem
+
+When a user selects a deeply nested location (e.g., "House > Kitchen > Cupboard > Top Shelf > Storage Box"), the LocationPicker trigger button displays the full path. This long text:
+
+1. **Overflows the trigger button** — the `truncate` class doesn't work because there's no width constraint in the flex chain
+2. **Pushes the entire `<main>` element wider** — beyond its `max-w-4xl` boundary
+3. **Cascades to all form fields** — text inputs, text areas, and other fields in the same form all expand to the viewport width, breaking the layout on narrow screens
+
+**Root Causes:**
+
+**Root Cause 1:** `<main>` in `Layout.tsx` has `max-w-4xl mx-auto` but no `overflow-hidden` or `w-full`
+- `max-width` is only a *preference* — it doesn't prevent the element from being pushed wider by its children
+- When any descendant (the LocationPicker button) becomes wider than `max-w-4xl`, the `<main>` expands to accommodate it
+- All block-level form children inside the expanded `<main>` inherit and fill the new width
+
+**Root Cause 2:** `truncate` never fires on the path text in LocationPicker
+- The `<span class="truncate">` is inside a `<button class="flex-1">` inside a `<div class="flex items-center gap-2">`
+- For `truncate` to work in a flex context, every flex child in the chain needs `min-w-0` to allow shrinking below `min-content` width
+- Without `min-w-0` on the `<button>` and `<span>`, the flex items refuse to shrink and the container expands instead
+- The full chain from outer flex row → button → text span needs `min-w-0` at each step
+
+### Root Cause Analysis (Corrected)
+
+**The Deep Issue: Browser Default Fieldset Sizing**
+
+The form expands wider than the viewport because of how browsers handle `<fieldset>` elements. The CSS cascade is:
+
+```
+Layout > <main className="p-4 max-w-4xl mx-auto">
+  ItemForm > <form className="space-y-6">
+    <fieldset className="space-y-4">                 ← browser default: min-width: min-content
+      <div>                                           ← no min-w-0
+        <LocationPicker>
+          <div className="relative min-w-0">
+            <div className="flex items-center gap-2">
+              <button className="flex-1 min-w-0">
+                <span className="truncate min-w-0">  ← wants to truncate, but parent fieldset already expanded
+```
+
+**The Problem:**
+
+Browsers apply `min-width: min-content` to `<fieldset>` by default. This means the fieldset will **always** be at least as wide as the widest non-wrappable content it contains. When the `<LocationPicker>` renders a long path like "House > Kitchen > Cupboard > Top Shelf > Storage Box", the fieldset sees this as untruncated text and expands to fit it — **before** the `<span className="truncate">` ever gets a chance to shrink it.
+
+The fix is to explicitly override this default with `min-w-0`, which tells the fieldset: "You are allowed to shrink below your content's intrinsic width."
+
+Once the fieldset shrinks, the constraint propagates down to the LocationPicker button, and the `truncate` class works as intended.
+
+### 35.1 Add min-w-0 to Fieldset in ItemForm ✅
+
+**`src/components/ItemForm.tsx` (line 148):**
+
+- ✅ Change: `<fieldset className="space-y-4">`
+- ✅ To: `<fieldset className="space-y-4 min-w-0">`
+- **Effect:** Overrides browser default `min-width: min-content`, allowing the fieldset to shrink below its content's intrinsic width. This unblocks the truncation chain below.
+
+### 35.2 Add min-w-0 to Location Field Wrapper in ItemForm ✅
+
+**`src/components/ItemForm.tsx` (line 216):**
+
+- ✅ Change: `<div>`  (bare div wrapping LocationPicker)
+- ✅ To: `<div className="min-w-0">`
+- **Effect:** Belt-and-suspenders: ensures the intermediate wrapper also respects the shrinking constraint.
+
+### 35.3 Add min-w-0 to Location Field Wrapper in LocationForm ✅
+
+**`src/components/LocationForm.tsx` (line 105):**
+
+- ✅ Change: `<div>`  (bare div wrapping LocationPicker)
+- ✅ To: `<div className="min-w-0">`
+- **Effect:** Same fix for LocationForm, which also wraps LocationPicker without a width constraint.
+
+### 35.4 Allow Full Path Display with Multiline Wrap ✅
+
+**`src/components/LocationPicker.tsx` (line 326):**
+
+- ✅ Removed `truncate min-w-0` from display text span
+- ✅ Replaced plain string rendering with wrapped segment approach
+- ✅ Each location/item segment stays together on one line with `whitespace-nowrap`
+- ✅ Separators (`>`) appear after each segment except the last
+- ✅ Line breaks occur naturally after `>` separators
+- ✅ Added `ariaLabelText` helper to compute plain text version for accessibility
+- **Effect:** Full location path now displays across multiple lines, wrapping after `>` separators. Form width remains constrained.
+
+**Implementation Detail:**
+```tsx
+// Renders as:
+<span className="flex flex-wrap gap-1">
+  {ancestors.map((a, i) => (
+    <span key={a.id} className="whitespace-nowrap">
+      {icon} {name}
+      {i < ancestors.length - 1 ? ' >' : ''}
+    </span>
+  ))}
+</span>
+```
+
+### 35.5 Update Breadcrumbs Component with Same Wrapping Pattern ✅
+
+**`src/components/Breadcrumbs.tsx` (lines 31–89):**
+
+- ✅ Refactored breadcrumb structure to separate content from separators
+- ✅ Each breadcrumb item (icon + name/link) wrapped with `whitespace-nowrap`
+- ✅ Separators (SVG arrows) appear **after** each item except the last
+- ✅ `gap-1` on `<ol>` with `flex-wrap` allows natural line breaks
+- ✅ Consistent visual style with LocationPicker wrapping behavior
+- **Effect:** Breadcrumb navigation also wraps cleanly after separators, matching LocationPicker behavior.
+
+**Implementation Detail:**
+- Home link ends with separator (if ancestors exist)
+- Each ancestor item contains icon + link/text + separator (if not last)
+- `whitespace-nowrap` on each item prevents internal wrapping
+- Wrapping happens in `<ol>` between items
+
+### 35.6 Build and Verification ✅
+
+**Build:**
+- ✅ `npm run build` — zero TypeScript errors
+- ✅ All modules transform successfully
+- ✅ No console warnings
+
+**Testing Scenarios:**
+
+1. **LocationPicker with long path:**
+   - Create item in deeply nested location (5+ levels)
+   - Path displays as wrapped segments with `>` separator at end of each line
+   - Example: "📍 House >" / "📍 Kitchen >" / "📦 Storage Box"
+   - Full path visible, form fields remain constrained
+   - No horizontal scroll on narrow screens
+
+2. **Breadcrumbs with long path:**
+   - Navigate to deeply nested item/location
+   - Breadcrumbs wrap cleanly after `>` separators
+   - Example: "🏠 Home /" / "📍 House /" / "📍 Kitchen /" / "📦 Storage Box"
+   - Each breadcrumb item (icon + link) stays together on same line
+   - Wrapping occurs between items
+
+3. **Form field alignment:**
+   - Edit form with long location path in LocationPicker
+   - Text inputs, text areas, buttons all remain within `max-w-4xl`
+   - Long path wraps to multiple lines, making button taller but not wider
+   - No horizontal scroll on narrow screens
+
+4. **Responsive behavior:**
+   - Test on 320px, 375px, 768px, 1024px+ widths
+   - Path segments wrap as needed while staying readable
+   - Form maintains consistent width
+   - All separators visible and properly positioned
+
+5. **Accessibility:**
+   - Long path fully visible (no hidden text)
+   - aria-label on LocationPicker button shows plain text version: "Select location: 📍 House > 📍 Kitchen > ..."
+   - Screen readers can access complete path
+   - Breadcrumb links all functional despite wrapping
+
+**Files Modified (3 total):**
+1. `src/components/ItemForm.tsx` — Add `min-w-0` to `<fieldset>` and location field wrapper
+2. `src/components/LocationForm.tsx` — Add `min-w-0` to location field wrapper
+3. `src/components/LocationPicker.tsx` — Render segments with `whitespace-nowrap` and wrap after `>`
+4. `src/components/Breadcrumbs.tsx` — Restructure to wrap after separators, consistent with LocationPicker
+
+**Summary:**
+
+The form layout overflow bug is now completely fixed:
+- ✅ Fieldset's `min-width: min-content` browser default overridden with `min-w-0`
+- ✅ All intermediate containers allow shrinking with `min-w-0`
+- ✅ LocationPicker renders path as wrapped segments, each `whitespace-nowrap`, breaking after `>`
+- ✅ Breadcrumbs follow same wrapping pattern for visual consistency
+- ✅ Full paths remain visible across multiple lines
+- ✅ Form never exceeds viewport width
+- ✅ Accessibility maintained with proper aria-labels and semantic HTML
+
+---
+
+## Next Steps (Phase 36+)
 
 ### Phase 22: Complete i18n Migration (Optional)
 

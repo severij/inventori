@@ -101,8 +101,8 @@ export function LocationForm({
           />
         </div>
 
-         {/* Parent Location field */}
-         <div>
+          {/* Parent Location field */}
+          <div className="min-w-0">
            <label htmlFor="location-parent" className="block text-sm font-medium text-content-secondary">
              {t('location.parentLocation')}
            </label>
