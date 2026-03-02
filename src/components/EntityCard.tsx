@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { Location, Item } from '../types';
@@ -19,6 +20,24 @@ interface EntityCardProps {
 export function EntityCard({ entity, entityType }: EntityCardProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [thumbnailUrl, setThumbnailUrl] = useState<string>('');
+
+  // Create object URL for thumbnail on mount, revoke on unmount
+  useEffect(() => {
+    const thumbnail = entity.photos?.[0];
+    if (!thumbnail) {
+      setThumbnailUrl('');
+      return;
+    }
+
+    const url = URL.createObjectURL(thumbnail);
+    setThumbnailUrl(url);
+
+    return () => {
+      // Cleanup: revoke object URL when component unmounts
+      URL.revokeObjectURL(url);
+    };
+  }, [entity.id]); // Depends on entity ID, not photos array
 
   // Display name: Items may have no name, Locations always do
   const displayName = entity.name || (entityType === 'item' ? t('common.unnamedItem') : entity.name);
@@ -26,10 +45,6 @@ export function EntityCard({ entity, entityType }: EntityCardProps) {
   const handleClick = () => {
     navigate(`/${entityType}/${entity.id}`);
   };
-
-  // Get first photo as thumbnail (if available)
-  const thumbnail = entity.photos?.[0];
-  const thumbnailUrl = thumbnail ? URL.createObjectURL(thumbnail) : null;
 
   // Get icon based on entity type and canHoldItems flag
   const icon = getEntityIcon(entityType, entity);

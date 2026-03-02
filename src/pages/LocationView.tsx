@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Layout } from '../components/Layout';
@@ -65,6 +65,23 @@ export function LocationView() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [destinationId, setDestinationId] = useState<string>('');
   const [destinationType, setDestinationType] = useState<'location' | 'item' | undefined>(undefined);
+  const [coverPhotoUrl, setCoverPhotoUrl] = useState<string>('');
+
+  // Create object URL for cover photo on mount, revoke on unmount
+  useEffect(() => {
+    if (!location?.photos?.[0]) {
+      setCoverPhotoUrl('');
+      return;
+    }
+
+    const url = URL.createObjectURL(location.photos[0]);
+    setCoverPhotoUrl(url);
+
+    return () => {
+      // Cleanup: revoke object URL when component unmounts
+      URL.revokeObjectURL(url);
+    };
+  }, [location?.id]); // Depends on location ID, not photos array
 
   const loading = locationLoading || childLocationsLoading || childItemsLoading;
   const hasChildLocations = childLocations.length > 0;
@@ -111,7 +128,7 @@ export function LocationView() {
   };
 
   // Get first photo for display
-  const photoUrl = location?.photos?.[0] ? URL.createObjectURL(location.photos[0]) : null;
+  // (URL is created in useEffect above and stored in coverPhotoUrl state)
 
   return (
     <Layout title={location?.name ?? 'Location'} onBack={handleBack}>
@@ -142,15 +159,15 @@ export function LocationView() {
           {/* Breadcrumbs */}
           <Breadcrumbs ancestors={ancestors} />
 
-           {/* Location details */}
-           <div className="bg-surface rounded-lg shadow-sm border border-border p-4 mb-6">
-             {photoUrl && (
-               <img
-                 src={photoUrl}
-                 alt={location.name}
-                 className="w-full h-48 object-cover rounded-lg mb-4"
-               />
-             )}
+            {/* Location details */}
+            <div className="bg-surface rounded-lg shadow-sm border border-border p-4 mb-6">
+              {coverPhotoUrl && (
+                <img
+                  src={coverPhotoUrl}
+                  alt={location.name}
+                  className="w-full h-48 object-cover rounded-lg mb-4"
+                />
+              )}
               <div className="flex items-start justify-between gap-2 mb-2">
                 <h2 className="text-xl font-semibold text-content flex-1">{location.name}</h2>
                 <OverflowMenu

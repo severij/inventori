@@ -1,5 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { PhotoLightbox } from './PhotoLightbox';
+import { compressImage } from '../utils/imageCompression';
 
 interface PhotoCaptureProps {
   photos: Blob[];
@@ -13,6 +14,12 @@ interface PhotoCaptureProps {
  * Displays preview thumbnails with delete functionality.
  * On mobile, the Camera button opens the native camera app.
  * On desktop, it opens a file picker (with camera if available).
+ *
+ * **Image Compression:**
+ * Photos are automatically compressed before being added:
+ * - Max 1920px longest side
+ * - 80% JPEG quality
+ * - ~95% reduction for typical camera photos
  */
 export function PhotoCapture({
   photos,
@@ -23,12 +30,36 @@ export function PhotoCapture({
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [objectUrls, setObjectUrls] = useState<{ [key: number]: string }>({});
 
-  const addPhotos = (files: FileList) => {
+  // Create object URLs for photos on mount, revoke on unmount
+  useEffect(() => {
+    const urls: { [key: number]: string } = {};
+    photos.forEach((photo, index) => {
+      urls[index] = URL.createObjectURL(photo);
+    });
+    setObjectUrls(urls);
+
+    return () => {
+      // Cleanup: revoke all object URLs when component unmounts
+      Object.values(urls).forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, []);
+
+  const addPhotos = async (files: FileList) => {
     const newPhotos: Blob[] = [];
     for (let i = 0; i < files.length; i++) {
       if (photos.length + newPhotos.length >= maxPhotos) break;
-      newPhotos.push(files[i]);
+
+      // Compress image before adding
+      try {
+        const compressed = await compressImage(files[i]);
+        newPhotos.push(compressed);
+      } catch (error) {
+        console.error('Error compressing image:', error);
+        // Fallback: add original if compression fails
+        newPhotos.push(files[i]);
+      }
     }
 
     if (newPhotos.length > 0) {
@@ -70,10 +101,10 @@ export function PhotoCapture({
       {/* Photo previews */}
        {photos.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {photos.map((photo, index) => (
+          {photos.map((_, index) => (
             <div key={index} className="relative group">
               <img
-                src={URL.createObjectURL(photo)}
+                src={objectUrls[index]}
                 alt={`Photo ${index + 1}`}
                 className="w-20 h-20 object-cover rounded-md border border-border cursor-pointer hover:opacity-90 transition-opacity"
                 onClick={() => setLightboxIndex(index)}

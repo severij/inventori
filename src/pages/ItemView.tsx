@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Layout } from '../components/Layout';
@@ -76,6 +76,23 @@ export function ItemView() {
   const [destinationId, setDestinationId] = useState<string>('');
   const [destinationType, setDestinationType] = useState<'location' | 'item' | undefined>(undefined);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+
+  // Create object URLs for photos on mount, revoke on unmount
+  useEffect(() => {
+    if (!item?.photos || item.photos.length === 0) {
+      setPhotoUrls([]);
+      return;
+    }
+
+    const urls = item.photos.map((photo) => URL.createObjectURL(photo));
+    setPhotoUrls(urls);
+
+    return () => {
+      // Cleanup: revoke all object URLs when component unmounts
+      urls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [item?.id]); // Depends on item ID, not photos array
 
   const loading = itemLoading || (item?.canHoldItems && childrenLoading);
   const hasChildren = children.length > 0;
@@ -170,14 +187,14 @@ export function ItemView() {
           {item.photos.length > 0 && (
             <div className="mb-6">
               <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
-                {item.photos.map((photo, index) => (
-                  <img
-                    key={index}
-                    src={URL.createObjectURL(photo)}
-                    alt={`${item.name || t('common.unnamedItem')} photo ${index + 1}`}
-                    className="w-48 h-48 object-cover rounded-lg flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
-                    onClick={() => setLightboxIndex(index)}
-                  />
+           {item.photos.map((_, index) => (
+                   <img
+                     key={index}
+                     src={photoUrls[index]}
+                     alt={`${item.name || t('common.unnamedItem')} photo ${index + 1}`}
+                     className="w-48 h-48 object-cover rounded-lg flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
+                     onClick={() => setLightboxIndex(index)}
+                   />
                 ))}
               </div>
             </div>
