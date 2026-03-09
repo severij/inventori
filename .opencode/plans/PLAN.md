@@ -2046,7 +2046,73 @@ The form layout overflow bug is now completely fixed:
 
 ---
 
-## Next Steps (Phase 36+)
+## Phase 36: Pinch/Zoom + Pan in Photo Lightbox
+
+**Status: IN PROGRESS**
+
+Add zoom and pan support to the photo lightbox so users can inspect photos in detail on all devices. The lightbox (`PhotoLightbox.tsx`) is a shared component used by both `ItemView` and `PhotoCapture` (Add/Edit forms), so all consumers benefit automatically.
+
+### Interactions Supported
+
+| Interaction | Platform | Behavior |
+|---|---|---|
+| Pinch-to-zoom | Mobile/tablet | Two-finger pinch in/out, scale 1×–5× |
+| Double-tap | Mobile/tablet | Toggles between 1× and 2.5× zoom, resets offset |
+| Mouse wheel / trackpad | Desktop | Zooms toward cursor position, scale 1×–5× |
+| Double-click | Desktop | Toggles between 1× and 2.5× zoom, resets offset |
+| Drag (mouse or single-touch) | All | Pans image when zoomed > 1×, clamped to image edges |
+| Horizontal swipe | Mobile (zoom = 1×) | Navigates to prev/next photo |
+
+### 36.1 Update PhotoLightbox Component
+
+**`src/components/PhotoLightbox.tsx`:**
+
+New state:
+- `scale: number` — Current zoom level (1.0–5.0)
+- `offset: { x: number; y: number }` — Pan offset in CSS pixels
+- `isPanning: boolean` — Suppresses backdrop click while dragging
+- `isAnimating: boolean` — Enables CSS transition when not actively gesturing
+
+Touch tracking refs (not state, avoid re-render):
+- `touchStartRef` — records initial touch points and base scale/offset for the gesture
+- `lastTapRef` — timestamp of last tap for double-tap detection
+
+Implementation details:
+- `<img>` gets `style={{ transform: `scale(${scale}) translate(...)`, transition: isAnimating ? 'transform 0.2s' : 'none' }}`
+- `touch-action: none` on image container to suppress browser native zoom/scroll
+- Pinch: `onTouchStart` stores two points + base scale; `onTouchMove` computes ratio of current vs. initial distance
+- Double-tap: if two taps within 300 ms, toggle scale 1↔2.5, reset offset, trigger animation
+- Mouse wheel: `onWheel` adjusts scale by `deltaY * -0.001`, zooms toward cursor using offset math
+- Double-click: toggle scale 1↔2.5, reset offset
+- Drag/pan: when scale > 1, pointer/touch drag updates offset, clamped so image stays within viewport
+- Swipe: when scale === 1, horizontal touch drag ≥ 50 px triggers prev/next
+- Reset: `useEffect([currentIndex])` resets scale and offset when changing photos
+
+### 36.2 Fix Stale URL Bug in PhotoCapture
+
+**`src/components/PhotoCapture.tsx`:**
+
+- Change `useEffect` dependency from `[]` to `[photos]` so object URLs are recreated whenever the photos array changes (new photo added or photo deleted)
+- Ensure old URLs are revoked before creating new ones (cleanup function handles this)
+
+### 36.3 Build and Verification
+
+- `pnpm build` — zero TypeScript errors
+- Test: pinch zoom on mobile viewport emulation
+- Test: mouse wheel zoom on desktop
+- Test: double-tap / double-click toggles
+- Test: drag to pan when zoomed
+- Test: swipe navigates when at 1×
+- Test: zoom resets when changing photos
+- Test: Escape / backdrop close still work at all zoom levels
+
+**Files Modified (2 total):**
+1. `src/components/PhotoLightbox.tsx` — Add zoom/pan/swipe logic
+2. `src/components/PhotoCapture.tsx` — Fix stale URL bug (dependency fix)
+
+---
+
+## Next Steps (Phase 37+)
 
 ### Phase 22: Complete i18n Migration (Optional)
 

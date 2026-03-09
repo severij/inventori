@@ -1,6 +1,6 @@
 # Inventori UI Design Specification
 
-**Last Updated:** Phase 33 - Image Lightbox Preview (COMPLETED ✅)
+**Last Updated:** Phase 36 - Photo Lightbox Zoom & Pan (IN PROGRESS)
 
 This document contains ASCII representations of all UI components, pages, and layouts for the Inventori app redesign.
 
@@ -24,6 +24,7 @@ This document contains ASCII representations of all UI components, pages, and la
 - ✅ **Phase 28 Complete:** Tag input inline "+" add button for mobile
 - ✅ **Phase 32 Complete:** Inventory statistics display (home, location, container stats)
 - ✅ **Phase 33 Complete:** Image lightbox preview with prev/next navigation
+- 🔄 **Phase 36 In Progress:** Photo lightbox zoom/pan (pinch, double-tap, mouse wheel, drag)
 
 ## Design Principles
 
@@ -482,11 +483,28 @@ This document contains ASCII representations of all UI components, pages, and la
 **Behavior:**
 - Fixed-position overlay (z-50) covering full viewport
 - Image centered, `object-contain` (preserves aspect ratio, fits screen)
-- Clicking backdrop (black area) closes overlay
-- Escape key closes overlay
+- Clicking backdrop (black area) closes overlay (only when not panning)
+- Escape key closes overlay (resets zoom first if zoomed, closes if already at 1×)
 - Prev/Next arrows navigate between photos, hidden when at boundaries
 - Dot indicators show current position, clickable to jump to specific photo
 - All object URLs created once on mount, properly revoked on unmount
+- Zoom resets to 1× and pan resets to center when navigating between photos
+
+**Zoom & Pan (Phase 36):**
+
+| Interaction | Platform | Result |
+|---|---|---|
+| Pinch in/out | Mobile/tablet | Zoom 1×–5×, centered on pinch midpoint |
+| Double-tap | Mobile/tablet | Toggle 1× ↔ 2.5×, reset pan to center |
+| Mouse wheel / trackpad pinch | Desktop | Zoom 1×–5×, toward cursor position |
+| Double-click | Desktop | Toggle 1× ↔ 2.5×, reset pan to center |
+| Touch drag (zoom > 1×) | Mobile/tablet | Pan image, clamped to image bounds |
+| Mouse drag (zoom > 1×) | Desktop | Pan image, clamped to image bounds |
+| Horizontal swipe (zoom = 1×) | Mobile/tablet | Navigate prev/next photo |
+
+- `touch-action: none` on image container — suppresses browser native pan/zoom
+- CSS `transform: scale() translate()` applied to image element
+- Smooth `transition: transform 0.2s` during toggle, no transition during active gesture
 
 ---
 

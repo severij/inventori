@@ -32,7 +32,7 @@ export function PhotoCapture({
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [objectUrls, setObjectUrls] = useState<{ [key: number]: string }>({});
 
-  // Create object URLs for photos on mount, revoke on unmount
+  // Create object URLs for photos, recreate whenever photos array changes
   useEffect(() => {
     const urls: { [key: number]: string } = {};
     photos.forEach((photo, index) => {
@@ -41,10 +41,10 @@ export function PhotoCapture({
     setObjectUrls(urls);
 
     return () => {
-      // Cleanup: revoke all object URLs when component unmounts
+      // Cleanup: revoke all object URLs when photos change or component unmounts
       Object.values(urls).forEach((url) => URL.revokeObjectURL(url));
     };
-  }, []);
+  }, [photos]);
 
   const addPhotos = async (files: FileList) => {
     const newPhotos: Blob[] = [];
