@@ -10,7 +10,7 @@ import { useState, useRef } from 'react';
 import { importData, previewImport } from '../utils/import';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { clearAllData } from '../db';
-import type { Language, Currency, DateFormat, ItemCountMethod, ValueCalculation } from '../types/settings';
+import type { Language, Currency, DateFormat, ItemCountMethod, ValueCalculation, ImageMaxSize, ImageQuality } from '../types/settings';
 
 /**
  * Settings page - Appearance, Regional, and Data Management
@@ -65,6 +65,16 @@ export function Settings() {
 
   const handleValueCalculationChange = (valueCalculation: ValueCalculation) => {
     updateSettings({ valueCalculation });
+    showToast('success', t('common.settingsSaved'));
+  };
+
+  const handleImageMaxSizeChange = (imageMaxSize: ImageMaxSize) => {
+    updateSettings({ imageMaxSize });
+    showToast('success', t('common.settingsSaved'));
+  };
+
+  const handleImageQualityChange = (imageQuality: ImageQuality) => {
+    updateSettings({ imageQuality });
     showToast('success', t('common.settingsSaved'));
   };
 
@@ -291,6 +301,54 @@ export function Settings() {
               </select>
               <p className="mt-1 text-sm text-content-secondary">
                 {t('settings.valueCalculationDescription')}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Photos Section */}
+        <div className="bg-surface rounded-lg shadow-sm border border-border p-4">
+          <h2 className="text-lg font-semibold text-content mb-4">{t('settings.photos')}</h2>
+          <div className="space-y-4">
+            {/* Image Max Size */}
+            <div>
+              <label htmlFor="imageMaxSize" className="block text-sm font-medium text-content mb-2">
+                {t('settings.imageMaxSize')}
+              </label>
+              <select
+                id="imageMaxSize"
+                value={settings.imageMaxSize}
+                onChange={(e) => handleImageMaxSizeChange(parseInt(e.target.value) as ImageMaxSize)}
+                className="w-full px-3 py-2 bg-surface-secondary border border-border rounded-lg text-content focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent transition-colors"
+              >
+                <option value={640}>{t('settings.imageMaxSize_640')}</option>
+                <option value={960}>{t('settings.imageMaxSize_960')}</option>
+                <option value={1280}>{t('settings.imageMaxSize_1280')}</option>
+                <option value={1920}>{t('settings.imageMaxSize_1920')}</option>
+              </select>
+              <p className="mt-1 text-sm text-content-secondary">
+                {t('settings.imageMaxSizeDescription')}
+              </p>
+            </div>
+
+            {/* Image Quality */}
+            <div>
+              <label htmlFor="imageQuality" className="block text-sm font-medium text-content mb-2">
+                {t('settings.imageQuality')}
+              </label>
+              <select
+                id="imageQuality"
+                value={settings.imageQuality}
+                onChange={(e) => handleImageQualityChange(parseInt(e.target.value) as ImageQuality)}
+                className="w-full px-3 py-2 bg-surface-secondary border border-border rounded-lg text-content focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent transition-colors"
+              >
+                <option value={60}>{t('settings.imageQuality_60')}</option>
+                <option value={70}>{t('settings.imageQuality_70')}</option>
+                <option value={80}>{t('settings.imageQuality_80')}</option>
+                <option value={90}>{t('settings.imageQuality_90')}</option>
+              </select>
+              <p className="mt-1 text-sm text-content-secondary">
+                {t('settings.imageQualityDescription')}
               </p>
             </div>
           </div>

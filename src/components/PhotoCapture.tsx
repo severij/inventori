@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { PhotoLightbox } from './PhotoLightbox';
 import { compressImage } from '../utils/imageCompression';
+import { useSettings } from '../contexts/SettingsContext';
 
 interface PhotoCaptureProps {
   photos: Blob[];
@@ -31,6 +32,7 @@ export function PhotoCapture({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [objectUrls, setObjectUrls] = useState<{ [key: number]: string }>({});
+  const { settings } = useSettings();
 
   // Create object URLs for photos, recreate whenever photos array changes
   useEffect(() => {
@@ -51,9 +53,13 @@ export function PhotoCapture({
     for (let i = 0; i < files.length; i++) {
       if (photos.length + newPhotos.length >= maxPhotos) break;
 
-      // Compress image before adding
+      // Compress image before adding using settings
       try {
-        const compressed = await compressImage(files[i]);
+        const compressed = await compressImage(
+          files[i],
+          settings.imageMaxSize,
+          settings.imageQuality
+        );
         newPhotos.push(compressed);
       } catch (error) {
         console.error('Error compressing image:', error);

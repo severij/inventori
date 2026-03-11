@@ -18,6 +18,16 @@ export type ItemCountMethod = 'unique' | 'quantity';
 export type ValueCalculation = 'currentValue' | 'currentWithFallback' | 'purchasePrice';
 
 /**
+ * Maximum image dimension for compression
+ */
+export type ImageMaxSize = 640 | 960 | 1280 | 1920;
+
+/**
+ * JPEG quality for image compression (percentage)
+ */
+export type ImageQuality = 60 | 70 | 80 | 90;
+
+/**
  * Complete application settings
  */
 export interface AppSettings {
@@ -32,6 +42,10 @@ export interface AppSettings {
   // Inventory Stats
   itemCountMethod: ItemCountMethod;
   valueCalculation: ValueCalculation;
+
+  // Photos
+  imageMaxSize: ImageMaxSize;
+  imageQuality: ImageQuality;
 }
 
 /**
@@ -44,6 +58,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   dateFormat: 'system',
   itemCountMethod: 'unique',
   valueCalculation: 'currentWithFallback',
+  imageMaxSize: 1280,
+  imageQuality: 80,
 };
 
 /**
@@ -56,4 +72,6 @@ export const SETTINGS_KEYS = {
   DATE_FORMAT: 'inventori-dateFormat',
   ITEM_COUNT_METHOD: 'inventori-itemCountMethod',
   VALUE_CALCULATION: 'inventori-valueCalculation',
+  IMAGE_MAX_SIZE: 'inventori-imageMaxSize',
+  IMAGE_QUALITY: 'inventori-imageQuality',
 } as const;

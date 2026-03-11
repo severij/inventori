@@ -309,7 +309,8 @@ Add ability to select and change parent locations when creating or editing locat
 - [x] **Phase 33:** Image lightbox preview
 - [x] **Phase 34:** Fix photo memory leaks & add image compression
 - [x] **Phase 35:** Fix form layout overflow with long location paths
-- [ ] **Phase 36+:** Additional features (optional)
+- [x] **Phase 37:** Configurable image compression (IN PROGRESS)
+- [ ] **Phase 38+:** Additional features (optional)
 
 ---
 
@@ -2112,7 +2113,98 @@ Implementation details:
 
 ---
 
-## Next Steps (Phase 37+)
+## Phase 37: Configurable Image Compression
+
+**Status: IN PROGRESS 🔄**
+
+Fix memory exhaustion when capturing photos from high-resolution cameras (48MP+). Add configurable image size and quality settings to balance memory usage vs. image quality.
+
+### Problem
+
+When users capture photos from the native camera (especially on smartphone with 48MP sensors), the app frequently crashes with **"Edellistä toimintoa ei voi suorittaa. Muisti ei riitä."** (Finnish: "The previous operation cannot be performed. Not enough memory.") error.
+
+**Root Cause:**
+- 48MP image uncompressed in memory: ~150-200 MB per image
+- Modern phones can have 4-8 MP cameras → 150-400 MB per photo
+- Browser memory limits on mobile: often 256-512 MB max
+- Single photo can exceed available memory
+
+### Solution
+
+1. **Use `createImageBitmap()` with resize options** — Decode image at target size instead of full resolution
+2. **Make compression settings configurable** — Let users choose max size and quality
+
+### 37.1 Add Settings Types ✅
+
+**`src/types/settings.ts`:**
+- ✅ Added `ImageMaxSize` type: `640 | 960 | 1280 | 1920`
+- ✅ Added `ImageQuality` type: `60 | 70 | 80 | 90`
+- ✅ Extended `AppSettings` interface with `imageMaxSize` and `imageQuality`
+- ✅ Updated `DEFAULT_SETTINGS`: `imageMaxSize: 1280`, `imageQuality: 80`
+- ✅ Added to `SETTINGS_KEYS`: `IMAGE_MAX_SIZE`, `IMAGE_QUALITY`
+
+### 37.2 Update SettingsContext ✅
+
+**`src/contexts/SettingsContext.tsx`:**
+- ✅ Import new types
+- ✅ Update `loadSettings()` to read from localStorage
+- ✅ Update `saveSettings()` to persist to localStorage
+
+### 37.3 Add Photos Section to Settings Page ✅
+
+**`src/pages/Settings.tsx`:**
+- ✅ Add "Photos" section between Inventory Stats and Data Management
+- ✅ Image Max Size dropdown (640 / 960 / 1280 / 1920)
+- ✅ Image Quality dropdown (60% / 70% / 80% / 90%)
+- ✅ Helper text for each setting
+- ✅ Toast notification on change
+
+### 37.4 Update Image Compression Utility ✅
+
+**`src/utils/imageCompression.ts`:**
+- ✅ Accept `maxSize` and `quality` parameters (with defaults)
+- ✅ Use `createImageBitmap()` with `resizeWidth`, `resizeHeight`, `resizeQuality` options
+- ✅ This tells browser to decode at target size, avoiding full-resolution memory allocation
+- ✅ Apply quality parameter via `canvas.toBlob()`
+
+**Memory Impact:**
+- 48MP photo at 1920px: ~17 MB (vs 150-200 MB)
+- 48MP photo at 1280px: ~7 MB
+- 48MP photo at 640px: ~2 MB
+
+### 37.5 Update PhotoCapture Component ✅
+
+**`src/components/PhotoCapture.tsx`:**
+- ✅ Import `useSettings` hook
+- ✅ Pass `settings.imageMaxSize` and `settings.imageQuality` to `compressImage()`
+
+### 37.6 Add i18n Translations ✅
+
+**`src/i18n/locales/en.json` and `fi.json`:**
+- ✅ `settings.photos`: "Photos" / "Kuvat"
+- ✅ `settings.imageMaxSize`: "Max Image Size"
+- ✅ `settings.imageMaxSize_640` through `_1920`: Options
+- ✅ `settings.imageMaxSizeDescription`: "Larger sizes use more memory"
+- ✅ `settings.imageQuality`: "Image Quality"
+- ✅ `settings.imageQuality_60` through `_90`: Options
+- ✅ `settings.imageQualityDescription`: "Higher quality uses more storage"
+
+### 37.7 Build and Verification ✅
+
+**Status:**
+- ✅ Build passes with zero TypeScript errors
+- ✅ All modules transformed correctly
+- ✅ Settings persist to localStorage
+- ✅ Compression uses resize options for memory efficiency
+
+**Expected Behavior:**
+- User captures photo → Browser decodes at configured max size (not full resolution)
+- User adjusts settings → New photos use new settings
+- Existing photos unchanged (settings only apply to new captures)
+
+---
+
+## Next Steps (Phase 38+)
 
 ### Phase 22: Complete i18n Migration (Optional)
 

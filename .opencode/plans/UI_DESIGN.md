@@ -24,7 +24,9 @@ This document contains ASCII representations of all UI components, pages, and la
 - ✅ **Phase 28 Complete:** Tag input inline "+" add button for mobile
 - ✅ **Phase 32 Complete:** Inventory statistics display (home, location, container stats)
 - ✅ **Phase 33 Complete:** Image lightbox preview with prev/next navigation
-- 🔄 **Phase 36 In Progress:** Photo lightbox zoom/pan (pinch, double-tap, mouse wheel, drag)
+- ✅ **Phase 34 Complete:** Fix photo memory leaks & add image compression
+- ✅ **Phase 35 Complete:** Fix form layout overflow with long location paths
+- 🔄 **Phase 37 In Progress:** Configurable image compression (max size, quality)
 
 ## Design Principles
 
@@ -1429,6 +1431,26 @@ Accessible via hamburger menu → Settings. All settings persist in localStorage
 │                                     │
 │ Date Format                         │
 │ [System default    ▼]               │
+│                                     │
+│ ◾ INVENTORY STATS                   │
+│                                     │
+│ Item Counting                       │
+│ [Count unique items  ▼]             │
+│ Choose how to count items...        │
+│                                     │
+│ Value Calculation                   │
+│ [Current value w/   ▼]              │
+│ Choose which price to use...        │
+│                                     │
+│ ◾ PHOTOS (Phase 37)                 │ ← New Section
+│                                     │
+│ Max Image Size                      │
+│ [1280px (Recommended) ▼]            │ ← 640/960/1280/1920
+│ Larger sizes use more memory        │
+│                                     │
+│ Image Quality                       │
+│ [80% (Recommended)      ▼]          │ ← 60/70/80/90%
+│ Higher quality uses more storage    │
 │                                     │
 │ ◾ DATA MANAGEMENT                   │
 │                                     │
